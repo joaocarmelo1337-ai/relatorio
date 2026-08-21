@@ -69,6 +69,30 @@ select,input,textarea{
 }
 select#filtroRua{font-weight:600}
 #resumoTopo{padding:0 10px 4px;font-size:12.5px;color:var(--suave)}
+.resumoObra{
+  font-size:12px;border-radius:8px;padding:8px 10px;border:1px solid var(--borda);
+  background:#fff;display:flex;gap:9px;align-items:center;
+}
+.resumoObra.pendente{background:#fdf1e0;border-color:#f0d3a8;color:#8a5316;font-weight:600}
+.resumoObra .logoMini{width:34px;height:34px;object-fit:contain;flex:0 0 34px;background:#f2f4f2;border-radius:5px}
+.resumoObra .obraNome{font-weight:700;color:var(--texto)}
+.resumoObra .empresaNome{color:var(--suave)}
+.logoBox{background:#fff;border:1px solid var(--borda);border-radius:9px;padding:10px;text-align:center}
+.logoBox .prevLogo{
+  display:none;max-width:100%;max-height:110px;object-fit:contain;
+  background:#f2f4f2;border-radius:7px;padding:6px;margin-bottom:9px;
+}
+.logoBox .prevLogo.ver{display:inline-block}
+.logoBox .escolher{
+  display:block;text-align:center;background:var(--azul);color:#fff;font-weight:700;
+  padding:12px;border-radius:8px;font-size:14px;
+}
+.logoBox input[type=file]{display:none}
+.logoBox .estado{font-size:12px;margin-top:7px;color:var(--suave);min-height:16px}
+.logoBox .estado.proc{color:var(--laranja);font-weight:700}
+.logoBox .estado.pronta{color:var(--verde);font-weight:700}
+.logoBox .estado.falhou{color:var(--vermelho);font-weight:700}
+.logoBox .remover{margin-top:8px;background:none;border:none;color:var(--vermelho);font-family:inherit;font-size:12.5px;font-weight:700}
 #areaDownloads{padding:0 10px}
 .blocoArq{
   background:#fff;border:1px solid var(--borda);border-left:4px solid var(--azul);
@@ -138,22 +162,22 @@ main#lista{padding:4px 10px}
   opacity:0;pointer-events:none;transition:opacity .22s ease;
 }
 #fundoEscuro.aberto{opacity:1;pointer-events:auto}
-#sheet{
+#sheet, #sheetConfig{
   position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--fundo);
   border-radius:16px 16px 0 0;box-shadow:0 -6px 22px rgba(0,0,0,.25);
   max-height:94vh;display:flex;flex-direction:column;
   transform:translateY(100%);transition:transform .28s cubic-bezier(.22,.68,.36,1);
 }
-#sheet.aberto{transform:translateY(0)}
-#sheet .puxador{width:42px;height:4px;background:#c8cfc9;border-radius:4px;margin:8px auto 2px}
-#sheet .topo{
+#sheet.aberto, #sheetConfig.aberto{transform:translateY(0)}
+#sheet .puxador, #sheetConfig .puxador{width:42px;height:4px;background:#c8cfc9;border-radius:4px;margin:8px auto 2px}
+#sheet .topo, #sheetConfig .topo{
   display:flex;justify-content:space-between;align-items:center;
   padding:6px 14px 10px;border-bottom:1px solid var(--borda);
 }
-#sheet .topo h2{margin:0;font-size:16px;color:var(--escuro)}
-#sheet .topo button{background:none;border:none;font-size:24px;color:var(--suave);font-family:inherit;padding:0 4px}
-#sheet .conteudo{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 16px}
-#sheet .rodape{
+#sheet .topo h2, #sheetConfig .topo h2{margin:0;font-size:16px;color:var(--escuro)}
+#sheet .topo button, #sheetConfig .topo button{background:none;border:none;font-size:24px;color:var(--suave);font-family:inherit;padding:0 4px}
+#sheet .conteudo, #sheetConfig .conteudo{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 16px}
+#sheet .rodape, #sheetConfig .rodape{
   padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom));
   border-top:1px solid var(--borda);background:#fff;display:flex;gap:8px;
 }
@@ -177,11 +201,11 @@ main#lista{padding:4px 10px}
 .fotoBox .estado.proc{color:var(--laranja);font-weight:700}
 .fotoBox .estado.pronta{color:var(--verde);font-weight:700}
 .fotoBox .estado.falhou{color:var(--vermelho);font-weight:700}
-#erroForm{
+#erroForm, .erroCaixa{
   display:none;background:#fbe6e4;border:1px solid #efc2bc;color:#8f2318;
   padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;
 }
-#erroForm.ver{display:block}
+#erroForm.ver, .erroCaixa.ver{display:block}
 .secTit{
   font-size:11.5px;font-weight:800;color:var(--azul);text-transform:uppercase;
   letter-spacing:.8px;margin:16px 0 9px;padding-bottom:4px;border-bottom:1px solid var(--borda);
@@ -215,6 +239,10 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
 
 <div id="barraFerr">
   <select id="filtroRua" aria-label="Filtrar por rua"><option value="">Todas as ruas</option></select>
+  <div class="linhaBt">
+    <button type="button" class="bt bt-escuro" id="btConfig">Dados da obra e da empresa</button>
+  </div>
+  <div id="resumoObra" class="resumoObra"></div>
   <div class="linhaBt">
     <button type="button" class="bt bt-prim" id="btPdf">Gerar PDF completo</button>
   </div>
@@ -316,6 +344,73 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
   <div class="rodape">
     <button type="button" class="bt" id="btCancelar">Cancelar</button>
     <button type="button" class="bt bt-prim" id="btSalvar">Salvar casa</button>
+  </div>
+</section>
+
+<section id="sheetConfig" aria-hidden="true">
+  <div class="puxador"></div>
+  <div class="topo">
+    <h2>Dados da obra e da empresa</h2>
+    <button type="button" id="btFecharCfg" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="conteudo">
+    <div id="erroCfg" class="erroCaixa"></div>
+    <p style="margin:0 0 14px;font-size:12.5px;color:#6b7a86">
+      Estes dados aparecem na capa e no cabeçalho de todas as páginas do PDF.
+      Preencha uma vez — ficam salvos no aparelho.
+    </p>
+
+    <div class="secTit">Obra</div>
+    <div class="campo">
+      <label for="cObra">Nome da obra <span class="obrig">*</span></label>
+      <input type="text" id="cObra" autocomplete="off" placeholder="Ex.: Pavimentação asfáltica do Bairro Aero Rancho">
+    </div>
+    <div class="campo">
+      <label for="cContrato">Contrato / processo</label>
+      <input type="text" id="cContrato" autocomplete="off" placeholder="Opcional. Ex.: Contrato nº 045/2026">
+    </div>
+    <div class="campo">
+      <label for="cMunicipio">Município</label>
+      <input type="text" id="cMunicipio" autocomplete="off" placeholder="Campo Grande/MS">
+    </div>
+    <div class="campo">
+      <label for="cConcessionaria">Concessionária</label>
+      <input type="text" id="cConcessionaria" autocomplete="off" placeholder="Águas Guariroba">
+    </div>
+
+    <div class="secTit">Empresa executora</div>
+    <div class="campo">
+      <label for="cEmpresa">Nome da empresa <span class="obrig">*</span></label>
+      <input type="text" id="cEmpresa" autocomplete="off" placeholder="Ex.: Construtora Exemplo Ltda.">
+    </div>
+    <div class="campo">
+      <label for="cCnpj">CNPJ</label>
+      <input type="text" id="cCnpj" autocomplete="off" placeholder="Opcional">
+    </div>
+    <div class="campo">
+      <label>Logo da empresa</label>
+      <div class="logoBox" id="boxLogo">
+        <img class="prevLogo" id="prevLogo" alt="Pré-visualização da logo da empresa">
+        <label class="escolher" for="cLogo">Escolher imagem da logo</label>
+        <input type="file" id="cLogo" accept="image/*">
+        <div class="estado" id="estLogo">Nenhuma logo selecionada.</div>
+        <button type="button" class="remover" id="btRemoverLogo" style="display:none">Remover logo</button>
+      </div>
+    </div>
+
+    <div class="secTit">Responsável técnico</div>
+    <div class="campo">
+      <label for="cResp">Nome do responsável técnico</label>
+      <input type="text" id="cResp" autocomplete="off" placeholder="Opcional. Aparece na assinatura do relatório.">
+    </div>
+    <div class="campo">
+      <label for="cCrea">CREA / CAU</label>
+      <input type="text" id="cCrea" autocomplete="off" placeholder="Opcional. Ex.: CREA-MS 12345/D">
+    </div>
+  </div>
+  <div class="rodape">
+    <button type="button" class="bt" id="btCancelarCfg">Cancelar</button>
+    <button type="button" class="bt bt-prim" id="btSalvarCfg">Salvar dados</button>
   </div>
 </section>
 
@@ -739,7 +834,30 @@ var SITUACOES = ['Mantido','A remanejar','Danificado','Já remanejado'];
 var CLASSE_BADGE = {'Mantido':'b-mantido','A remanejar':'b-remanejar','Danificado':'b-danificado','Já remanejado':'b-ja'};
 var COR_PDF = {'Mantido':[46,125,50],'A remanejar':[230,126,34],'Danificado':[192,57,43],'Já remanejado':[127,140,141]};
 var LIMITE_FOTO = 900 * 1024;         // ~900 KB por foto
+var LIMITE_LOGO = 500 * 1024;         // ~500 KB para a logo
 var CHAVE_LS = 'aguasguariroba_registros_v1';
+var CHAVE_LS_CFG = 'aguasguariroba_config_v1';
+
+// Dados que identificam o relatório: capa, cabeçalho das páginas e assinatura.
+var CFG_PADRAO = {
+  obra: '', contrato: '', municipio: 'Campo Grande/MS', concessionaria: 'Águas Guariroba',
+  empresa: '', cnpj: '', logo: '', logoTipo: 'PNG', logoDim: null,
+  resp: '', crea: ''
+};
+
+var DESCR_SITUACAO = {
+  'Mantido': 'permanece no local, sem interferência com a obra.',
+  'A remanejar': 'precisa ser deslocado ou adequado antes da execução do pavimento.',
+  'Danificado': 'encontrado com avaria; requer substituição ou reparo pela concessionária.',
+  'Já remanejado': 'já adequado anteriormente; registrado para comprovação.'
+};
+
+var MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho',
+             'agosto','setembro','outubro','novembro','dezembro'];
+function dataExtenso(){
+  var d = new Date();
+  return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear();
+}
 
 function $(id){ return document.getElementById(id); }
 function pausa(ms){ return new Promise(function(r){ setTimeout(r, ms||0); }); }
@@ -956,6 +1074,38 @@ var Armaz = {
     return Promise.resolve();
   },
 
+  lerConfig: function(){
+    var self = this;
+    if(self.modo === 'indexeddb'){
+      return self.tx('meta','readonly', function(s){ return s.get('config'); })
+        .then(function(c){ return c || null; });
+    }
+    if(self.modo === 'localstorage'){
+      return new Promise(function(res){
+        try{ res(JSON.parse(localStorage.getItem(CHAVE_LS_CFG) || 'null')); }
+        catch(e){ res(null); }
+      });
+    }
+    return Promise.resolve(self.memConfig || null);
+  },
+
+  salvarConfig: function(cfg){
+    var self = this;
+    if(self.modo === 'indexeddb'){
+      return self.tx('meta','readwrite', function(s){ return s.put(cfg, 'config'); });
+    }
+    if(self.modo === 'localstorage'){
+      return new Promise(function(res, rej){
+        try{ localStorage.setItem(CHAVE_LS_CFG, JSON.stringify(cfg)); res(); }
+        catch(e){
+          rej(new Error('não coube no armazenamento alternativo. Tente uma logo menor. (' + msgErro(e) + ')'));
+        }
+      });
+    }
+    self.memConfig = cfg;
+    return Promise.resolve();
+  },
+
   salvarVarios: function(regs){
     var self = this;
     if(self.modo === 'indexeddb'){
@@ -985,6 +1135,8 @@ var Armaz = {
 /* ============================== ESTADO ============================== */
 var estado = {
   registros: [],
+  config: JSON.parse(JSON.stringify(CFG_PADRAO)),
+  logoPendente: null,
   filtro: '',
   editandoId: null,
   fotos: { hid: null, esg: null },   // {dataUrl, w, h, bytes}
@@ -1046,8 +1198,25 @@ function badge(prefixo, sit){
          '<b>' + esc(prefixo) + '</b> ' + esc(sit) + '</span>';
 }
 
+function renderizarResumoObra(){
+  var cfg = estado.config;
+  var cx = $('resumoObra');
+  if(!cfg.obra || !cfg.empresa){
+    cx.className = 'resumoObra pendente';
+    cx.innerHTML = 'Faltam os dados da obra e da empresa — necessários para gerar o PDF. Toque no botão acima.';
+    return;
+  }
+  cx.className = 'resumoObra';
+  cx.innerHTML =
+    (cfg.logo ? '<img class="logoMini" src="' + esc(cfg.logo) + '" alt="Logo da empresa">' : '') +
+    '<div><div class="obraNome">' + esc(cfg.obra) + '</div>' +
+    '<div class="empresaNome">' + esc(cfg.empresa) +
+    (cfg.contrato ? ' &middot; ' + esc(cfg.contrato) : '') + '</div></div>';
+}
+
 function renderizar(){
   try{
+    renderizarResumoObra();
     var todos = registrosOrdenados();
     var gruposTodos = agruparPorRua(todos);
     renderizarFiltro(gruposTodos);
@@ -1193,6 +1362,56 @@ function comprimirFoto(file, aoAndar){
   });
 }
 
+/* Logo: preserva transparência (PNG) enquanto couber; se não couber, achata em JPEG. */
+function comprimirLogo(file){
+  if(!file) return Promise.reject(new Error('nenhum arquivo selecionado'));
+  return carregarImagemArquivo(file).then(function(img){
+    var cv = document.createElement('canvas');
+    var ctx = cv.getContext('2d');
+    if(!ctx) throw new Error('o navegador não permitiu usar o canvas');
+    var maiores = [700, 560, 440, 340, 260];
+
+    function desenhar(alvo){
+      var maior = Math.max(img.w || alvo, img.h || alvo);
+      var escala = Math.min(1, alvo / maior);
+      var lw = Math.max(1, Math.round((img.w || alvo) * escala));
+      var lh = Math.max(1, Math.round((img.h || alvo) * escala));
+      cv.width = lw; cv.height = lh;
+      ctx.clearRect(0, 0, lw, lh);
+      ctx.drawImage(img.el, 0, 0, lw, lh);
+      return { w: lw, h: lh };
+    }
+
+    var ultima = null;
+    for(var i=0; i<maiores.length; i++){
+      var d = desenhar(maiores[i]);
+      var url = cv.toDataURL('image/png');
+      var bytes = tamanhoDataUrl(url);
+      ultima = { dataUrl: url, tipo: 'PNG', w: d.w, h: d.h, bytes: bytes };
+      if(bytes <= LIMITE_LOGO) return ultima;
+    }
+    // ainda grande: achata sobre fundo branco em JPEG
+    var d2 = desenhar(560);
+    var fundo = document.createElement('canvas');
+    fundo.width = d2.w; fundo.height = d2.h;
+    var fctx = fundo.getContext('2d');
+    fctx.fillStyle = '#ffffff';
+    fctx.fillRect(0, 0, d2.w, d2.h);
+    fctx.drawImage(cv, 0, 0);
+    var quals = [0.85, 0.7, 0.55, 0.4];
+    for(var q=0; q<quals.length; q++){
+      var u2 = fundo.toDataURL('image/jpeg', quals[q]);
+      var b2 = tamanhoDataUrl(u2);
+      ultima = { dataUrl: u2, tipo: 'JPEG', w: d2.w, h: d2.h, bytes: b2 };
+      if(b2 <= LIMITE_LOGO) return ultima;
+    }
+    throw new Error('a logo continuou grande demais (' + kb(ultima.bytes) + '). Use uma imagem menor.');
+  }).then(function(r){
+    try{ if(r && r.el && r.el.close) r.el.close(); }catch(e){}
+    return r;
+  });
+}
+
 function medirImagem(dataUrl){
   return new Promise(function(res){
     try{
@@ -1290,6 +1509,113 @@ function fecharSheet(){
     document.body.style.overflow = '';
     estado.editandoId = null;
   }catch(e){}
+}
+
+/* ------------------- folha de dados da obra/empresa ------------------ */
+function mostrarErroCfg(txt){
+  var e = $('erroCfg');
+  if(txt){ e.textContent = txt; e.classList.add('ver'); try{ e.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(x){} }
+  else { e.textContent = ''; e.classList.remove('ver'); }
+}
+
+function pintarLogo(dataUrl, texto, classe){
+  var img = $('prevLogo');
+  if(dataUrl){ img.src = dataUrl; img.classList.add('ver'); }
+  else { img.removeAttribute('src'); img.classList.remove('ver'); }
+  $('btRemoverLogo').style.display = dataUrl ? 'inline-block' : 'none';
+  var el = $('estLogo');
+  el.className = 'estado' + (classe ? ' ' + classe : '');
+  el.textContent = texto;
+}
+
+function abrirConfig(aviso){
+  try{
+    var c = estado.config;
+    mostrarErroCfg(aviso || '');
+    $('cObra').value = c.obra || '';
+    $('cContrato').value = c.contrato || '';
+    $('cMunicipio').value = c.municipio || CFG_PADRAO.municipio;
+    $('cConcessionaria').value = c.concessionaria || CFG_PADRAO.concessionaria;
+    $('cEmpresa').value = c.empresa || '';
+    $('cCnpj').value = c.cnpj || '';
+    $('cResp').value = c.resp || '';
+    $('cCrea').value = c.crea || '';
+    estado.logoPendente = c.logo ? { dataUrl: c.logo, tipo: c.logoTipo, w: (c.logoDim||{}).w, h: (c.logoDim||{}).h, bytes: tamanhoDataUrl(c.logo) } : null;
+    if(estado.logoPendente) pintarLogo(c.logo, 'Logo salva (' + kb(estado.logoPendente.bytes) + '). Escolha outra para substituir.', 'pronta');
+    else pintarLogo(null, 'Nenhuma logo selecionada.', '');
+
+    $('sheetConfig').classList.add('aberto');
+    $('sheetConfig').setAttribute('aria-hidden','false');
+    $('fundoEscuro').classList.add('aberto');
+    document.body.style.overflow = 'hidden';
+  }catch(e){
+    mostrarMsg('Não foi possível abrir os dados da obra: ' + msgErro(e), 'erro', true);
+  }
+}
+
+function fecharConfig(){
+  try{
+    $('sheetConfig').classList.remove('aberto');
+    $('sheetConfig').setAttribute('aria-hidden','true');
+    if(!$('sheet').classList.contains('aberto')) $('fundoEscuro').classList.remove('aberto');
+    document.body.style.overflow = '';
+  }catch(e){}
+}
+
+function tratarEscolhaLogo(input){
+  var arq = input.files && input.files[0];
+  input.value = '';
+  if(!arq) return;
+  pintarLogo(estado.logoPendente ? estado.logoPendente.dataUrl : null, 'Processando logo…', 'proc');
+  $('btSalvarCfg').disabled = true;
+  comprimirLogo(arq).then(function(r){
+    estado.logoPendente = r;
+    pintarLogo(r.dataUrl, 'Logo pronta — ' + r.w + '×' + r.h + ' px, ' + kb(r.bytes) + '.', 'pronta');
+  }).catch(function(e){
+    pintarLogo(estado.logoPendente ? estado.logoPendente.dataUrl : null,
+               'Falha ao processar a logo: ' + msgErro(e), 'falhou');
+  }).then(function(){
+    $('btSalvarCfg').disabled = false;
+  });
+}
+
+function salvarConfig(){
+  try{
+    mostrarErroCfg('');
+    var obra = $('cObra').value.trim();
+    var empresa = $('cEmpresa').value.trim();
+    if(!obra || !empresa){
+      mostrarErroCfg('Preencha o nome da obra e o nome da empresa — os dois aparecem na capa do relatório.');
+      return;
+    }
+    var cfg = {
+      obra: obra,
+      contrato: $('cContrato').value.trim(),
+      municipio: $('cMunicipio').value.trim() || CFG_PADRAO.municipio,
+      concessionaria: $('cConcessionaria').value.trim() || CFG_PADRAO.concessionaria,
+      empresa: empresa,
+      cnpj: $('cCnpj').value.trim(),
+      logo: estado.logoPendente ? estado.logoPendente.dataUrl : '',
+      logoTipo: estado.logoPendente ? estado.logoPendente.tipo : 'PNG',
+      logoDim: estado.logoPendente ? { w: estado.logoPendente.w, h: estado.logoPendente.h } : null,
+      resp: $('cResp').value.trim(),
+      crea: $('cCrea').value.trim()
+    };
+    $('btSalvarCfg').disabled = true;
+    Armaz.salvarConfig(cfg).then(function(){
+      estado.config = cfg;
+      renderizarResumoObra();
+      fecharConfig();
+      mostrarMsg('Dados da obra salvos.', 'sucesso');
+    }).catch(function(e){
+      mostrarErroCfg('ERRO AO SALVAR: ' + msgErro(e));
+    }).then(function(){
+      $('btSalvarCfg').disabled = false;
+    });
+  }catch(e){
+    $('btSalvarCfg').disabled = false;
+    mostrarErroCfg('ERRO AO SALVAR: ' + msgErro(e));
+  }
 }
 
 function tratarEscolhaFoto(qual, input){
@@ -1419,16 +1745,30 @@ function publicarArquivo(nome, blob, dica){
   return auto;
 }
 
-/* ============================ GERAÇÃO DO PDF ========================= */
-var TXT_INTRO =
-  'Este documento apresenta o registro fotográfico dos hidrômetros e das ligações de esgoto ' +
-  'identificados nas ruas contempladas pela obra de pavimentação asfáltica, indicando quais serão ' +
-  'mantidos, quais deverão ser remanejados e quais se encontram danificados. A finalidade é subsidiar ' +
-  'a comunicação técnica com a concessionária Águas Guariroba, responsável pelos serviços de ' +
-  'abastecimento de água e esgotamento sanitário em Campo Grande/MS, permitindo o planejamento ' +
-  'conjunto das interferências necessárias à execução da obra. As fotografias foram obtidas em campo, ' +
-  'casa a casa, nas datas indicadas em cada registro, e os quantitativos por rua consideram as ligações ' +
-  'de esgoto classificadas como "A remanejar" ou "Danificado".';
+/* ============================ GERAÇÃO DO PDF =========================
+   Documento técnico: capa de identificação, apresentação, classificação,
+   registro fotográfico por rua, resumo geral e assinatura.
+   ===================================================================== */
+var C_ESCURO = [44,62,80], C_AZUL = [47,111,143], C_CINZA = [110,120,128],
+    C_LINHA = [219,224,220], C_SUAVE = [238,243,240], C_TEXTO = [45,55,64];
+
+function textoApresentacao(cfg){
+  return 'Este documento apresenta o registro fotográfico dos hidrômetros e das ligações de esgoto ' +
+    'identificados nas ruas contempladas pela obra "' + cfg.obra + '", executada por ' + cfg.empresa +
+    ', no município de ' + cfg.municipio + '. O levantamento indica, casa a casa, quais dispositivos ' +
+    'serão mantidos, quais deverão ser remanejados e quais se encontram danificados, com a finalidade ' +
+    'de subsidiar a comunicação técnica com a concessionária ' + cfg.concessionaria + ', responsável ' +
+    'pelos serviços de abastecimento de água e esgotamento sanitário, e de permitir o planejamento ' +
+    'conjunto das interferências necessárias à execução do pavimento asfáltico. As fotografias foram ' +
+    'obtidas em campo, uma a uma, nas datas indicadas em cada registro.';
+}
+
+var TXT_CRITERIO =
+  'Os quantitativos deste relatório consideram exclusivamente as ligações de esgoto classificadas como ' +
+  '"A remanejar" ou "Danificado", por serem as que demandam intervenção da concessionária antes ou ' +
+  'durante a execução do pavimento. As ligações classificadas como "Mantido" e "Já remanejado" constam ' +
+  'do registro fotográfico para fins de comprovação do estado encontrado em campo, mas não são somadas ' +
+  'aos totais por rua nem ao total geral.';
 
 function gerarPDF(){
   limparMsgs();
@@ -1439,6 +1779,13 @@ function gerarPDF(){
   }
   if(!estado.registros.length){
     mostrarMsg('Não há nada para gerar: nenhuma casa cadastrada.', 'erro', true);
+    return;
+  }
+  var cfg = estado.config;
+  if(!cfg.obra || !cfg.empresa){
+    mostrarMsg('Antes de gerar o relatório, informe o nome da obra e o nome da empresa — eles aparecem ' +
+               'na capa e no cabeçalho de todas as páginas.', 'erro', true);
+    abrirConfig('Preencha estes dados para poder gerar o PDF.');
     return;
   }
 
@@ -1454,6 +1801,9 @@ function gerarPDF(){
     if(!r.dimHid || !r.dimHid.w) pendentes.push(medirImagem(r.fotoHid).then(function(d){ r.dimHid = d; }));
     if(!r.dimEsg || !r.dimEsg.w) pendentes.push(medirImagem(r.fotoEsg).then(function(d){ r.dimEsg = d; }));
   });
+  if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)){
+    pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
+  }
 
   Promise.all(pendentes).then(function(){
     return montarPDF(Ctor, grupos, todos);
@@ -1462,9 +1812,11 @@ function gerarPDF(){
     var auto = publicarArquivo(res.nome, res.blob,
       'PDF com ' + res.paginas + ' página(s), ' + todos.length + ' casa(s) e ' + grupos.length + ' rua(s). ' +
       'Se o download automático não abrir, use os botões abaixo.');
-    var extra = res.fotosComFalha ? ' Atenção: ' + res.fotosComFalha + ' foto(s) não puderam ser desenhadas e aparecem como moldura vazia.' : '';
+    var extra = '';
+    if(res.fotosComFalha) extra += ' Atenção: ' + res.fotosComFalha + ' foto(s) não puderam ser desenhadas e aparecem como moldura vazia.';
+    if(res.logoFalhou) extra += ' Atenção: a logo não pôde ser inserida no PDF; troque a imagem em "Dados da obra".';
     mostrarMsg('PDF gerado com sucesso.' + (auto ? ' O download automático foi disparado.' : '') + extra,
-               res.fotosComFalha ? 'erro' : 'sucesso', !!res.fotosComFalha);
+               extra ? 'erro' : 'sucesso', !!extra);
   }).catch(function(e){
     processando(false);
     mostrarMsg('Falha ao gerar o PDF: ' + msgErro(e) + ' Nenhum arquivo foi produzido.', 'erro', true);
@@ -1474,35 +1826,142 @@ function gerarPDF(){
 }
 
 function montarPDF(Ctor, grupos, todos){
-  var doc = new Ctor({ orientation:'portrait', unit:'mm', format:'a4' });
+  // compress: a logo em PNG entra sem filtro próprio; sem isso o arquivo incha.
+  var doc = new Ctor({ orientation:'portrait', unit:'mm', format:'a4', compress:true });
+  var cfg = estado.config;
 
   var M = 14, LARG = 210, ALT = 297, UTIL = LARG - 2*M;
-  var LIM = ALT - 18;                 // limite inferior do conteúdo
+  var TOPO = 22, LIM = 276;           // área útil entre cabeçalho e rodapé
   var COL = (UTIL - 6) / 2;           // largura de cada foto
   var H_MOLD = 52;                    // altura da moldura da foto
-  var y = M;
-  var fotosComFalha = 0;
+  var y = TOPO;
+  var fotosComFalha = 0, logoFalhou = false;
+  var totalGeral = todos.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
 
-  function novaPag(){ doc.addPage(); y = M; }
+  function setT(c){ doc.setTextColor(c[0],c[1],c[2]); }
+  function setF(c){ doc.setFillColor(c[0],c[1],c[2]); }
+  function setD(c){ doc.setDrawColor(c[0],c[1],c[2]); }
+  function fonte(estilo, tam, c){ doc.setFont('helvetica', estilo); doc.setFontSize(tam); if(c) setT(c); }
+  function txt(s, x, yy, o){ doc.text(String(s == null ? '' : s), x, yy, o || undefined); }
+  function txtC(s, yy){ txt(s, LARG/2, yy, {align:'center'}); }
+  function corta(s, larg){ return doc.splitTextToSize(String(s||''), larg)[0] || ''; }
+  function novaPag(){ doc.addPage(); y = TOPO; }
   function cabe(h){ return (y + h) <= LIM; }
 
-  function txt(s, x, yy, opc){ doc.text(String(s == null ? '' : s), x, yy, opc || undefined); }
-
-  function barraRua(nome, continuacao){
-    doc.setFillColor(47,111,143);
-    doc.rect(M, y, UTIL, 9, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(255,255,255);
-    var rot = String(nome).toLocaleUpperCase('pt-BR') + (continuacao ? ' (continuação)' : '');
-    var linhas = doc.splitTextToSize(rot, UTIL - 6);
-    txt(linhas[0], M + 3, y + 6.1);
-    y += 9 + 2;
+  function paragrafo(t, tam){
+    fonte('normal', tam || 9.8, C_TEXTO);
+    var linhas = doc.splitTextToSize(t, UTIL);
+    for(var i=0;i<linhas.length;i++){
+      if(!cabe(5)) novaPag();
+      txt(linhas[i], M, y + 3.4);
+      y += 5;
+    }
+    y += 3;
   }
 
-  function desenhaFoto(dataUrl, dim, x, yy, w, h, legenda){
-    doc.setDrawColor(203,211,206); doc.setFillColor(251,251,250);
+  function secao(n, titulo){
+    if(!cabe(18)) novaPag();
+    fonte('bold', 11.5, C_ESCURO);
+    txt(n + '.  ' + titulo, M, y + 5);
+    setD(C_AZUL); doc.setLineWidth(0.6);
+    doc.line(M, y + 7.4, M + UTIL, y + 7.4);
+    doc.setLineWidth(0.2);
+    y += 12.5;
+  }
+
+  function medidasLogo(maxW, maxH){
+    var d = cfg.logoDim || { w: 4, h: 1.5 };
+    var dw = d.w || 4, dh = d.h || 1.5;
+    var iw = maxW, ih = iw * (dh / dw);
+    if(ih > maxH){ ih = maxH; iw = ih * (dw / dh); }
+    return { w: iw, h: ih };
+  }
+
+  function porLogo(x, yy, maxW, maxH){
+    if(!cfg.logo) return null;
+    var m = medidasLogo(maxW, maxH);
+    try{ doc.addImage(cfg.logo, cfg.logoTipo || 'PNG', x, yy, m.w, m.h); return m; }
+    catch(e){ logoFalhou = true; return null; }
+  }
+
+  function chip(sit, x, yy, larg){
+    var c = COR_PDF[sit] || C_CINZA;
+    setF(c);
+    doc.roundedRect(x, yy, larg, 5.6, 1.3, 1.3, 'F');
+    fonte('bold', 7.3, [255,255,255]);
+    txt(String(sit).toLocaleUpperCase('pt-BR'), x + larg/2, yy + 3.85, {align:'center'});
+  }
+
+  /* ------------------------------- CAPA ------------------------------ */
+  function capa(){
+    setF(C_AZUL); doc.rect(0, 0, LARG, 6, 'F');
+    setF(C_ESCURO); doc.rect(0, 6, LARG, 1.4, 'F');
+
+    var yy = 26;
+    if(cfg.logo){
+      var m = medidasLogo(74, 26);
+      var r = porLogo((LARG - m.w)/2, yy, 74, 26);
+      yy += (r ? r.h : 4) + 11;
+    }
+    fonte('bold', 15, C_ESCURO); txtC(corta(cfg.empresa, UTIL), yy); yy += 6.5;
+    if(cfg.cnpj){ fonte('normal', 9, C_CINZA); txtC('CNPJ ' + cfg.cnpj, yy); yy += 5.5; }
+    yy += 6;
+    setD(C_LINHA); doc.line(M + 34, yy, LARG - M - 34, yy);
+    yy += 19;
+
+    fonte('bold', 21, C_AZUL); txtC('RELATÓRIO DE INTERFERÊNCIAS', yy); yy += 9;
+    fonte('normal', 11.5, [80,90,98]);
+    txtC('Registro fotográfico de hidrômetros e ligações de esgoto', yy); yy += 6;
+    txtC('Obra de pavimentação asfáltica', yy); yy += 17;
+
+    var itens = [['OBRA', cfg.obra], ['CONCESSIONÁRIA', cfg.concessionaria], ['MUNICÍPIO', cfg.municipio]];
+    if(cfg.contrato) itens.push(['CONTRATO / PROCESSO', cfg.contrato]);
+    if(cfg.resp) itens.push(['RESPONSÁVEL TÉCNICO', cfg.resp + (cfg.crea ? ' — ' + cfg.crea : '')]);
+    itens.push(['DATA DE EMISSÃO', dataBR(hojeISO())]);
+
+    var LAB = 48, VAL = UTIL - LAB - 6;
+    fonte('bold', 10.5);
+    var linhas = itens.map(function(it){ return doc.splitTextToSize(String(it[1] || '—'), VAL); });
+    var alturas = linhas.map(function(l){ return Math.max(10, l.length * 5 + 5); });
+    var alturaQ = alturas.reduce(function(a,b){ return a + b; }, 0);
+
+    setD(C_LINHA); setF([252,252,251]);
+    doc.rect(M, yy, UTIL, alturaQ, 'FD');
+    var cy = yy;
+    itens.forEach(function(it, i){
+      if(i > 0){ setD([233,237,234]); doc.line(M + 4, cy, M + UTIL - 4, cy); }
+      fonte('bold', 7.5, C_CINZA); txt(it[0], M + 5, cy + 6.6);
+      fonte('bold', 10.5, C_ESCURO);
+      linhas[i].forEach(function(l, j){ txt(l, M + LAB, cy + 6.6 + j*5); });
+      cy += alturas[i];
+    });
+    yy += alturaQ + 11;
+
+    var cels = [[String(grupos.length), 'RUAS LEVANTADAS'],
+                [String(todos.length), 'CASAS REGISTRADAS'],
+                [String(totalGeral), 'LIGAÇÕES A MODIFICAR']];
+    setF(C_SUAVE); setD(C_LINHA);
+    doc.rect(M, yy, UTIL, 24, 'FD');
+    var lc = UTIL / 3;
+    cels.forEach(function(c, i){
+      var cx = M + lc*i + lc/2;
+      if(i > 0){ setD([214,222,216]); doc.line(M + lc*i, yy + 4, M + lc*i, yy + 20); }
+      fonte('bold', 17, C_AZUL); txt(c[0], cx, yy + 11.5, {align:'center'});
+      fonte('bold', 7.5, C_CINZA); txt(c[1], cx, yy + 18, {align:'center'});
+    });
+    yy += 24;
+
+    var yData = Math.min(268, Math.max(252, yy + 26));
+    fonte('normal', 10, C_TEXTO);
+    txtC(cfg.municipio + ', ' + dataExtenso() + '.', yData);
+  }
+
+  /* --------------------------- BLOCO DA CASA -------------------------- */
+  function desenhaFoto(dataUrl, dim, x, yy, w, h){
+    setD([203,211,206]); setF([251,251,250]);
     doc.rect(x, yy, w, h, 'FD');
     if(!dataUrl){
-      doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(150,155,158);
+      fonte('italic', 8, [150,155,158]);
       txt('sem foto', x + w/2, yy + h/2, {align:'center'});
       fotosComFalha++;
       return;
@@ -1513,47 +1972,45 @@ function montarPDF(Ctor, grupos, todos){
     var asp = dw / dh;
     var iw = mw, ih = iw / asp;
     if(ih > mh){ ih = mh; iw = ih * asp; }
-    var ix = x + (w - iw)/2, iy = yy + (h - ih)/2;
     try{
-      doc.addImage(dataUrl, 'JPEG', ix, iy, iw, ih);
+      doc.addImage(dataUrl, 'JPEG', x + (w - iw)/2, yy + (h - ih)/2, iw, ih);
     }catch(e){
       fotosComFalha++;
-      doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(192,57,43);
+      fonte('italic', 7.5, [192,57,43]);
       txt('foto não pôde ser inserida', x + w/2, yy + h/2, {align:'center'});
     }
   }
 
   function linhaSituacao(rotulo, valor, x, yy){
-    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(80,90,98);
+    fonte('normal', 9, [80,90,98]);
     txt(rotulo + ': ', x, yy);
     var lw = doc.getTextWidth(rotulo + ': ');
     var c = COR_PDF[valor] || [80,90,98];
-    doc.setFont('helvetica','bold'); doc.setTextColor(c[0], c[1], c[2]);
+    fonte('bold', 9, c);
     txt(valor || '—', x + lw, yy);
   }
 
   function alturaObs(obs){
     if(!obs) return 0;
-    doc.setFont('helvetica','italic'); doc.setFontSize(8.5);
-    var linhas = doc.splitTextToSize('Observações: ' + obs, UTIL);
-    return 1.5 + linhas.length * 4;
+    fonte('italic', 8.5);
+    return 1.5 + doc.splitTextToSize('Observações: ' + obs, UTIL).length * 4;
   }
 
   function alturaCasa(r){
     return 5.5 + 1.5 + 4.2 + H_MOLD + 3 + 5 + alturaObs(r.obs) + 5;
   }
 
-  function desenhaCasa(r){
+  function desenhaCasa(r, indice){
     var num = (r.numero || '').trim();
     var nh = (r.numHid || '').trim();
     var titulo = (num ? 'Casa nº ' + num : 'Casa sem número') + '  |  Hidrômetro nº ' + (nh || 'não informado');
-    doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(44,62,80);
-    txt(doc.splitTextToSize(titulo, UTIL - 30)[0], M, y + 4);
-    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(110,120,128);
+    fonte('bold', 10.5, C_ESCURO);
+    txt(corta(titulo, UTIL - 34), M, y + 4);
+    fonte('normal', 9, C_CINZA);
     txt(dataBR(r.data), M + UTIL, y + 4, {align:'right'});
     y += 5.5 + 1.5;
 
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(47,111,143);
+    fonte('bold', 8, C_AZUL);
     txt('HIDRÔMETRO', M + COL/2, y + 3, {align:'center'});
     txt('ESGOTO', M + COL + 6 + COL/2, y + 3, {align:'center'});
     y += 4.2;
@@ -1567,134 +2024,184 @@ function montarPDF(Ctor, grupos, todos){
     y += 5;
 
     if(r.obs){
-      doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor(90,100,108);
+      fonte('italic', 8.5, [90,100,108]);
       var linhas = doc.splitTextToSize('Observações: ' + r.obs, UTIL);
       y += 1.5;
       for(var i=0;i<linhas.length;i++){ txt(linhas[i], M, y + 3); y += 4; }
     }
 
-    doc.setDrawColor(219,224,220);
+    setD(C_LINHA);
     doc.line(M, y + 2, M + UTIL, y + 2);
     y += 5;
   }
 
-  /* ---- capa / abertura ---- */
-  doc.setFillColor(44,62,80);
-  doc.rect(0, 0, LARG, 28, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(14.5); doc.setTextColor(255,255,255);
-  txt('RELATÓRIO DE INTERFERÊNCIAS — ÁGUAS GUARIROBA', LARG/2, 13, {align:'center'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(190,205,216);
-  txt('Registro fotográfico de hidrômetros e ligações de esgoto — obra de pavimentação asfáltica', LARG/2, 20.5, {align:'center'});
-  y = 36;
+  function barraRua(rotulo, continuacao){
+    setF(C_AZUL);
+    doc.rect(M, y, UTIL, 9, 'F');
+    fonte('bold', 11, [255,255,255]);
+    txt(corta(rotulo + (continuacao ? ' (continuação)' : ''), UTIL - 6), M + 3, y + 6.1);
+    y += 9 + 2;
+  }
 
-  var hoje = new Date();
-  doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(47,111,143);
-  txt('Data de emissão: ' + dataBR(hojeISO()) + ' — Campo Grande/MS', M, y);
-  y += 7;
+  /* ------------------------------ CAPA ------------------------------- */
+  capa();
 
-  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(45,55,64);
-  var introLinhas = doc.splitTextToSize(TXT_INTRO, UTIL);
-  for(var i=0;i<introLinhas.length;i++){ txt(introLinhas[i], M, y); y += 5; }
-  y += 3;
+  /* ------------------------ TEXTO DE ABERTURA ------------------------ */
+  novaPag();
+  secao('1', 'APRESENTAÇÃO');
+  paragrafo(textoApresentacao(cfg));
 
-  var totalGeral = todos.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
-  doc.setDrawColor(203,211,206); doc.setFillColor(238,243,240);
-  doc.rect(M, y, UTIL, 16, 'FD');
-  doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(44,62,80);
-  txt('Ruas levantadas: ' + grupos.length + '     Casas registradas: ' + todos.length, M + 4, y + 6.5);
-  txt('Ligações de esgoto a modificar: ' + totalGeral, M + 4, y + 12);
-  y += 16 + 8;
+  secao('2', 'CLASSIFICAÇÃO ADOTADA');
+  SITUACOES.forEach(function(sit){
+    if(!cabe(9)) novaPag();
+    chip(sit, M, y, 34);
+    fonte('normal', 9, C_TEXTO);
+    txt(corta(DESCR_SITUACAO[sit], UTIL - 38), M + 38, y + 3.9);
+    y += 8.2;
+  });
+  y += 4;
 
-  /* ---- ruas ---- */
-  grupos.forEach(function(g){
+  secao('3', 'CRITÉRIO DE QUANTIFICAÇÃO');
+  paragrafo(TXT_CRITERIO);
+
+  secao('4', 'REGISTRO FOTOGRÁFICO POR RUA');
+
+  /* ---------------------------- POR RUA ------------------------------ */
+  grupos.forEach(function(g, iRua){
     var itens = g.itens;
     var nEsg = itens.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
+    var rotulo = '4.' + (iRua + 1) + '  ' + String(g.nome).toLocaleUpperCase('pt-BR');
 
-    if(!cabe(9 + 2 + 7 + alturaCasa(itens[0]))) novaPag();
-    barraRua(g.nome, false);
-    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(44,62,80);
-    txt('Total de ligações de esgoto a serem modificadas nesta rua: ' + nEsg, M, y + 3.5);
-    y += 7;
+    if(!cabe(9 + 2 + 8 + 3 + alturaCasa(itens[0]))) novaPag();
+    barraRua(rotulo, false);
+
+    setF(C_SUAVE); setD(C_LINHA);
+    doc.rect(M, y, UTIL, 8, 'FD');
+    fonte('bold', 9, C_ESCURO);
+    txt('Total de ligações de esgoto a serem modificadas nesta rua: ' + nEsg, M + 3, y + 5.3);
+    fonte('normal', 8.5, C_CINZA);
+    txt('Casas registradas: ' + itens.length, M + UTIL - 3, y + 5.3, {align:'right'});
+    y += 8 + 3;
 
     itens.forEach(function(r){
-      var h = alturaCasa(r);
-      if(!cabe(h)){
+      if(!cabe(alturaCasa(r))){
         novaPag();
-        barraRua(g.nome, true);
+        barraRua(rotulo, true);
       }
       desenhaCasa(r);
     });
-    y += 3;
+    y += 4;
   });
 
-  /* ---- resumo geral ---- */
-  doc.addPage(); y = M;
-  doc.setFillColor(44,62,80);
-  doc.rect(M, y, UTIL, 11, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(255,255,255);
-  txt('RESUMO GERAL', M + 4, y + 7.4);
-  y += 11 + 6;
+  /* --------------------------- RESUMO GERAL --------------------------- */
+  novaPag();
+  secao('5', 'RESUMO GERAL');
 
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(90,100,108);
-  txt('Ligações de esgoto a modificar por rua (situação "A remanejar" ou "Danificado").', M, y);
-  y += 7;
+  fonte('normal', 9, C_CINZA);
+  txt('Ligações de esgoto a modificar por rua (situação "A remanejar" ou "Danificado").', M, y + 3);
+  y += 8;
 
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(47,111,143);
+  fonte('bold', 8.5, C_AZUL);
   txt('RUA', M, y);
-  txt('CASAS', M + UTIL - 40, y, {align:'right'});
+  txt('CASAS', M + UTIL - 42, y, {align:'right'});
   txt('A MODIFICAR', M + UTIL, y, {align:'right'});
   y += 2;
-  doc.setDrawColor(47,111,143); doc.line(M, y, M + UTIL, y);
+  setD(C_AZUL); doc.line(M, y, M + UTIL, y);
   y += 5;
 
   grupos.forEach(function(g){
     if(!cabe(7)){
       novaPag();
-      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(47,111,143);
+      fonte('bold', 9, C_AZUL);
       txt('RESUMO GERAL (continuação)', M, y + 3);
       y += 8;
     }
     var nEsg = g.itens.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
-    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(45,55,64);
-    txt(doc.splitTextToSize(g.nome, UTIL - 50)[0], M, y + 3);
-    txt(String(g.itens.length), M + UTIL - 40, y + 3, {align:'right'});
-    doc.setFont('helvetica','bold');
+    fonte('normal', 9.5, C_TEXTO);
+    txt(corta(g.nome, UTIL - 52), M, y + 3);
+    txt(String(g.itens.length), M + UTIL - 42, y + 3, {align:'right'});
+    fonte('bold', 9.5, C_ESCURO);
     txt(String(nEsg), M + UTIL, y + 3, {align:'right'});
-    doc.setDrawColor(228,232,229); doc.line(M, y + 5, M + UTIL, y + 5);
+    setD([228,232,229]); doc.line(M, y + 5, M + UTIL, y + 5);
     y += 7;
   });
 
   y += 4;
-  if(!cabe(16)) novaPag();
-  doc.setFillColor(47,111,143);
+  if(!cabe(14)) novaPag();
+  setF(C_AZUL);
   doc.rect(M, y, UTIL, 13, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor(255,255,255);
+  fonte('bold', 10.5, [255,255,255]);
   txt('TOTAL GERAL DE LIGAÇÕES DE ESGOTO A MODIFICAR:', M + 4, y + 8.4);
-  doc.setFontSize(13);
-  txt(String(todos.filter(function(r){ return contaEsgoto(r.sitEsg); }).length), M + UTIL - 4, y + 8.8, {align:'right'});
-  y += 13 + 8;
+  fonte('bold', 13, [255,255,255]);
+  txt(String(totalGeral), M + UTIL - 4, y + 8.8, {align:'right'});
+  y += 13 + 10;
 
-  doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor(110,120,128);
-  var fecho = doc.splitTextToSize(
-    'Documento gerado automaticamente a partir do levantamento de campo, contendo ' + todos.length +
-    ' registro(s) fotográfico(s) distribuído(s) em ' + grupos.length + ' rua(s).', UTIL);
-  for(var k=0;k<fecho.length;k++){ txt(fecho[k], M, y); y += 4.5; }
+  /* ------------------- quadro por situação encontrada ------------------ */
+  if(!cabe(14 + SITUACOES.length * 7)) novaPag();
+  fonte('bold', 9.5, C_ESCURO);
+  txt('Quadro geral por situação encontrada', M, y + 3);
+  y += 8;
+  fonte('bold', 8.5, C_AZUL);
+  txt('SITUAÇÃO', M, y);
+  txt('HIDRÔMETROS', M + UTIL - 42, y, {align:'right'});
+  txt('ESGOTOS', M + UTIL, y, {align:'right'});
+  y += 2;
+  setD(C_AZUL); doc.line(M, y, M + UTIL, y);
+  y += 5;
+  SITUACOES.forEach(function(sit){
+    var nh = todos.filter(function(r){ return r.sitHid === sit; }).length;
+    var ne = todos.filter(function(r){ return r.sitEsg === sit; }).length;
+    chip(sit, M, y - 1.4, 34);
+    fonte('normal', 9.5, C_TEXTO);
+    txt(String(nh), M + UTIL - 42, y + 3, {align:'right'});
+    txt(String(ne), M + UTIL, y + 3, {align:'right'});
+    setD([228,232,229]); doc.line(M, y + 5, M + UTIL, y + 5);
+    y += 7.5;
+  });
+  y += 8;
 
-  /* ---- rodapés ---- */
+  /* ----------------------------- assinatura --------------------------- */
+  if(!cabe(46)) novaPag();
+  fonte('normal', 9.8, C_TEXTO);
+  txtC(cfg.municipio + ', ' + dataExtenso() + '.', y + 4);
+  y += 22;
+  setD([120,130,138]);
+  doc.line(LARG/2 - 40, y, LARG/2 + 40, y);
+  fonte('bold', 10, C_ESCURO);
+  txtC(cfg.resp || 'Responsável técnico', y + 5.5);
+  var yb = y + 10.5;
+  if(cfg.crea){ fonte('normal', 8.8, C_CINZA); txtC(cfg.crea, yb); yb += 4.6; }
+  fonte('normal', 8.8, C_CINZA);
+  txtC(cfg.empresa, yb);
+
+  /* --------------------- cabeçalho e rodapé de todas -------------------- */
   var n = doc.getNumberOfPages();
-  for(var p=1; p<=n; p++){
+  for(var p=2; p<=n; p++){
     doc.setPage(p);
-    doc.setDrawColor(219,224,220);
-    doc.line(M, ALT - 12, M + UTIL, ALT - 12);
-    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(130,140,146);
-    doc.text('Relatório de interferências — Águas Guariroba — emitido em ' + dataBR(hojeISO()), M, ALT - 8);
-    doc.text('Página ' + p + ' de ' + n, M + UTIL, ALT - 8, {align:'right'});
+    setD(C_LINHA); doc.line(M, 15.5, M + UTIL, 15.5);
+    var xTexto = M;
+    if(cfg.logo){
+      var m = medidasLogo(22, 7.5);
+      try{
+        doc.addImage(cfg.logo, cfg.logoTipo || 'PNG', M, 15.5 - m.h - 2.4, m.w, m.h);
+        xTexto = M + m.w + 3.5;
+      }catch(e){ logoFalhou = true; }
+    }
+    fonte('bold', 7.6, C_ESCURO);
+    txt(corta(cfg.obra, UTIL - 72 - (xTexto - M)), xTexto, 12.8);
+    fonte('normal', 7.6, C_CINZA);
+    txt(corta(cfg.empresa, 68), M + UTIL, 12.8, {align:'right'});
+
+    setD(C_LINHA); doc.line(M, ALT - 12, M + UTIL, ALT - 12);
+    fonte('normal', 7.5, C_CINZA);
+    txt('Relatório de interferências — ' + cfg.concessionaria + ' — emitido em ' + dataBR(hojeISO()), M, ALT - 8);
+    txt('Página ' + (p - 1) + ' de ' + (n - 1), M + UTIL, ALT - 8, {align:'right'});
   }
 
   var blob = doc.output('blob');
   if(!blob || !blob.size) throw new Error('o arquivo gerado ficou vazio');
-  var nome = 'relatorio-interferencias-aguas-guariroba-' + hojeISO() + '.pdf';
-  return { blob: blob, nome: nome, paginas: n, fotosComFalha: fotosComFalha };
+  var nome = 'relatorio-interferencias-' + hojeISO() + '.pdf';
+  return { blob: blob, nome: nome, paginas: n, fotosComFalha: fotosComFalha, logoFalhou: logoFalhou };
 }
 
 /* =========================== BACKUP JSON ============================ */
@@ -1706,9 +2213,10 @@ function exportarBackup(){
     }
     var pacote = {
       aplicativo: 'registro-interferencias-aguas-guariroba',
-      versao: 1,
+      versao: 2,
       exportadoEm: new Date().toISOString(),
       total: estado.registros.length,
+      config: estado.config,
       registros: registrosOrdenados()
     };
     var texto = JSON.stringify(pacote);
@@ -1765,15 +2273,26 @@ function importarBackup(arq){
         return estado.registros.some(function(x){ return x.id === r.id; });
       }).length;
 
+      var cfgBackup = (dados && dados.config && typeof dados.config === 'object') ? dados.config : null;
+      var trocaCfg = !!cfgBackup && !!cfgBackup.obra &&
+                     (!estado.config.obra || cfgBackup.obra !== estado.config.obra ||
+                      cfgBackup.empresa !== estado.config.empresa);
+
       processando(false);
       var pergunta = 'Importar ' + regs.length + ' registro(s) deste backup?\n\n' +
         (jaExistem ? jaExistem + ' registro(s) já existente(s) serão ATUALIZADOS.\n' : '') +
         (regs.length - jaExistem) + ' registro(s) novo(s) serão adicionados.\n' +
-        'Os demais registros atuais serão mantidos.';
+        'Os demais registros atuais serão mantidos.' +
+        (trocaCfg ? '\n\nOs dados da obra também serão substituídos por: ' + cfgBackup.obra +
+                    ' (' + (cfgBackup.empresa || 'sem empresa') + ').' : '');
       if(!confirm(pergunta)) return;
 
       processando(true, 'Importando backup…', regs.length + ' registro(s)');
       Armaz.salvarVarios(regs).then(function(){
+        if(!trocaCfg) return;
+        var novo = Object.assign({}, CFG_PADRAO, cfgBackup);
+        return Armaz.salvarConfig(novo).then(function(){ estado.config = novo; });
+      }).then(function(){
         return recarregar();
       }).then(function(){
         processando(false);
@@ -1796,10 +2315,20 @@ function ligarEventos(){
   $('fab').addEventListener('click', function(){ abrirSheet(null); });
   $('btFechar').addEventListener('click', fecharSheet);
   $('btCancelar').addEventListener('click', fecharSheet);
-  $('fundoEscuro').addEventListener('click', fecharSheet);
+  $('fundoEscuro').addEventListener('click', function(){ fecharSheet(); fecharConfig(); });
   $('btSalvar').addEventListener('click', salvarCasa);
   $('btExcluir').addEventListener('click', function(){
     if(estado.editandoId) excluirRegistro(estado.editandoId);
+  });
+
+  $('btConfig').addEventListener('click', function(){ abrirConfig(''); });
+  $('btFecharCfg').addEventListener('click', fecharConfig);
+  $('btCancelarCfg').addEventListener('click', fecharConfig);
+  $('btSalvarCfg').addEventListener('click', salvarConfig);
+  $('cLogo').addEventListener('change', function(){ tratarEscolhaLogo(this); });
+  $('btRemoverLogo').addEventListener('click', function(){
+    estado.logoPendente = null;
+    pintarLogo(null, 'Logo removida. Salve para confirmar.', '');
   });
 
   $('cFotoHid').addEventListener('change', function(){ tratarEscolhaFoto('hid', this); });
@@ -1872,6 +2401,9 @@ function iniciar(){
       mostrarMsg('O aplicativo está usando o armazenamento alternativo (localStorage), com espaço limitado. ' +
                  'Exporte backups com frequência.', 'info', true);
     }
+    return Armaz.lerConfig();
+  }).then(function(cfg){
+    if(cfg) estado.config = Object.assign({}, CFG_PADRAO, cfg);
     return recarregar();
   }).catch(function(e){
     renderizarFaixaStatus();

@@ -10,8 +10,10 @@ geração de um relatório PDF único para entrega à concessionária **Águas G
 1. Baixe o arquivo `index.html` para o celular (ou envie por e-mail/WhatsApp para você mesmo).
 2. Abra o arquivo no navegador. Depois de aberto, **funciona totalmente offline** —
    não há nenhuma requisição externa (a biblioteca jsPDF está embutida no próprio arquivo).
-3. Toque no botão **+** para cadastrar cada casa.
-4. Ao final do levantamento, toque em **Gerar PDF completo**.
+3. Toque em **Dados da obra e da empresa** e preencha o nome da obra, o nome da empresa e a logo
+   (uma vez só — fica salvo no aparelho).
+4. Toque no botão **+** para cadastrar cada casa.
+5. Ao final do levantamento, toque em **Gerar PDF completo**.
 
 Dica: no Android/iOS, use "Adicionar à tela de início" para abrir como um aplicativo.
 
@@ -28,11 +30,21 @@ Dica: no Android/iOS, use "Adicionar à tela de início" para abrir como um apli
 - **Listagem**: registros agrupados por rua, com contagem de casas, filtro por rua e
   badges coloridos por situação (verde = Mantido, laranja = A remanejar,
   vermelho = Danificado, cinza = Já remanejado). Permite editar e excluir.
-- **PDF**: um único arquivo A4 com título, parágrafo introdutório formal, data de
-  emissão, uma seção por rua (em ordem alfabética) com o total de ligações de esgoto
-  a modificar, as duas fotos lado a lado por casa e a página final de **Resumo geral**
-  com o total por rua e o total geral. A paginação é calculada bloco a bloco, de modo
-  que nenhuma casa é cortada ao meio.
+- **Dados do relatório**: nome da obra, contrato/processo, município, concessionária,
+  empresa executora, CNPJ, logo da empresa e responsável técnico com CREA/CAU. Só a obra
+  e a empresa são obrigatórias; o resto aparece no PDF apenas se estiver preenchido.
+- **PDF**: um único arquivo A4 estruturado como documento técnico —
+  1. **capa** com a logo, a empresa, o quadro de identificação da obra e os quantitativos;
+  2. **1. Apresentação** (texto formal citando obra, empresa, município e concessionária);
+  3. **2. Classificação adotada** (o que significa cada situação);
+  4. **3. Critério de quantificação** (o que entra e o que não entra na contagem);
+  5. **4. Registro fotográfico por rua** (4.1, 4.2, …), cada rua com o total de ligações a
+     modificar e as duas fotos lado a lado por casa;
+  6. **5. Resumo geral**, com o total por rua, o total geral, o quadro por situação
+     encontrada e o campo de assinatura do responsável técnico.
+
+  Todas as páginas trazem cabeçalho com a logo e o nome da obra e rodapé com a numeração.
+  A paginação é calculada bloco a bloco, de modo que nenhuma casa é cortada ao meio.
 - **Contagem de ligações a modificar**: considera apenas os registros cuja situação do
   **esgoto** seja *A remanejar* ou *Danificado* (não conta *Mantido* nem *Já remanejado*).
 
@@ -48,8 +60,9 @@ teste real de gravação e leitura e mostra no topo qual modo está ativo:
 | Somente memória | vermelha | Nada é gravado; os dados se perdem ao fechar a página. |
 
 Como os dados ficam presos ao aparelho, use **Exportar backup** (gera um `.json` com
-todos os registros e as fotos) e **Importar backup** (restaura ou mescla a partir do
-`.json`) para transferir entre aparelhos ou guardar cópia de segurança.
+todos os registros, as fotos e os dados da obra, inclusive a logo) e **Importar backup**
+(restaura ou mescla a partir do `.json`) para transferir entre aparelhos ou guardar cópia
+de segurança.
 
 ## Detalhes técnicos
 

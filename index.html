@@ -492,14 +492,34 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
       </div>
     </div>
 
-    <div class="secTit">Responsável técnico</div>
+    <div class="secTit">Assinaturas do relatório</div>
+    <p style="margin:-2px 0 12px;font-size:12px;color:#6b7a86">
+      Todas opcionais. Só entram no PDF as que estiverem preenchidas — de uma a três,
+      lado a lado no fim do documento.
+    </p>
     <div class="campo">
-      <label for="cResp">Nome do responsável técnico</label>
-      <input type="text" id="cResp" autocomplete="off" placeholder="Opcional. Aparece na assinatura do relatório.">
+      <label for="cResp">Responsável técnico &mdash; nome</label>
+      <input type="text" id="cResp" autocomplete="off" placeholder="Ex.: Eng. Fulano de Tal">
     </div>
     <div class="campo">
-      <label for="cCrea">CREA / CAU</label>
-      <input type="text" id="cCrea" autocomplete="off" placeholder="Opcional. Ex.: CREA-MS 12345/D">
+      <label for="cCrea">Responsável técnico &mdash; CREA / CAU</label>
+      <input type="text" id="cCrea" autocomplete="off" placeholder="Ex.: CREA-MS 12345/D">
+    </div>
+    <div class="campo">
+      <label for="cDono">Representante / dono da empresa &mdash; nome</label>
+      <input type="text" id="cDono" autocomplete="off" placeholder="Ex.: Beltrano de Souza">
+    </div>
+    <div class="campo">
+      <label for="cDonoCrea">Representante / dono da empresa &mdash; CREA / CAU</label>
+      <input type="text" id="cDonoCrea" autocomplete="off" placeholder="Opcional, se tiver registro">
+    </div>
+    <div class="campo">
+      <label for="cFiscal">Fiscal da obra &mdash; nome</label>
+      <input type="text" id="cFiscal" autocomplete="off" placeholder="Ex.: Eng. Sicrano da Silva">
+    </div>
+    <div class="campo">
+      <label for="cFiscalCrea">Fiscal da obra &mdash; CREA / CAU</label>
+      <input type="text" id="cFiscalCrea" autocomplete="off" placeholder="Ex.: CREA-MS 54321/D">
     </div>
   </div>
   <div class="rodape">
@@ -944,7 +964,9 @@ var CFG_PADRAO = {
   obra: '', contrato: '', municipio: 'Campo Grande/MS', concessionaria: 'Águas Guariroba',
   destArv: '',
   empresa: '', cnpj: '', logo: '', logoTipo: 'PNG', logoDim: null,
-  resp: '', crea: ''
+  resp: '', crea: '',
+  dono: '', donoCrea: '',
+  fiscal: '', fiscalCrea: ''
 };
 
 var DESCR_SITUACAO = {
@@ -1881,6 +1903,10 @@ function abrirConfig(aviso){
     $('cCnpj').value = c.cnpj || '';
     $('cResp').value = c.resp || '';
     $('cCrea').value = c.crea || '';
+    $('cDono').value = c.dono || '';
+    $('cDonoCrea').value = c.donoCrea || '';
+    $('cFiscal').value = c.fiscal || '';
+    $('cFiscalCrea').value = c.fiscalCrea || '';
     estado.logoPendente = c.logo ? { dataUrl: c.logo, tipo: c.logoTipo, w: (c.logoDim||{}).w, h: (c.logoDim||{}).h, bytes: tamanhoDataUrl(c.logo) } : null;
     if(estado.logoPendente) pintarLogo(c.logo, 'Logo salva (' + kb(estado.logoPendente.bytes) + '). Escolha outra para substituir.', 'pronta');
     else pintarLogo(null, 'Nenhuma logo selecionada.', '');
@@ -1941,7 +1967,11 @@ function salvarConfig(){
       logoTipo: estado.logoPendente ? estado.logoPendente.tipo : 'PNG',
       logoDim: estado.logoPendente ? { w: estado.logoPendente.w, h: estado.logoPendente.h } : null,
       resp: $('cResp').value.trim(),
-      crea: $('cCrea').value.trim()
+      crea: $('cCrea').value.trim(),
+      dono: $('cDono').value.trim(),
+      donoCrea: $('cDonoCrea').value.trim(),
+      fiscal: $('cFiscal').value.trim(),
+      fiscalCrea: $('cFiscalCrea').value.trim()
     };
     $('btSalvarCfg').disabled = true;
     Armaz.salvarConfig(cfg).then(function(){
@@ -2620,23 +2650,37 @@ function montarPDF(Ctor, grupos, todos, perfil){
     y += 8;
   }
 
-  /* ----------------------------- assinatura --------------------------- */
-  if(!cabe(46)) novaPag();
+  /* ---------------------------- assinaturas --------------------------- */
+  var assinaturas = [];
+  if(cfg.resp)   assinaturas.push({ nome: cfg.resp,   crea: cfg.crea,       cargo: 'Responsável técnico' });
+  if(cfg.dono)   assinaturas.push({ nome: cfg.dono,   crea: cfg.donoCrea,   cargo: 'Representante da empresa' });
+  if(cfg.fiscal) assinaturas.push({ nome: cfg.fiscal, crea: cfg.fiscalCrea, cargo: 'Fiscal da obra' });
+  if(!assinaturas.length) assinaturas.push({ nome: '', crea: '', cargo: 'Responsável técnico' });
+
+  if(!cabe(52)) novaPag();
   fonte('italic', 8.5, C_CINZA);
   var fecho = doc.splitTextToSize(perfil.fecho(todos, grupos), UTIL);
   for(var k=0;k<fecho.length;k++){ txt(fecho[k], M, y); y += 4.5; }
   y += 6;
   fonte('normal', 9.8, C_TEXTO);
   txtC(cfg.municipio + ', ' + dataExtenso() + '.', y + 4);
-  y += 22;
-  setD([120,130,138]);
-  doc.line(LARG/2 - 40, y, LARG/2 + 40, y);
-  fonte('bold', 10, C_ESCURO);
-  txtC(cfg.resp || 'Responsável técnico', y + 5.5);
-  var yb = y + 10.5;
-  if(cfg.crea){ fonte('normal', 8.8, C_CINZA); txtC(cfg.crea, yb); yb += 4.6; }
-  fonte('normal', 8.8, C_CINZA);
-  txtC(cfg.empresa, yb);
+  y += 24;
+
+  var nAss = assinaturas.length;
+  var largAss = UTIL / nAss;
+  var meia = Math.min(largAss * 0.42, 40);
+  assinaturas.forEach(function(a, i){
+    var cx = M + largAss * i + largAss / 2;
+    setD([120,130,138]);
+    doc.line(cx - meia, y, cx + meia, y);
+    fonte('bold', nAss > 2 ? 9 : 10, C_ESCURO);
+    txt(corta(a.nome || a.cargo, largAss - 5), cx, y + 5.5, {align:'center'});
+    var yb = y + 10.2;
+    fonte('normal', nAss > 2 ? 7.8 : 8.8, C_CINZA);
+    if(a.nome){ txt(a.cargo, cx, yb, {align:'center'}); yb += 4.4; }
+    if(a.crea){ txt(corta(a.crea, largAss - 5), cx, yb, {align:'center'}); yb += 4.4; }
+    if(nAss === 1){ txt(corta(cfg.empresa, largAss - 5), cx, yb, {align:'center'}); }
+  });
 
   /* --------------------- cabeçalho e rodapé de todas -------------------- */
   var nPag = doc.getNumberOfPages();

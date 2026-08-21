@@ -44,8 +44,11 @@ Dica: no Android/iOS, use "Adicionar à tela de início" para abrir como um apli
   badges coloridos por situação (verde = Mantido, laranja = A remanejar,
   vermelho = Danificado, cinza = Já remanejado). Permite editar e excluir.
 - **Dados do relatório**: nome da obra, contrato/processo, município, concessionária,
-  empresa executora, CNPJ, logo da empresa e responsável técnico com CREA/CAU. Só a obra
-  e a empresa são obrigatórias; o resto aparece no PDF apenas se estiver preenchido.
+  destinatário do relatório de árvores, empresa executora, CNPJ e logo da empresa. Só a
+  obra e a empresa são obrigatórias; o resto aparece no PDF apenas se estiver preenchido.
+- **Assinaturas**: até três, todas opcionais — responsável técnico, representante/dono da
+  empresa e fiscal da obra, cada uma com nome e CREA/CAU. Entram no fim do PDF apenas as
+  preenchidas, lado a lado.
 - **PDF**: um único arquivo A4 estruturado como documento técnico —
   1. **capa** com a logo, a empresa, o quadro de identificação da obra e os quantitativos;
   2. **1. Apresentação** (texto formal citando obra, empresa, município e concessionária);
@@ -54,7 +57,7 @@ Dica: no Android/iOS, use "Adicionar à tela de início" para abrir como um apli
   5. **4. Registro fotográfico por rua** (4.1, 4.2, …), cada rua com o total de ligações a
      modificar e as duas fotos lado a lado por casa;
   6. **5. Resumo geral**, com o total por rua, o total geral, o quadro por situação
-     encontrada e o campo de assinatura do responsável técnico.
+     encontrada e as assinaturas preenchidas.
 
   Todas as páginas trazem cabeçalho com a logo e o nome da obra e rodapé com a numeração.
   A paginação é calculada bloco a bloco, de modo que nenhuma casa é cortada ao meio.

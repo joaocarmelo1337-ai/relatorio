@@ -1,9 +1,17 @@
-# Registro de Interferências — Águas Guariroba
+# Registro de Campo — Obra de pavimentação asfáltica
 
-Aplicativo web de campo para registro fotográfico de **hidrômetros** e **ligações de
-esgoto** que serão modificados por causa de obra de pavimentação asfáltica, com
-geração de um relatório PDF único para entrega à concessionária **Águas Guariroba**
-(Campo Grande/MS).
+Aplicativo web de campo com duas abas, cada uma com o seu relatório em PDF:
+
+- **Esgoto** — registro fotográfico de **hidrômetros** e **ligações de esgoto** que serão
+  modificados pela obra, para entrega à concessionária **Águas Guariroba** (Campo Grande/MS).
+  Identidade em azul-petróleo.
+- **Árvores** — registro fotográfico das **árvores cortadas** por estarem no traçado do
+  pavimento ou interferirem na calçada, com a foto da árvore antes do corte e a foto da
+  etiqueta de identificação. Identidade em verde escuro, e o destinatário é você quem
+  escreve em "Dados da obra".
+
+A cor da tela inteira muda conforme a aba, para não haver dúvida sobre onde se está
+cadastrando.
 
 ## Como usar
 
@@ -12,13 +20,18 @@ geração de um relatório PDF único para entrega à concessionária **Águas G
    não há nenhuma requisição externa (a biblioteca jsPDF está embutida no próprio arquivo).
 3. Toque em **Dados da obra e da empresa** e preencha o nome da obra, o nome da empresa e a logo
    (uma vez só — fica salvo no aparelho).
-4. Toque no botão **+** para cadastrar cada casa.
-5. Ao final do levantamento, toque em **Gerar PDF completo**.
+4. Escolha a aba (**Esgoto** ou **Árvores**) e toque no botão **+** para cadastrar.
+5. Ao final do levantamento, toque em **Gerar PDF** — cada aba gera o seu próprio relatório.
 
 Dica: no Android/iOS, use "Adicionar à tela de início" para abrir como um aplicativo.
 
 ## O que o aplicativo faz
 
+- **Abas**: *Esgoto* e *Árvores*, com listas, filtros, contadores e PDFs independentes.
+  O backup e os dados da obra são comuns às duas.
+- **Cadastro por árvore** (aba Árvores): rua, número/referência (opcional), data, foto da
+  árvore antes do corte (obrigatória), foto da etiqueta (obrigatória), número da etiqueta e
+  observações. Toda árvore registrada é, por definição, uma árvore cortada.
 - **Cadastro por casa**: rua (com autocomplete das ruas já usadas), número/lote
   (opcional), data (preenchida com o dia de hoje), foto do hidrômetro, número do
   hidrômetro, situação do hidrômetro, foto da ligação de esgoto, situação do esgoto

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2c3e50">
-<title>Registro de Interferências — Águas Guariroba</title>
+<title>Registro de Campo — Obra de pavimentação asfáltica</title>
 <style>
 :root{
   --azul:#2f6f8f;
@@ -19,6 +19,11 @@
   --vermelho:#c0392b;
   --cinza:#7f8c8d;
 }
+body[data-aba="arvore"]{
+  --azul:#2d6a4a;      /* verde escuro: aba e relatório de árvores */
+  --azul-esc:#22513a;
+  --escuro:#22402f;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
@@ -32,7 +37,15 @@ header#cab{
   position:sticky;top:0;z-index:30;box-shadow:0 2px 6px rgba(0,0,0,.18);
 }
 #cab .tit{font-size:16px;font-weight:700;letter-spacing:.2px}
-#cab .sub{font-size:11.5px;color:#b9c6d1;margin-top:2px}
+#cab .sub{font-size:11.5px;color:#c3d0da;margin-top:2px}
+#abas{display:flex;gap:7px;margin-top:11px}
+#abas .aba{
+  flex:1;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
+  color:#e8eef3;font-family:inherit;font-size:13px;font-weight:700;
+  padding:9px 6px;border-radius:8px;min-height:40px;
+}
+#abas .aba .qtd{font-weight:600;opacity:.72}
+#abas .aba.ativa{background:#fff;color:var(--escuro);border-color:#fff}
 .faixa{
   padding:7px 14px;font-size:12px;font-weight:600;display:flex;gap:8px;align-items:center;
   border-bottom:1px solid var(--borda);
@@ -140,6 +153,7 @@ main#lista{padding:4px 10px}
 .b-remanejar{background:var(--laranja)}
 .b-danificado{background:var(--vermelho)}
 .b-ja{background:var(--cinza)}
+.b-cortada{background:#2d6a4a}
 .card .acoes{display:flex;flex-direction:column;gap:6px;justify-content:center}
 .card .acoes button{
   border:1px solid var(--borda);background:#fff;border-radius:7px;padding:7px 9px;
@@ -162,22 +176,22 @@ main#lista{padding:4px 10px}
   opacity:0;pointer-events:none;transition:opacity .22s ease;
 }
 #fundoEscuro.aberto{opacity:1;pointer-events:auto}
-#sheet, #sheetConfig{
+#sheet, #sheetConfig, #sheetArv{
   position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--fundo);
   border-radius:16px 16px 0 0;box-shadow:0 -6px 22px rgba(0,0,0,.25);
   max-height:94vh;display:flex;flex-direction:column;
   transform:translateY(100%);transition:transform .28s cubic-bezier(.22,.68,.36,1);
 }
-#sheet.aberto, #sheetConfig.aberto{transform:translateY(0)}
-#sheet .puxador, #sheetConfig .puxador{width:42px;height:4px;background:#c8cfc9;border-radius:4px;margin:8px auto 2px}
-#sheet .topo, #sheetConfig .topo{
+#sheet.aberto, #sheetConfig.aberto, #sheetArv.aberto{transform:translateY(0)}
+#sheet .puxador, #sheetConfig .puxador, #sheetArv .puxador{width:42px;height:4px;background:#c8cfc9;border-radius:4px;margin:8px auto 2px}
+#sheet .topo, #sheetConfig .topo, #sheetArv .topo{
   display:flex;justify-content:space-between;align-items:center;
   padding:6px 14px 10px;border-bottom:1px solid var(--borda);
 }
-#sheet .topo h2, #sheetConfig .topo h2{margin:0;font-size:16px;color:var(--escuro)}
-#sheet .topo button, #sheetConfig .topo button{background:none;border:none;font-size:24px;color:var(--suave);font-family:inherit;padding:0 4px}
-#sheet .conteudo, #sheetConfig .conteudo{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 16px}
-#sheet .rodape, #sheetConfig .rodape{
+#sheet .topo h2, #sheetConfig .topo h2, #sheetArv .topo h2{margin:0;font-size:16px;color:var(--escuro)}
+#sheet .topo button, #sheetConfig .topo button, #sheetArv .topo button{background:none;border:none;font-size:24px;color:var(--suave);font-family:inherit;padding:0 4px}
+#sheet .conteudo, #sheetConfig .conteudo, #sheetArv .conteudo{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 16px}
+#sheet .rodape, #sheetConfig .rodape, #sheetArv .rodape{
   padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom));
   border-top:1px solid var(--borda);background:#fff;display:flex;gap:8px;
 }
@@ -229,8 +243,12 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
 <body>
 
 <header id="cab">
-  <div class="tit">Registro de Interferências</div>
-  <div class="sub">Hidrômetros e ligações de esgoto &mdash; Águas Guariroba (Campo Grande/MS)</div>
+  <div class="tit">Registro de Campo</div>
+  <div class="sub" id="subCab">Hidrômetros e ligações de esgoto &mdash; Águas Guariroba (Campo Grande/MS)</div>
+  <nav id="abas">
+    <button type="button" class="aba ativa" data-aba="esgoto">Esgoto <span class="qtd" id="qtdEsgoto"></span></button>
+    <button type="button" class="aba" data-aba="arvore">Árvores <span class="qtd" id="qtdArvore"></span></button>
+  </nav>
 </header>
 
 <div id="faixaStatus" class="faixa aviso"><span class="pt"></span><span id="txtStatus">Verificando o armazenamento do aparelho…</span></div>
@@ -347,6 +365,76 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
   </div>
 </section>
 
+<section id="sheetArv" aria-hidden="true">
+  <div class="puxador"></div>
+  <div class="topo">
+    <h2 id="tituloSheetArv">Nova árvore cortada</h2>
+    <button type="button" id="btFecharArv" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="conteudo">
+    <div id="erroFormArv" class="erroCaixa"></div>
+    <p style="margin:0 0 14px;font-size:12.5px;color:#6b7a86">
+      Toda árvore registrada aqui foi <b>cortada</b> por estar no caminho do asfalto
+      ou interferir na calçada.
+    </p>
+
+    <div class="secTit">Localização</div>
+    <div class="campo">
+      <label for="cRuaA">Rua <span class="obrig">*</span></label>
+      <input type="text" id="cRuaA" list="listaRuas" autocomplete="off" placeholder="Ex.: Rua das Palmeiras">
+    </div>
+    <div class="campo">
+      <label for="cNumeroA">Número / referência</label>
+      <input type="text" id="cNumeroA" autocomplete="off" placeholder="Opcional — nº do imóvel em frente, se houver">
+      <div class="ajuda">Se ficar vazio, o registro aparece como &ldquo;Sem referência&rdquo;.</div>
+    </div>
+    <div class="campo">
+      <label for="cDataA">Data</label>
+      <input type="date" id="cDataA">
+    </div>
+
+    <div class="secTit">Árvore</div>
+    <div class="campo">
+      <label>Foto da árvore antes do corte <span class="obrig">*</span></label>
+      <div class="fotoBox" id="boxArv">
+        <img class="prev" id="prevArv" alt="Pré-visualização da foto da árvore">
+        <label class="escolher" for="cFotoArv">Tirar foto ou escolher da galeria</label>
+        <input type="file" id="cFotoArv" accept="image/*">
+        <div class="estado" id="estArv">Nenhuma foto selecionada.</div>
+      </div>
+    </div>
+
+    <div class="secTit">Etiqueta</div>
+    <div class="campo">
+      <label>Foto da etiqueta na árvore <span class="obrig">*</span></label>
+      <div class="fotoBox" id="boxEtq">
+        <img class="prev" id="prevEtq" alt="Pré-visualização da foto da etiqueta">
+        <label class="escolher" for="cFotoEtq">Tirar foto ou escolher da galeria</label>
+        <input type="file" id="cFotoEtq" accept="image/*">
+        <div class="estado" id="estEtq">Nenhuma foto selecionada.</div>
+      </div>
+    </div>
+    <div class="campo">
+      <label for="cEtiqueta">Número da etiqueta</label>
+      <input type="text" id="cEtiqueta" autocomplete="off" placeholder="Ex.: 0123">
+    </div>
+
+    <div class="secTit">Observações</div>
+    <div class="campo">
+      <label for="cObsA">Observações</label>
+      <textarea id="cObsA" rows="3" placeholder="Opcional. Ex.: árvore sobre o alinhamento da nova calçada."></textarea>
+    </div>
+
+    <div class="campo" id="areaExcluirArv" style="display:none">
+      <button type="button" class="bt bt-perigo" id="btExcluirArv" style="width:100%">Excluir este registro</button>
+    </div>
+  </div>
+  <div class="rodape">
+    <button type="button" class="bt" id="btCancelarArv">Cancelar</button>
+    <button type="button" class="bt bt-prim" id="btSalvarArv">Salvar árvore</button>
+  </div>
+</section>
+
 <section id="sheetConfig" aria-hidden="true">
   <div class="puxador"></div>
   <div class="topo">
@@ -376,6 +464,12 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
     <div class="campo">
       <label for="cConcessionaria">Concessionária</label>
       <input type="text" id="cConcessionaria" autocomplete="off" placeholder="Águas Guariroba">
+    </div>
+
+    <div class="campo">
+      <label for="cDestArv">Destinatário do relatório de árvores</label>
+      <input type="text" id="cDestArv" autocomplete="off" placeholder="Opcional. Ex.: SEMADUR — Prefeitura Municipal de Campo Grande">
+      <div class="ajuda">Quem vai receber o relatório de árvores cortadas. Aparece na capa e no texto de apresentação.</div>
     </div>
 
     <div class="secTit">Empresa executora</div>
@@ -836,11 +930,19 @@ var COR_PDF = {'Mantido':[46,125,50],'A remanejar':[230,126,34],'Danificado':[19
 var LIMITE_FOTO = 900 * 1024;         // ~900 KB por foto
 var LIMITE_LOGO = 500 * 1024;         // ~500 KB para a logo
 var CHAVE_LS = 'aguasguariroba_registros_v1';
+var CHAVE_LS_ARV = 'aguasguariroba_arvores_v1';
 var CHAVE_LS_CFG = 'aguasguariroba_config_v1';
+
+// As duas coleções: ligações de esgoto/hidrômetros e árvores cortadas.
+var COLECOES = {
+  registros: { loja: 'registros', ls: CHAVE_LS },
+  arvores:   { loja: 'arvores',   ls: CHAVE_LS_ARV }
+};
 
 // Dados que identificam o relatório: capa, cabeçalho das páginas e assinatura.
 var CFG_PADRAO = {
   obra: '', contrato: '', municipio: 'Campo Grande/MS', concessionaria: 'Águas Guariroba',
+  destArv: '',
   empresa: '', cnpj: '', logo: '', logoTipo: 'PNG', logoDim: null,
   resp: '', crea: ''
 };
@@ -936,7 +1038,7 @@ var Armaz = {
   modo: 'nenhum',
   detalhe: '',
   db: null,
-  memoria: [],
+  memoria: {},
 
   abrirIDB: function(){
     return new Promise(function(res, rej){
@@ -948,11 +1050,12 @@ var Armaz = {
         if(!pronto) rej(new Error('tempo esgotado ao abrir o banco de dados'));
       }, 8000);
       var req;
-      try{ req = indexedDB.open('aguasguariroba_db', 1); }
+      try{ req = indexedDB.open('aguasguariroba_db', 2); }
       catch(e){ clearTimeout(t); rej(e); return; }
       req.onupgradeneeded = function(ev){
         var db = ev.target.result;
         if(!db.objectStoreNames.contains('registros')) db.createObjectStore('registros', {keyPath:'id'});
+        if(!db.objectStoreNames.contains('arvores')) db.createObjectStore('arvores', {keyPath:'id'});
         if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
       };
       req.onsuccess = function(){ pronto = true; clearTimeout(t); res(req.result); };
@@ -1015,24 +1118,26 @@ var Armaz = {
     });
   },
 
-  listar: function(){
-    var self = this;
+  listar: function(col){
+    var self = this, d = COLECOES[col || 'registros'];
     if(self.modo === 'indexeddb'){
-      return self.tx('registros','readonly', function(s){ return s.getAll(); })
+      return self.tx(d.loja,'readonly', function(s){ return s.getAll(); })
         .then(function(r){ return r || []; });
     }
     if(self.modo === 'localstorage'){
       return new Promise(function(res, rej){
-        try{ res(JSON.parse(localStorage.getItem(CHAVE_LS) || '[]') || []); }
+        try{ res(JSON.parse(localStorage.getItem(d.ls) || '[]') || []); }
         catch(e){ rej(new Error('backup local corrompido: ' + msgErro(e))); }
       });
     }
-    return Promise.resolve(self.memoria.slice());
+    self.memoria[d.loja] = self.memoria[d.loja] || [];
+    return Promise.resolve(self.memoria[d.loja].slice());
   },
 
-  gravarLS: function(lista){
+  gravarLS: function(col, lista){
+    var d = COLECOES[col || 'registros'];
     try{
-      localStorage.setItem(CHAVE_LS, JSON.stringify(lista));
+      localStorage.setItem(d.ls, JSON.stringify(lista));
     }catch(e){
       var nome = (e && e.name) || '';
       if(nome === 'QuotaExceededError' || nome === 'NS_ERROR_DOM_QUOTA_REACHED' || /quota/i.test(msgErro(e))){
@@ -1043,34 +1148,35 @@ var Armaz = {
     }
   },
 
-  salvar: function(reg){
-    var self = this;
+  salvar: function(col, reg){
+    var self = this, d = COLECOES[col || 'registros'];
     if(self.modo === 'indexeddb'){
-      return self.tx('registros','readwrite', function(s){ return s.put(reg); });
+      return self.tx(d.loja,'readwrite', function(s){ return s.put(reg); });
     }
     if(self.modo === 'localstorage'){
-      return self.listar().then(function(lista){
+      return self.listar(col).then(function(lista){
         var i = lista.findIndex(function(r){ return r.id === reg.id; });
         if(i >= 0) lista[i] = reg; else lista.push(reg);
-        self.gravarLS(lista);
+        self.gravarLS(col, lista);
       });
     }
-    var i = self.memoria.findIndex(function(r){ return r.id === reg.id; });
-    if(i >= 0) self.memoria[i] = reg; else self.memoria.push(reg);
+    self.memoria[d.loja] = self.memoria[d.loja] || [];
+    var i = self.memoria[d.loja].findIndex(function(r){ return r.id === reg.id; });
+    if(i >= 0) self.memoria[d.loja][i] = reg; else self.memoria[d.loja].push(reg);
     return Promise.resolve();
   },
 
-  remover: function(id){
-    var self = this;
+  remover: function(col, id){
+    var self = this, d = COLECOES[col || 'registros'];
     if(self.modo === 'indexeddb'){
-      return self.tx('registros','readwrite', function(s){ return s.delete(id); });
+      return self.tx(d.loja,'readwrite', function(s){ return s.delete(id); });
     }
     if(self.modo === 'localstorage'){
-      return self.listar().then(function(lista){
-        self.gravarLS(lista.filter(function(r){ return r.id !== id; }));
+      return self.listar(col).then(function(lista){
+        self.gravarLS(col, lista.filter(function(r){ return r.id !== id; }));
       });
     }
-    self.memoria = self.memoria.filter(function(r){ return r.id !== id; });
+    self.memoria[d.loja] = (self.memoria[d.loja] || []).filter(function(r){ return r.id !== id; });
     return Promise.resolve();
   },
 
@@ -1106,27 +1212,29 @@ var Armaz = {
     return Promise.resolve();
   },
 
-  salvarVarios: function(regs){
-    var self = this;
+  salvarVarios: function(col, regs){
+    var self = this, d = COLECOES[col || 'registros'];
+    if(!regs.length) return Promise.resolve();
     if(self.modo === 'indexeddb'){
-      return self.tx('registros','readwrite', function(s){
+      return self.tx(d.loja,'readwrite', function(s){
         var ult = null;
         for(var i=0;i<regs.length;i++) ult = s.put(regs[i]);
         return ult;
       });
     }
     if(self.modo === 'localstorage'){
-      return self.listar().then(function(lista){
+      return self.listar(col).then(function(lista){
         regs.forEach(function(reg){
           var i = lista.findIndex(function(r){ return r.id === reg.id; });
           if(i >= 0) lista[i] = reg; else lista.push(reg);
         });
-        self.gravarLS(lista);
+        self.gravarLS(col, lista);
       });
     }
+    self.memoria[d.loja] = self.memoria[d.loja] || [];
     regs.forEach(function(reg){
-      var i = self.memoria.findIndex(function(r){ return r.id === reg.id; });
-      if(i >= 0) self.memoria[i] = reg; else self.memoria.push(reg);
+      var i = self.memoria[d.loja].findIndex(function(r){ return r.id === reg.id; });
+      if(i >= 0) self.memoria[d.loja][i] = reg; else self.memoria[d.loja].push(reg);
     });
     return Promise.resolve();
   }
@@ -1134,17 +1242,23 @@ var Armaz = {
 
 /* ============================== ESTADO ============================== */
 var estado = {
-  registros: [],
+  aba: 'esgoto',                     // 'esgoto' | 'arvore'
+  registros: [],                     // ligações de esgoto / hidrômetros
+  arvores: [],                       // árvores cortadas
   config: JSON.parse(JSON.stringify(CFG_PADRAO)),
   logoPendente: null,
-  filtro: '',
+  filtro: '',                        // filtro de rua da aba esgoto
+  filtroArv: '',                     // filtro de rua da aba árvores
   editandoId: null,
-  fotos: { hid: null, esg: null },   // {dataUrl, w, h, bytes}
+  editandoArvId: null,
+  fotos: { hid: null, esg: null, arv: null, etq: null },   // {dataUrl, w, h, bytes}
   urlsTemp: []
 };
 
-function registrosOrdenados(){
-  return estado.registros.slice().sort(function(a,b){
+function itensDaAba(){ return estado.aba === 'arvore' ? estado.arvores : estado.registros; }
+
+function ordenarRegistros(lista){
+  return lista.slice().sort(function(a,b){
     var r = ordenaTexto(a.rua || '', b.rua || '');
     if(r !== 0) return r;
     var na = (a.numero||'').trim(), nb = (b.numero||'').trim();
@@ -1155,6 +1269,7 @@ function registrosOrdenados(){
     return String(a.criadoEm||'').localeCompare(String(b.criadoEm||''));
   });
 }
+function registrosOrdenados(){ return ordenarRegistros(estado.registros); }
 
 function agruparPorRua(lista){
   var mapa = {}, ordem = [];
@@ -1175,21 +1290,49 @@ function renderizarFaixaStatus(){
   t.textContent = 'Armazenamento: ' + rotulo + ' — ' + Armaz.detalhe;
 }
 
-function renderizarFiltro(grupos){
+function renderizarAbas(){
+  var arv = estado.aba === 'arvore';
+  document.body.setAttribute('data-aba', estado.aba);
+  $('qtdEsgoto').textContent = estado.registros.length ? '· ' + estado.registros.length : '';
+  $('qtdArvore').textContent = estado.arvores.length ? '· ' + estado.arvores.length : '';
+  var bts = document.querySelectorAll('#abas .aba');
+  for(var i=0;i<bts.length;i++){
+    bts[i].classList.toggle('ativa', bts[i].getAttribute('data-aba') === estado.aba);
+  }
+  $('subCab').innerHTML = arv
+    ? 'Árvores cortadas &mdash; registro fotográfico da supressão'
+    : 'Hidrômetros e ligações de esgoto &mdash; Águas Guariroba';
+  $('btPdf').textContent = arv ? 'Gerar PDF de árvores' : 'Gerar PDF de esgoto';
+  $('fab').setAttribute('aria-label', arv ? 'Cadastrar nova árvore cortada' : 'Cadastrar nova casa');
+}
+
+function renderizarFiltro(grupos, total){
   var sel = $('filtroRua');
-  var atual = estado.filtro;
-  var html = '<option value="">Todas as ruas (' + estado.registros.length + ' casas)</option>';
+  var arv = estado.aba === 'arvore';
+  var atual = arv ? estado.filtroArv : estado.filtro;
+  var html = '<option value="">Todas as ruas (' + total + (arv ? ' árvores)' : ' casas)') + '</option>';
   grupos.forEach(function(g){
     html += '<option value="' + esc(chaveRua(g.nome)) + '">' + esc(g.nome) + ' (' + g.itens.length + ')</option>';
   });
   sel.innerHTML = html;
   sel.value = atual;
-  if(sel.value !== atual){ estado.filtro = ''; sel.value = ''; }
+  if(sel.value !== atual){
+    if(arv) estado.filtroArv = ''; else estado.filtro = '';
+    sel.value = '';
+  }
 }
 
-function renderizarRuasDatalist(grupos){
-  $('listaRuas').innerHTML = grupos.map(function(g){
-    return '<option value="' + esc(g.nome) + '"></option>';
+function renderizarRuasDatalist(){
+  var vistas = {}, nomes = [];
+  estado.registros.concat(estado.arvores).forEach(function(r){
+    var n = String(r.rua||'').trim();
+    if(!n) return;
+    var k = chaveRua(n);
+    if(!vistas[k]){ vistas[k] = 1; nomes.push(n); }
+  });
+  nomes.sort(ordenaTexto);
+  $('listaRuas').innerHTML = nomes.map(function(n){
+    return '<option value="' + esc(n) + '"></option>';
   }).join('');
 }
 
@@ -1214,53 +1357,87 @@ function renderizarResumoObra(){
     (cfg.contrato ? ' &middot; ' + esc(cfg.contrato) : '') + '</div></div>';
 }
 
+function cardEsgoto(r){
+  var num = (r.numero||'').trim();
+  return '<div class="card">' +
+    '<img class="mini" src="' + esc(r.fotoHid || '') + '" alt="Foto do hidrômetro">' +
+    '<div class="corpo">' +
+      '<div class="l1">' + (num ? 'Casa nº ' + esc(num) : '<span class="semnum">Sem número</span>') + '</div>' +
+      '<div class="l2">Hidrômetro: ' + (String(r.numHid||'').trim() ? esc(r.numHid) : 'não informado') +
+        ' &middot; ' + esc(dataBR(r.data)) + '</div>' +
+      '<div class="badges">' + badge('Hidrômetro:', r.sitHid) + badge('Esgoto:', r.sitEsg) + '</div>' +
+    '</div>' +
+    '<div class="acoes">' +
+      '<button type="button" data-editar="' + esc(r.id) + '">Editar</button>' +
+      '<button type="button" class="ex" data-excluir="' + esc(r.id) + '">Excluir</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function cardArvore(r){
+  var etq = (r.etiqueta||'').trim();
+  var num = (r.numero||'').trim();
+  return '<div class="card">' +
+    '<img class="mini" src="' + esc(r.fotoArv || '') + '" alt="Foto da árvore">' +
+    '<div class="corpo">' +
+      '<div class="l1">' + (etq ? 'Etiqueta nº ' + esc(etq) : '<span class="semnum">Sem etiqueta</span>') + '</div>' +
+      '<div class="l2">' + (num ? 'Referência: nº ' + esc(num) + ' &middot; ' : '') + esc(dataBR(r.data)) + '</div>' +
+      '<div class="badges"><span class="badge b-cortada">Árvore cortada</span></div>' +
+    '</div>' +
+    '<div class="acoes">' +
+      '<button type="button" data-editar-arv="' + esc(r.id) + '">Editar</button>' +
+      '<button type="button" class="ex" data-excluir-arv="' + esc(r.id) + '">Excluir</button>' +
+    '</div>' +
+  '</div>';
+}
+
 function renderizar(){
   try{
     renderizarResumoObra();
-    var todos = registrosOrdenados();
+    renderizarAbas();
+
+    var arv = estado.aba === 'arvore';
+    var todos = ordenarRegistros(itensDaAba());
     var gruposTodos = agruparPorRua(todos);
-    renderizarFiltro(gruposTodos);
-    renderizarRuasDatalist(gruposTodos);
+    renderizarFiltro(gruposTodos, todos.length);
+    renderizarRuasDatalist();
 
-    var totalEsg = todos.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
-    $('resumoTopo').textContent = todos.length + ' casa(s) em ' + gruposTodos.length +
-      ' rua(s) — ' + totalEsg + ' ligação(ões) de esgoto a modificar.';
+    if(arv){
+      $('resumoTopo').textContent = todos.length + ' árvore(s) cortada(s) em ' + gruposTodos.length + ' rua(s).';
+    }else{
+      var totalEsg = todos.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
+      $('resumoTopo').textContent = todos.length + ' casa(s) em ' + gruposTodos.length +
+        ' rua(s) — ' + totalEsg + ' ligação(ões) de esgoto a modificar.';
+    }
 
-    var grupos = estado.filtro ? gruposTodos.filter(function(g){ return chaveRua(g.nome) === estado.filtro; }) : gruposTodos;
+    var filtro = arv ? estado.filtroArv : estado.filtro;
+    var grupos = filtro ? gruposTodos.filter(function(g){ return chaveRua(g.nome) === filtro; }) : gruposTodos;
     var cx = $('lista');
 
     if(!todos.length){
-      cx.innerHTML = '<div class="vazio">Nenhuma casa cadastrada ainda.<br>Toque no botão <b>+</b> para registrar a primeira.</div>';
+      cx.innerHTML = '<div class="vazio">' +
+        (arv ? 'Nenhuma árvore cadastrada ainda.<br>Toque no botão <b>+</b> para registrar a primeira árvore cortada.'
+             : 'Nenhuma casa cadastrada ainda.<br>Toque no botão <b>+</b> para registrar a primeira.') +
+        '</div>';
       return;
     }
     if(!grupos.length){
-      cx.innerHTML = '<div class="vazio">Nenhuma casa nesta rua.</div>';
+      cx.innerHTML = '<div class="vazio">Nenhum registro nesta rua.</div>';
       return;
     }
 
     var html = '';
     grupos.forEach(function(g){
-      var nEsg = g.itens.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
       html += '<div class="grupoRua">';
       html += '<div class="tituloRua"><span class="nome">' + esc(g.nome) + '</span>' +
-              '<span class="cont">' + g.itens.length + ' casa(s)</span></div>';
-      html += '<div class="subRua">Ligações de esgoto a modificar nesta rua: <b>' + nEsg + '</b></div>';
-      g.itens.forEach(function(r){
-        var num = (r.numero||'').trim();
-        html += '<div class="card">' +
-          '<img class="mini" src="' + esc(r.fotoHid || '') + '" alt="Foto do hidrômetro">' +
-          '<div class="corpo">' +
-            '<div class="l1">' + (num ? 'Casa nº ' + esc(num) : '<span class="semnum">Sem número</span>') + '</div>' +
-            '<div class="l2">Hidrômetro: ' + (String(r.numHid||'').trim() ? esc(r.numHid) : 'não informado') +
-              ' &middot; ' + esc(dataBR(r.data)) + '</div>' +
-            '<div class="badges">' + badge('Hidrômetro:', r.sitHid) + badge('Esgoto:', r.sitEsg) + '</div>' +
-          '</div>' +
-          '<div class="acoes">' +
-            '<button type="button" data-editar="' + esc(r.id) + '">Editar</button>' +
-            '<button type="button" class="ex" data-excluir="' + esc(r.id) + '">Excluir</button>' +
-          '</div>' +
-        '</div>';
-      });
+              '<span class="cont">' + g.itens.length + (arv ? ' árvore(s)' : ' casa(s)') + '</span></div>';
+      if(arv){
+        html += '<div class="subRua">Árvores cortadas nesta rua: <b>' + g.itens.length + '</b></div>';
+      }else{
+        var nEsg = g.itens.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
+        html += '<div class="subRua">Ligações de esgoto a modificar nesta rua: <b>' + nEsg + '</b></div>';
+      }
+      g.itens.forEach(function(r){ html += arv ? cardArvore(r) : cardEsgoto(r); });
       html += '</div>';
     });
     cx.innerHTML = html;
@@ -1269,9 +1446,19 @@ function renderizar(){
   }
 }
 
+function trocarAba(aba){
+  if(aba !== 'esgoto' && aba !== 'arvore') return;
+  estado.aba = aba;
+  limparMsgs();
+  $('areaDownloads').innerHTML = '';
+  renderizar();
+  try{ window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0,0); }
+}
+
 function recarregar(){
-  return Armaz.listar().then(function(lista){
-    estado.registros = Array.isArray(lista) ? lista : [];
+  return Promise.all([Armaz.listar('registros'), Armaz.listar('arvores')]).then(function(r){
+    estado.registros = Array.isArray(r[0]) ? r[0] : [];
+    estado.arvores = Array.isArray(r[1]) ? r[1] : [];
     renderizar();
   }).catch(function(e){
     mostrarMsg('Não foi possível ler os registros salvos: ' + msgErro(e), 'erro', true);
@@ -1424,20 +1611,33 @@ function medirImagem(dataUrl){
 }
 
 /* ========================= FORMULÁRIO (bottom sheet) ================= */
+function mostrarErroFormArv(txt){
+  var e = $('erroFormArv');
+  if(txt){ e.textContent = txt; e.classList.add('ver'); try{ e.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(x){} }
+  else { e.textContent = ''; e.classList.remove('ver'); }
+}
+
 function mostrarErroForm(txt){
   var e = $('erroForm');
   if(txt){ e.textContent = txt; e.classList.add('ver'); try{ e.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(x){} }
   else { e.textContent = ''; e.classList.remove('ver'); }
 }
 
+var IDS_FOTO = {
+  hid: { est:'estHid', prev:'prevHid', box:'boxHid', botao:'btSalvar' },
+  esg: { est:'estEsg', prev:'prevEsg', box:'boxEsg', botao:'btSalvar' },
+  arv: { est:'estArv', prev:'prevArv', box:'boxArv', botao:'btSalvarArv' },
+  etq: { est:'estEtq', prev:'prevEtq', box:'boxEtq', botao:'btSalvarArv' }
+};
+
 function pintarEstadoFoto(qual, texto, classe){
-  var el = $(qual === 'hid' ? 'estHid' : 'estEsg');
+  var el = $(IDS_FOTO[qual].est);
   el.className = 'estado' + (classe ? ' ' + classe : '');
   el.textContent = texto;
 }
 
 function pintarPreview(qual, dataUrl){
-  var img = $(qual === 'hid' ? 'prevHid' : 'prevEsg');
+  var img = $(IDS_FOTO[qual].prev);
   if(dataUrl){ img.src = dataUrl; img.classList.add('ver'); }
   else { img.removeAttribute('src'); img.classList.remove('ver'); }
 }
@@ -1511,6 +1711,146 @@ function fecharSheet(){
   }catch(e){}
 }
 
+/* ---------------------- folha de cadastro de árvore ------------------- */
+function limparFormularioArv(){
+  $('cRuaA').value = '';
+  $('cNumeroA').value = '';
+  $('cDataA').value = hojeISO();
+  $('cEtiqueta').value = '';
+  $('cObsA').value = '';
+  estado.fotos.arv = null;
+  estado.fotos.etq = null;
+  pintarPreview('arv', null); pintarPreview('etq', null);
+  pintarEstadoFoto('arv', 'Nenhuma foto selecionada.', '');
+  pintarEstadoFoto('etq', 'Nenhuma foto selecionada.', '');
+  $('boxArv').classList.remove('faltando');
+  $('boxEtq').classList.remove('faltando');
+  mostrarErroFormArv('');
+}
+
+function abrirSheetArv(reg){
+  try{
+    limparFormularioArv();
+    estado.editandoArvId = reg ? reg.id : null;
+    $('tituloSheetArv').textContent = reg ? 'Editar árvore cortada' : 'Nova árvore cortada';
+    $('btSalvarArv').textContent = reg ? 'Salvar alterações' : 'Salvar árvore';
+    $('areaExcluirArv').style.display = reg ? 'block' : 'none';
+
+    if(reg){
+      $('cRuaA').value = reg.rua || '';
+      $('cNumeroA').value = reg.numero || '';
+      $('cDataA').value = reg.data || hojeISO();
+      $('cEtiqueta').value = reg.etiqueta || '';
+      $('cObsA').value = reg.obs || '';
+      if(reg.fotoArv){
+        estado.fotos.arv = { dataUrl: reg.fotoArv, w: (reg.dimArv||{}).w, h: (reg.dimArv||{}).h, bytes: tamanhoDataUrl(reg.fotoArv) };
+        pintarPreview('arv', reg.fotoArv);
+        pintarEstadoFoto('arv', 'Foto já cadastrada (' + kb(estado.fotos.arv.bytes) + '). Escolha outra para substituir.', 'pronta');
+      }
+      if(reg.fotoEtq){
+        estado.fotos.etq = { dataUrl: reg.fotoEtq, w: (reg.dimEtq||{}).w, h: (reg.dimEtq||{}).h, bytes: tamanhoDataUrl(reg.fotoEtq) };
+        pintarPreview('etq', reg.fotoEtq);
+        pintarEstadoFoto('etq', 'Foto já cadastrada (' + kb(estado.fotos.etq.bytes) + '). Escolha outra para substituir.', 'pronta');
+      }
+    }else if(estado.ultimaRuaArv){
+      $('cRuaA').value = estado.ultimaRuaArv;
+    }
+
+    $('sheetArv').classList.add('aberto');
+    $('sheetArv').setAttribute('aria-hidden','false');
+    $('fundoEscuro').classList.add('aberto');
+    document.body.style.overflow = 'hidden';
+  }catch(e){
+    mostrarMsg('Não foi possível abrir o formulário de árvore: ' + msgErro(e), 'erro', true);
+  }
+}
+
+function fecharSheetArv(){
+  try{
+    $('sheetArv').classList.remove('aberto');
+    $('sheetArv').setAttribute('aria-hidden','true');
+    $('fundoEscuro').classList.remove('aberto');
+    document.body.style.overflow = '';
+    estado.editandoArvId = null;
+  }catch(e){}
+}
+
+function salvarArvore(){
+  try{
+    mostrarErroFormArv('');
+    var rua = $('cRuaA').value.trim();
+    var faltas = [];
+    if(!rua) faltas.push('informe a rua');
+    if(!estado.fotos.arv || !estado.fotos.arv.dataUrl) faltas.push('falta a FOTO DA ÁRVORE');
+    if(!estado.fotos.etq || !estado.fotos.etq.dataUrl) faltas.push('falta a FOTO DA ETIQUETA');
+
+    $('boxArv').classList.toggle('faltando', !(estado.fotos.arv && estado.fotos.arv.dataUrl));
+    $('boxEtq').classList.toggle('faltando', !(estado.fotos.etq && estado.fotos.etq.dataUrl));
+
+    if(faltas.length){
+      mostrarErroFormArv('Não foi possível salvar: ' + faltas.join('; ') + '.');
+      return;
+    }
+
+    var antigo = null;
+    if(estado.editandoArvId){
+      antigo = estado.arvores.filter(function(r){ return r.id === estado.editandoArvId; })[0] || null;
+    }
+    var agora = new Date().toISOString();
+    var reg = {
+      id: estado.editandoArvId || novoId(),
+      rua: rua,
+      numero: $('cNumeroA').value.trim(),
+      data: $('cDataA').value || hojeISO(),
+      fotoArv: estado.fotos.arv.dataUrl,
+      dimArv: { w: estado.fotos.arv.w || null, h: estado.fotos.arv.h || null },
+      fotoEtq: estado.fotos.etq.dataUrl,
+      dimEtq: { w: estado.fotos.etq.w || null, h: estado.fotos.etq.h || null },
+      etiqueta: $('cEtiqueta').value.trim(),
+      obs: $('cObsA').value.trim(),
+      criadoEm: (antigo && antigo.criadoEm) || agora,
+      atualizadoEm: agora
+    };
+
+    $('btSalvarArv').disabled = true;
+    var edicao = !!estado.editandoArvId;
+    Armaz.salvar('arvores', reg).then(function(){
+      estado.ultimaRuaArv = rua;
+      fecharSheetArv();
+      return recarregar();
+    }).then(function(){
+      if(!estado.arvores.some(function(r){ return r.id === reg.id; })){
+        throw new Error('o registro não apareceu na lista após a gravação');
+      }
+      mostrarMsg((edicao ? 'Árvore atualizada' : 'Árvore registrada') + ': ' + rua +
+                 (reg.etiqueta ? ', etiqueta nº ' + reg.etiqueta : ' (sem etiqueta)') + '.', 'sucesso');
+    }).catch(function(e){
+      mostrarErroFormArv('ERRO AO SALVAR: ' + msgErro(e));
+      mostrarMsg('Erro ao salvar a árvore: ' + msgErro(e) + ' Nada foi gravado.', 'erro', true);
+    }).then(function(){
+      $('btSalvarArv').disabled = false;
+    });
+  }catch(e){
+    $('btSalvarArv').disabled = false;
+    mostrarErroFormArv('ERRO AO SALVAR: ' + msgErro(e));
+  }
+}
+
+function excluirArvore(id){
+  var reg = estado.arvores.filter(function(r){ return r.id === id; })[0];
+  if(!reg){ mostrarMsg('Registro não encontrado para exclusão.', 'erro', true); return; }
+  var rot = reg.rua + (reg.etiqueta ? ', etiqueta nº ' + reg.etiqueta : ' (sem etiqueta)');
+  if(!confirm('Excluir definitivamente o registro da árvore em ' + rot + '?\n\nEsta ação não pode ser desfeita.')) return;
+  Armaz.remover('arvores', id).then(function(){
+    if(estado.editandoArvId === id) fecharSheetArv();
+    return recarregar();
+  }).then(function(){
+    mostrarMsg('Árvore excluída: ' + rot + '.', 'sucesso');
+  }).catch(function(e){
+    mostrarMsg('Não foi possível excluir o registro: ' + msgErro(e), 'erro', true);
+  });
+}
+
 /* ------------------- folha de dados da obra/empresa ------------------ */
 function mostrarErroCfg(txt){
   var e = $('erroCfg');
@@ -1536,6 +1876,7 @@ function abrirConfig(aviso){
     $('cContrato').value = c.contrato || '';
     $('cMunicipio').value = c.municipio || CFG_PADRAO.municipio;
     $('cConcessionaria').value = c.concessionaria || CFG_PADRAO.concessionaria;
+    $('cDestArv').value = c.destArv || '';
     $('cEmpresa').value = c.empresa || '';
     $('cCnpj').value = c.cnpj || '';
     $('cResp').value = c.resp || '';
@@ -1593,6 +1934,7 @@ function salvarConfig(){
       contrato: $('cContrato').value.trim(),
       municipio: $('cMunicipio').value.trim() || CFG_PADRAO.municipio,
       concessionaria: $('cConcessionaria').value.trim() || CFG_PADRAO.concessionaria,
+      destArv: $('cDestArv').value.trim(),
       empresa: empresa,
       cnpj: $('cCnpj').value.trim(),
       logo: estado.logoPendente ? estado.logoPendente.dataUrl : '',
@@ -1622,21 +1964,21 @@ function tratarEscolhaFoto(qual, input){
   var arq = input.files && input.files[0];
   input.value = '';                       // permite reescolher o mesmo arquivo
   if(!arq){ return; }
-  var box = $(qual === 'hid' ? 'boxHid' : 'boxEsg');
-  box.classList.remove('faltando');
+  var ids = IDS_FOTO[qual];
+  $(ids.box).classList.remove('faltando');
   pintarEstadoFoto(qual, 'Processando foto…', 'proc');
-  $('btSalvar').disabled = true;
+  $(ids.botao).disabled = true;
   comprimirFoto(arq, function(passo){
     pintarEstadoFoto(qual, 'Processando foto… (' + passo + ')', 'proc');
   }).then(function(r){
     estado.fotos[qual] = r;
     pintarPreview(qual, r.dataUrl);
     pintarEstadoFoto(qual, 'Foto pronta — ' + r.w + '×' + r.h + ' px, ' + kb(r.bytes) + '.', 'pronta');
-    mostrarErroForm('');
+    if(qual === 'arv' || qual === 'etq') mostrarErroFormArv(''); else mostrarErroForm('');
   }).catch(function(e){
     pintarEstadoFoto(qual, 'Falha ao processar a foto: ' + msgErro(e) + ' Tente novamente ou escolha outra imagem.', 'falhou');
   }).then(function(){
-    $('btSalvar').disabled = false;
+    $(ids.botao).disabled = false;
   });
 }
 
@@ -1681,7 +2023,7 @@ function salvarCasa(){
 
     $('btSalvar').disabled = true;
     var edicao = !!estado.editandoId;
-    Armaz.salvar(reg).then(function(){
+    Armaz.salvar('registros', reg).then(function(){
       estado.ultimaRua = rua;
       fecharSheet();
       return recarregar();
@@ -1707,7 +2049,7 @@ function excluirRegistro(id){
   if(!reg){ mostrarMsg('Registro não encontrado para exclusão.', 'erro', true); return; }
   var rot = reg.rua + (reg.numero ? ', nº ' + reg.numero : ' (sem número)');
   if(!confirm('Excluir definitivamente o registro de ' + rot + '?\n\nEsta ação não pode ser desfeita.')) return;
-  Armaz.remover(id).then(function(){
+  Armaz.remover('registros', id).then(function(){
     if(estado.editandoId === id) fecharSheet();
     return recarregar();
   }).then(function(){
@@ -1746,29 +2088,128 @@ function publicarArquivo(nome, blob, dica){
 }
 
 /* ============================ GERAÇÃO DO PDF =========================
-   Documento técnico: capa de identificação, apresentação, classificação,
-   registro fotográfico por rua, resumo geral e assinatura.
+   Um único montador, parametrizado por perfil: o relatório de esgoto sai
+   em azul-petróleo e o de árvores em verde escuro, com a mesma estrutura.
    ===================================================================== */
-var C_ESCURO = [44,62,80], C_AZUL = [47,111,143], C_CINZA = [110,120,128],
+var C_ESCURO = [44,62,80], C_CINZA = [110,120,128],
     C_LINHA = [219,224,220], C_SUAVE = [238,243,240], C_TEXTO = [45,55,64];
 
-function textoApresentacao(cfg){
-  return 'Este documento apresenta o registro fotográfico dos hidrômetros e das ligações de esgoto ' +
-    'identificados nas ruas contempladas pela obra "' + cfg.obra + '", executada por ' + cfg.empresa +
-    ', no município de ' + cfg.municipio + '. O levantamento indica, casa a casa, quais dispositivos ' +
-    'serão mantidos, quais deverão ser remanejados e quais se encontram danificados, com a finalidade ' +
-    'de subsidiar a comunicação técnica com a concessionária ' + cfg.concessionaria + ', responsável ' +
-    'pelos serviços de abastecimento de água e esgotamento sanitário, e de permitir o planejamento ' +
-    'conjunto das interferências necessárias à execução do pavimento asfáltico. As fotografias foram ' +
-    'obtidas em campo, uma a uma, nas datas indicadas em cada registro.';
-}
+var PERFIL_ESGOTO = {
+  chave: 'esgoto',
+  cor: [47,111,143],
+  titulo: 'RELATÓRIO DE INTERFERÊNCIAS',
+  sub1: 'Registro fotográfico de hidrômetros e ligações de esgoto',
+  sub2: 'Obra de pavimentação asfáltica',
+  arquivo: 'relatorio-interferencias-',
+  semDados: 'Não há nada para gerar: nenhuma casa cadastrada na aba Esgoto.',
+  lista: function(){ return registrosOrdenados(); },
+  identExtra: function(cfg){ return [['CONCESSIONÁRIA', cfg.concessionaria]]; },
+  rodape: function(cfg){ return 'Relatório de interferências — ' + cfg.concessionaria; },
+  apresentacao: function(cfg){
+    return 'Este documento apresenta o registro fotográfico dos hidrômetros e das ligações de esgoto ' +
+      'identificados nas ruas contempladas pela obra "' + cfg.obra + '", executada por ' + cfg.empresa +
+      ', no município de ' + cfg.municipio + '. O levantamento indica, casa a casa, quais dispositivos ' +
+      'serão mantidos, quais deverão ser remanejados e quais se encontram danificados, com a finalidade ' +
+      'de subsidiar a comunicação técnica com a concessionária ' + cfg.concessionaria + ', responsável ' +
+      'pelos serviços de abastecimento de água e esgotamento sanitário, e de permitir o planejamento ' +
+      'conjunto das interferências necessárias à execução do pavimento asfáltico. As fotografias foram ' +
+      'obtidas em campo, uma a uma, nas datas indicadas em cada registro.';
+  },
+  classificacao: true,
+  criterio:
+    'Os quantitativos deste relatório consideram exclusivamente as ligações de esgoto classificadas como ' +
+    '"A remanejar" ou "Danificado", por serem as que demandam intervenção da concessionária antes ou ' +
+    'durante a execução do pavimento. As ligações classificadas como "Mantido" e "Já remanejado" constam ' +
+    'do registro fotográfico para fins de comprovação do estado encontrado em campo, mas não são somadas ' +
+    'aos totais por rua nem ao total geral.',
+  conta: function(r){ return contaEsgoto(r.sitEsg); },
+  quantitativos: function(grupos, todos, total){
+    return [[String(grupos.length), 'RUAS LEVANTADAS'],
+            [String(todos.length), 'CASAS REGISTRADAS'],
+            [String(total), 'LIGAÇÕES A MODIFICAR']];
+  },
+  totalRua: function(n){ return 'Total de ligações de esgoto a serem modificadas nesta rua: ' + n; },
+  itensRua: function(n){ return 'Casas registradas: ' + n; },
+  tituloItem: function(r){
+    var num = (r.numero || '').trim(), nh = (r.numHid || '').trim();
+    return (num ? 'Casa nº ' + num : 'Casa sem número') + '  |  Hidrômetro nº ' + (nh || 'não informado');
+  },
+  legendas: ['HIDRÔMETRO', 'ESGOTO'],
+  fotos: function(r){ return [[r.fotoHid, r.dimHid], [r.fotoEsg, r.dimEsg]]; },
+  infos: function(r){
+    return [{ rot:'Hidrômetro', val:r.sitHid, cor:COR_PDF[r.sitHid] },
+            { rot:'Esgoto', val:r.sitEsg, cor:COR_PDF[r.sitEsg] }];
+  },
+  resumoNota: 'Ligações de esgoto a modificar por rua (situação "A remanejar" ou "Danificado").',
+  colunasResumo: [
+    { tit:'CASAS', val: function(g){ return g.itens.length; } },
+    { tit:'A MODIFICAR', val: function(g, perfil){ return g.itens.filter(perfil.conta).length; }, forte:true }
+  ],
+  totalGeralRot: 'TOTAL GERAL DE LIGAÇÕES DE ESGOTO A MODIFICAR:',
+  quadroSituacoes: true,
+  fecho: function(todos, grupos){
+    return 'Documento gerado a partir do levantamento de campo, contendo ' + todos.length +
+           ' registro(s) fotográfico(s) distribuído(s) em ' + grupos.length + ' rua(s).';
+  }
+};
 
-var TXT_CRITERIO =
-  'Os quantitativos deste relatório consideram exclusivamente as ligações de esgoto classificadas como ' +
-  '"A remanejar" ou "Danificado", por serem as que demandam intervenção da concessionária antes ou ' +
-  'durante a execução do pavimento. As ligações classificadas como "Mantido" e "Já remanejado" constam ' +
-  'do registro fotográfico para fins de comprovação do estado encontrado em campo, mas não são somadas ' +
-  'aos totais por rua nem ao total geral.';
+var PERFIL_ARVORE = {
+  chave: 'arvore',
+  cor: [45,106,74],
+  titulo: 'RELATÓRIO DE SUPRESSÃO DE ÁRVORES',
+  sub1: 'Registro fotográfico das árvores cortadas',
+  sub2: 'Obra de pavimentação asfáltica',
+  arquivo: 'relatorio-arvores-',
+  semDados: 'Não há nada para gerar: nenhuma árvore cadastrada na aba Árvores.',
+  lista: function(){ return ordenarRegistros(estado.arvores); },
+  identExtra: function(cfg){ return cfg.destArv ? [['DESTINATÁRIO', cfg.destArv]] : []; },
+  rodape: function(cfg){ return 'Relatório de supressão de árvores — ' + (cfg.destArv || cfg.empresa); },
+  apresentacao: function(cfg){
+    return 'Este documento apresenta o registro fotográfico das árvores suprimidas em razão da obra "' +
+      cfg.obra + '", executada por ' + cfg.empresa + ', no município de ' + cfg.municipio + '. ' +
+      'Todas as árvores relacionadas neste relatório foram cortadas por estarem situadas no traçado do ' +
+      'pavimento asfáltico ou por interferirem na execução da calçada. Cada árvore foi fotografada antes ' +
+      'do corte e identificada por etiqueta numerada, também fotografada, de modo a permitir a conferência ' +
+      'individual de cada supressão' +
+      (cfg.destArv ? ' por ' + cfg.destArv : '') + '. As fotografias foram obtidas em campo, uma a uma, ' +
+      'nas datas indicadas em cada registro.';
+  },
+  classificacao: false,
+  criterio:
+    'Cada registro deste relatório corresponde a uma árvore efetivamente cortada, identificada pela ' +
+    'etiqueta afixada no tronco antes da supressão. Os totais por rua e o total geral correspondem à ' +
+    'contagem direta desses registros, não havendo neste documento árvores mantidas ou apenas podadas.',
+  conta: function(){ return true; },
+  quantitativos: function(grupos, todos){
+    return [[String(grupos.length), 'RUAS ATENDIDAS'],
+            [String(todos.length), 'ÁRVORES CORTADAS']];
+  },
+  totalRua: function(n){ return 'Total de árvores cortadas nesta rua: ' + n; },
+  itensRua: null,
+  tituloItem: function(r){
+    var etq = (r.etiqueta || '').trim(), num = (r.numero || '').trim();
+    return (etq ? 'Etiqueta nº ' + etq : 'Árvore sem etiqueta') +
+           (num ? '  |  Referência: nº ' + num : '  |  Sem referência de número');
+  },
+  legendas: ['ÁRVORE ANTES DO CORTE', 'ETIQUETA DE IDENTIFICAÇÃO'],
+  fotos: function(r){ return [[r.fotoArv, r.dimArv], [r.fotoEtq, r.dimEtq]]; },
+  infos: function(r){
+    return [{ rot:'Situação', val:'Árvore cortada', cor:[45,106,74] },
+            { rot:'Motivo', val:'Interferência com o pavimento/calçada', cor:[80,90,98] }];
+  },
+  resumoNota: 'Árvores cortadas por rua.',
+  colunasResumo: [
+    { tit:'ÁRVORES CORTADAS', val: function(g){ return g.itens.length; }, forte:true }
+  ],
+  totalGeralRot: 'TOTAL GERAL DE ÁRVORES CORTADAS:',
+  quadroSituacoes: false,
+  fecho: function(todos, grupos){
+    return 'Documento gerado a partir do levantamento de campo, contendo ' + todos.length +
+           ' árvore(s) cortada(s) distribuída(s) em ' + grupos.length + ' rua(s).';
+  }
+};
+
+function perfilAtual(){ return estado.aba === 'arvore' ? PERFIL_ARVORE : PERFIL_ESGOTO; }
 
 function gerarPDF(){
   limparMsgs();
@@ -1777,8 +2218,10 @@ function gerarPDF(){
     mostrarMsg('Falha ao gerar o PDF: a biblioteca jsPDF não foi carregada neste arquivo.', 'erro', true);
     return;
   }
-  if(!estado.registros.length){
-    mostrarMsg('Não há nada para gerar: nenhuma casa cadastrada.', 'erro', true);
+  var perfil = perfilAtual();
+  var todos = perfil.lista();
+  if(!todos.length){
+    mostrarMsg(perfil.semDados, 'erro', true);
     return;
   }
   var cfg = estado.config;
@@ -1792,25 +2235,34 @@ function gerarPDF(){
   processando(true, 'Gerando o PDF…', 'Preparando as fotos.');
   $('btPdf').disabled = true;
 
-  var todos = registrosOrdenados();
   var grupos = agruparPorRua(todos);
 
   // garante que todas as fotos tenham dimensões conhecidas (proporção correta)
   var pendentes = [];
   todos.forEach(function(r){
-    if(!r.dimHid || !r.dimHid.w) pendentes.push(medirImagem(r.fotoHid).then(function(d){ r.dimHid = d; }));
-    if(!r.dimEsg || !r.dimEsg.w) pendentes.push(medirImagem(r.fotoEsg).then(function(d){ r.dimEsg = d; }));
+    var f = perfil.fotos(r);
+    if(!f[0][1] || !f[0][1].w){
+      pendentes.push(medirImagem(f[0][0]).then(function(d){
+        if(perfil.chave === 'arvore') r.dimArv = d; else r.dimHid = d;
+      }));
+    }
+    if(!f[1][1] || !f[1][1].w){
+      pendentes.push(medirImagem(f[1][0]).then(function(d){
+        if(perfil.chave === 'arvore') r.dimEtq = d; else r.dimEsg = d;
+      }));
+    }
   });
   if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)){
     pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
   }
 
   Promise.all(pendentes).then(function(){
-    return montarPDF(Ctor, grupos, todos);
+    return montarPDF(Ctor, grupos, todos, perfil);
   }).then(function(res){
     processando(false);
     var auto = publicarArquivo(res.nome, res.blob,
-      'PDF com ' + res.paginas + ' página(s), ' + todos.length + ' casa(s) e ' + grupos.length + ' rua(s). ' +
+      'PDF com ' + res.paginas + ' página(s), ' + todos.length +
+      (perfil.chave === 'arvore' ? ' árvore(s) ' : ' casa(s) ') + 'e ' + grupos.length + ' rua(s). ' +
       'Se o download automático não abrir, use os botões abaixo.');
     var extra = '';
     if(res.fotosComFalha) extra += ' Atenção: ' + res.fotosComFalha + ' foto(s) não puderam ser desenhadas e aparecem como moldura vazia.';
@@ -1825,10 +2277,11 @@ function gerarPDF(){
   });
 }
 
-function montarPDF(Ctor, grupos, todos){
+function montarPDF(Ctor, grupos, todos, perfil){
   // compress: a logo em PNG entra sem filtro próprio; sem isso o arquivo incha.
   var doc = new Ctor({ orientation:'portrait', unit:'mm', format:'a4', compress:true });
   var cfg = estado.config;
+  var COR = perfil.cor;
 
   var M = 14, LARG = 210, ALT = 297, UTIL = LARG - 2*M;
   var TOPO = 22, LIM = 276;           // área útil entre cabeçalho e rodapé
@@ -1836,7 +2289,7 @@ function montarPDF(Ctor, grupos, todos){
   var H_MOLD = 52;                    // altura da moldura da foto
   var y = TOPO;
   var fotosComFalha = 0, logoFalhou = false;
-  var totalGeral = todos.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
+  var totalGeral = todos.filter(perfil.conta).length;
 
   function setT(c){ doc.setTextColor(c[0],c[1],c[2]); }
   function setF(c){ doc.setFillColor(c[0],c[1],c[2]); }
@@ -1863,7 +2316,7 @@ function montarPDF(Ctor, grupos, todos){
     if(!cabe(18)) novaPag();
     fonte('bold', 11.5, C_ESCURO);
     txt(n + '.  ' + titulo, M, y + 5);
-    setD(C_AZUL); doc.setLineWidth(0.6);
+    setD(COR); doc.setLineWidth(0.6);
     doc.line(M, y + 7.4, M + UTIL, y + 7.4);
     doc.setLineWidth(0.2);
     y += 12.5;
@@ -1884,17 +2337,16 @@ function montarPDF(Ctor, grupos, todos){
     catch(e){ logoFalhou = true; return null; }
   }
 
-  function chip(sit, x, yy, larg){
-    var c = COR_PDF[sit] || C_CINZA;
-    setF(c);
+  function chip(rotulo, corChip, x, yy, larg){
+    setF(corChip || C_CINZA);
     doc.roundedRect(x, yy, larg, 5.6, 1.3, 1.3, 'F');
     fonte('bold', 7.3, [255,255,255]);
-    txt(String(sit).toLocaleUpperCase('pt-BR'), x + larg/2, yy + 3.85, {align:'center'});
+    txt(String(rotulo).toLocaleUpperCase('pt-BR'), x + larg/2, yy + 3.85, {align:'center'});
   }
 
   /* ------------------------------- CAPA ------------------------------ */
   function capa(){
-    setF(C_AZUL); doc.rect(0, 0, LARG, 6, 'F');
+    setF(COR); doc.rect(0, 0, LARG, 6, 'F');
     setF(C_ESCURO); doc.rect(0, 6, LARG, 1.4, 'F');
 
     var yy = 26;
@@ -1909,12 +2361,16 @@ function montarPDF(Ctor, grupos, todos){
     setD(C_LINHA); doc.line(M + 34, yy, LARG - M - 34, yy);
     yy += 19;
 
-    fonte('bold', 21, C_AZUL); txtC('RELATÓRIO DE INTERFERÊNCIAS', yy); yy += 9;
+    fonte('bold', 20, COR);
+    var tit = doc.splitTextToSize(perfil.titulo, UTIL - 10);
+    for(var i=0;i<tit.length;i++){ txtC(tit[i], yy); yy += 9; }
     fonte('normal', 11.5, [80,90,98]);
-    txtC('Registro fotográfico de hidrômetros e ligações de esgoto', yy); yy += 6;
-    txtC('Obra de pavimentação asfáltica', yy); yy += 17;
+    txtC(perfil.sub1, yy); yy += 6;
+    txtC(perfil.sub2, yy); yy += 17;
 
-    var itens = [['OBRA', cfg.obra], ['CONCESSIONÁRIA', cfg.concessionaria], ['MUNICÍPIO', cfg.municipio]];
+    var itens = [['OBRA', cfg.obra]];
+    itens = itens.concat(perfil.identExtra(cfg));
+    itens.push(['MUNICÍPIO', cfg.municipio]);
     if(cfg.contrato) itens.push(['CONTRATO / PROCESSO', cfg.contrato]);
     if(cfg.resp) itens.push(['RESPONSÁVEL TÉCNICO', cfg.resp + (cfg.crea ? ' — ' + cfg.crea : '')]);
     itens.push(['DATA DE EMISSÃO', dataBR(hojeISO())]);
@@ -1937,16 +2393,14 @@ function montarPDF(Ctor, grupos, todos){
     });
     yy += alturaQ + 11;
 
-    var cels = [[String(grupos.length), 'RUAS LEVANTADAS'],
-                [String(todos.length), 'CASAS REGISTRADAS'],
-                [String(totalGeral), 'LIGAÇÕES A MODIFICAR']];
+    var cels = perfil.quantitativos(grupos, todos, totalGeral);
     setF(C_SUAVE); setD(C_LINHA);
     doc.rect(M, yy, UTIL, 24, 'FD');
-    var lc = UTIL / 3;
+    var lc = UTIL / cels.length;
     cels.forEach(function(c, i){
       var cx = M + lc*i + lc/2;
       if(i > 0){ setD([214,222,216]); doc.line(M + lc*i, yy + 4, M + lc*i, yy + 20); }
-      fonte('bold', 17, C_AZUL); txt(c[0], cx, yy + 11.5, {align:'center'});
+      fonte('bold', 17, COR); txt(c[0], cx, yy + 11.5, {align:'center'});
       fonte('bold', 7.5, C_CINZA); txt(c[1], cx, yy + 18, {align:'center'});
     });
     yy += 24;
@@ -1956,7 +2410,7 @@ function montarPDF(Ctor, grupos, todos){
     txtC(cfg.municipio + ', ' + dataExtenso() + '.', yData);
   }
 
-  /* --------------------------- BLOCO DA CASA -------------------------- */
+  /* --------------------------- BLOCO DO ITEM -------------------------- */
   function desenhaFoto(dataUrl, dim, x, yy, w, h){
     setD([203,211,206]); setF([251,251,250]);
     doc.rect(x, yy, w, h, 'FD');
@@ -1981,13 +2435,13 @@ function montarPDF(Ctor, grupos, todos){
     }
   }
 
-  function linhaSituacao(rotulo, valor, x, yy){
+  function linhaInfo(info, x, yy){
     fonte('normal', 9, [80,90,98]);
-    txt(rotulo + ': ', x, yy);
-    var lw = doc.getTextWidth(rotulo + ': ');
-    var c = COR_PDF[valor] || [80,90,98];
+    txt(info.rot + ': ', x, yy);
+    var lw = doc.getTextWidth(info.rot + ': ');
+    var c = info.cor || [80,90,98];
     fonte('bold', 9, c);
-    txt(valor || '—', x + lw, yy);
+    txt(corta(info.val || '—', COL - lw), x + lw, yy);
   }
 
   function alturaObs(obs){
@@ -1996,31 +2450,30 @@ function montarPDF(Ctor, grupos, todos){
     return 1.5 + doc.splitTextToSize('Observações: ' + obs, UTIL).length * 4;
   }
 
-  function alturaCasa(r){
+  function alturaItem(r){
     return 5.5 + 1.5 + 4.2 + H_MOLD + 3 + 5 + alturaObs(r.obs) + 5;
   }
 
-  function desenhaCasa(r, indice){
-    var num = (r.numero || '').trim();
-    var nh = (r.numHid || '').trim();
-    var titulo = (num ? 'Casa nº ' + num : 'Casa sem número') + '  |  Hidrômetro nº ' + (nh || 'não informado');
+  function desenhaItem(r){
     fonte('bold', 10.5, C_ESCURO);
-    txt(corta(titulo, UTIL - 34), M, y + 4);
+    txt(corta(perfil.tituloItem(r), UTIL - 34), M, y + 4);
     fonte('normal', 9, C_CINZA);
     txt(dataBR(r.data), M + UTIL, y + 4, {align:'right'});
     y += 5.5 + 1.5;
 
-    fonte('bold', 8, C_AZUL);
-    txt('HIDRÔMETRO', M + COL/2, y + 3, {align:'center'});
-    txt('ESGOTO', M + COL + 6 + COL/2, y + 3, {align:'center'});
+    fonte('bold', 8, COR);
+    txt(perfil.legendas[0], M + COL/2, y + 3, {align:'center'});
+    txt(perfil.legendas[1], M + COL + 6 + COL/2, y + 3, {align:'center'});
     y += 4.2;
 
-    desenhaFoto(r.fotoHid, r.dimHid, M, y, COL, H_MOLD);
-    desenhaFoto(r.fotoEsg, r.dimEsg, M + COL + 6, y, COL, H_MOLD);
+    var f = perfil.fotos(r);
+    desenhaFoto(f[0][0], f[0][1], M, y, COL, H_MOLD);
+    desenhaFoto(f[1][0], f[1][1], M + COL + 6, y, COL, H_MOLD);
     y += H_MOLD + 3;
 
-    linhaSituacao('Hidrômetro', r.sitHid, M, y + 3.4);
-    linhaSituacao('Esgoto', r.sitEsg, M + COL + 6, y + 3.4);
+    var infos = perfil.infos(r);
+    linhaInfo(infos[0], M, y + 3.4);
+    linhaInfo(infos[1], M + COL + 6, y + 3.4);
     y += 5;
 
     if(r.obs){
@@ -2036,132 +2489,143 @@ function montarPDF(Ctor, grupos, todos){
   }
 
   function barraRua(rotulo, continuacao){
-    setF(C_AZUL);
+    setF(COR);
     doc.rect(M, y, UTIL, 9, 'F');
     fonte('bold', 11, [255,255,255]);
     txt(corta(rotulo + (continuacao ? ' (continuação)' : ''), UTIL - 6), M + 3, y + 6.1);
     y += 9 + 2;
   }
 
-  /* ------------------------------ CAPA ------------------------------- */
+  /* ------------------------------ MONTAGEM ---------------------------- */
   capa();
 
-  /* ------------------------ TEXTO DE ABERTURA ------------------------ */
   novaPag();
-  secao('1', 'APRESENTAÇÃO');
-  paragrafo(textoApresentacao(cfg));
+  var n = 1;
+  secao(String(n++), 'APRESENTAÇÃO');
+  paragrafo(perfil.apresentacao(cfg));
 
-  secao('2', 'CLASSIFICAÇÃO ADOTADA');
-  SITUACOES.forEach(function(sit){
-    if(!cabe(9)) novaPag();
-    chip(sit, M, y, 34);
-    fonte('normal', 9, C_TEXTO);
-    txt(corta(DESCR_SITUACAO[sit], UTIL - 38), M + 38, y + 3.9);
-    y += 8.2;
-  });
-  y += 4;
+  if(perfil.classificacao){
+    secao(String(n++), 'CLASSIFICAÇÃO ADOTADA');
+    SITUACOES.forEach(function(sit){
+      if(!cabe(9)) novaPag();
+      chip(sit, COR_PDF[sit], M, y, 34);
+      fonte('normal', 9, C_TEXTO);
+      txt(corta(DESCR_SITUACAO[sit], UTIL - 38), M + 38, y + 3.9);
+      y += 8.2;
+    });
+    y += 4;
+  }
 
-  secao('3', 'CRITÉRIO DE QUANTIFICAÇÃO');
-  paragrafo(TXT_CRITERIO);
+  secao(String(n++), 'CRITÉRIO DE QUANTIFICAÇÃO');
+  paragrafo(perfil.criterio);
 
-  secao('4', 'REGISTRO FOTOGRÁFICO POR RUA');
+  var nRegistro = n++;
+  secao(String(nRegistro), 'REGISTRO FOTOGRÁFICO POR RUA');
 
-  /* ---------------------------- POR RUA ------------------------------ */
   grupos.forEach(function(g, iRua){
     var itens = g.itens;
-    var nEsg = itens.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
-    var rotulo = '4.' + (iRua + 1) + '  ' + String(g.nome).toLocaleUpperCase('pt-BR');
+    var nConta = itens.filter(perfil.conta).length;
+    var rotulo = nRegistro + '.' + (iRua + 1) + '  ' + String(g.nome).toLocaleUpperCase('pt-BR');
 
-    if(!cabe(9 + 2 + 8 + 3 + alturaCasa(itens[0]))) novaPag();
+    if(!cabe(9 + 2 + 8 + 3 + alturaItem(itens[0]))) novaPag();
     barraRua(rotulo, false);
 
     setF(C_SUAVE); setD(C_LINHA);
     doc.rect(M, y, UTIL, 8, 'FD');
     fonte('bold', 9, C_ESCURO);
-    txt('Total de ligações de esgoto a serem modificadas nesta rua: ' + nEsg, M + 3, y + 5.3);
-    fonte('normal', 8.5, C_CINZA);
-    txt('Casas registradas: ' + itens.length, M + UTIL - 3, y + 5.3, {align:'right'});
+    txt(perfil.totalRua(nConta), M + 3, y + 5.3);
+    if(perfil.itensRua){
+      fonte('normal', 8.5, C_CINZA);
+      txt(perfil.itensRua(itens.length), M + UTIL - 3, y + 5.3, {align:'right'});
+    }
     y += 8 + 3;
 
     itens.forEach(function(r){
-      if(!cabe(alturaCasa(r))){
+      if(!cabe(alturaItem(r))){
         novaPag();
         barraRua(rotulo, true);
       }
-      desenhaCasa(r);
+      desenhaItem(r);
     });
     y += 4;
   });
 
   /* --------------------------- RESUMO GERAL --------------------------- */
   novaPag();
-  secao('5', 'RESUMO GERAL');
+  secao(String(n++), 'RESUMO GERAL');
+
+  var cols = perfil.colunasResumo;
+  function xCol(i){ return M + UTIL - (cols.length - 1 - i) * 42; }
 
   fonte('normal', 9, C_CINZA);
-  txt('Ligações de esgoto a modificar por rua (situação "A remanejar" ou "Danificado").', M, y + 3);
+  txt(perfil.resumoNota, M, y + 3);
   y += 8;
 
-  fonte('bold', 8.5, C_AZUL);
+  fonte('bold', 8.5, COR);
   txt('RUA', M, y);
-  txt('CASAS', M + UTIL - 42, y, {align:'right'});
-  txt('A MODIFICAR', M + UTIL, y, {align:'right'});
+  cols.forEach(function(c, i){ txt(c.tit, xCol(i), y, {align:'right'}); });
   y += 2;
-  setD(C_AZUL); doc.line(M, y, M + UTIL, y);
+  setD(COR); doc.line(M, y, M + UTIL, y);
   y += 5;
 
   grupos.forEach(function(g){
     if(!cabe(7)){
       novaPag();
-      fonte('bold', 9, C_AZUL);
+      fonte('bold', 9, COR);
       txt('RESUMO GERAL (continuação)', M, y + 3);
       y += 8;
     }
-    var nEsg = g.itens.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
     fonte('normal', 9.5, C_TEXTO);
-    txt(corta(g.nome, UTIL - 52), M, y + 3);
-    txt(String(g.itens.length), M + UTIL - 42, y + 3, {align:'right'});
-    fonte('bold', 9.5, C_ESCURO);
-    txt(String(nEsg), M + UTIL, y + 3, {align:'right'});
+    txt(corta(g.nome, UTIL - 42 * cols.length - 8), M, y + 3);
+    cols.forEach(function(c, i){
+      fonte(c.forte ? 'bold' : 'normal', 9.5, c.forte ? C_ESCURO : C_TEXTO);
+      txt(String(c.val(g, perfil)), xCol(i), y + 3, {align:'right'});
+    });
     setD([228,232,229]); doc.line(M, y + 5, M + UTIL, y + 5);
     y += 7;
   });
 
   y += 4;
   if(!cabe(14)) novaPag();
-  setF(C_AZUL);
+  setF(COR);
   doc.rect(M, y, UTIL, 13, 'F');
   fonte('bold', 10.5, [255,255,255]);
-  txt('TOTAL GERAL DE LIGAÇÕES DE ESGOTO A MODIFICAR:', M + 4, y + 8.4);
+  txt(perfil.totalGeralRot, M + 4, y + 8.4);
   fonte('bold', 13, [255,255,255]);
   txt(String(totalGeral), M + UTIL - 4, y + 8.8, {align:'right'});
   y += 13 + 10;
 
-  /* ------------------- quadro por situação encontrada ------------------ */
-  if(!cabe(14 + SITUACOES.length * 7)) novaPag();
-  fonte('bold', 9.5, C_ESCURO);
-  txt('Quadro geral por situação encontrada', M, y + 3);
-  y += 8;
-  fonte('bold', 8.5, C_AZUL);
-  txt('SITUAÇÃO', M, y);
-  txt('HIDRÔMETROS', M + UTIL - 42, y, {align:'right'});
-  txt('ESGOTOS', M + UTIL, y, {align:'right'});
-  y += 2;
-  setD(C_AZUL); doc.line(M, y, M + UTIL, y);
-  y += 5;
-  SITUACOES.forEach(function(sit){
-    var nh = todos.filter(function(r){ return r.sitHid === sit; }).length;
-    var ne = todos.filter(function(r){ return r.sitEsg === sit; }).length;
-    chip(sit, M, y - 1.4, 34);
-    fonte('normal', 9.5, C_TEXTO);
-    txt(String(nh), M + UTIL - 42, y + 3, {align:'right'});
-    txt(String(ne), M + UTIL, y + 3, {align:'right'});
-    setD([228,232,229]); doc.line(M, y + 5, M + UTIL, y + 5);
-    y += 7.5;
-  });
-  y += 8;
+  if(perfil.quadroSituacoes){
+    if(!cabe(14 + SITUACOES.length * 7)) novaPag();
+    fonte('bold', 9.5, C_ESCURO);
+    txt('Quadro geral por situação encontrada', M, y + 3);
+    y += 8;
+    fonte('bold', 8.5, COR);
+    txt('SITUAÇÃO', M, y);
+    txt('HIDRÔMETROS', M + UTIL - 42, y, {align:'right'});
+    txt('ESGOTOS', M + UTIL, y, {align:'right'});
+    y += 2;
+    setD(COR); doc.line(M, y, M + UTIL, y);
+    y += 5;
+    SITUACOES.forEach(function(sit){
+      var nh = todos.filter(function(r){ return r.sitHid === sit; }).length;
+      var ne = todos.filter(function(r){ return r.sitEsg === sit; }).length;
+      chip(sit, COR_PDF[sit], M, y - 1.4, 34);
+      fonte('normal', 9.5, C_TEXTO);
+      txt(String(nh), M + UTIL - 42, y + 3, {align:'right'});
+      txt(String(ne), M + UTIL, y + 3, {align:'right'});
+      setD([228,232,229]); doc.line(M, y + 5, M + UTIL, y + 5);
+      y += 7.5;
+    });
+    y += 8;
+  }
 
   /* ----------------------------- assinatura --------------------------- */
   if(!cabe(46)) novaPag();
+  fonte('italic', 8.5, C_CINZA);
+  var fecho = doc.splitTextToSize(perfil.fecho(todos, grupos), UTIL);
+  for(var k=0;k<fecho.length;k++){ txt(fecho[k], M, y); y += 4.5; }
+  y += 6;
   fonte('normal', 9.8, C_TEXTO);
   txtC(cfg.municipio + ', ' + dataExtenso() + '.', y + 4);
   y += 22;
@@ -2175,8 +2639,8 @@ function montarPDF(Ctor, grupos, todos){
   txtC(cfg.empresa, yb);
 
   /* --------------------- cabeçalho e rodapé de todas -------------------- */
-  var n = doc.getNumberOfPages();
-  for(var p=2; p<=n; p++){
+  var nPag = doc.getNumberOfPages();
+  for(var p=2; p<=nPag; p++){
     doc.setPage(p);
     setD(C_LINHA); doc.line(M, 15.5, M + UTIL, 15.5);
     var xTexto = M;
@@ -2194,36 +2658,38 @@ function montarPDF(Ctor, grupos, todos){
 
     setD(C_LINHA); doc.line(M, ALT - 12, M + UTIL, ALT - 12);
     fonte('normal', 7.5, C_CINZA);
-    txt('Relatório de interferências — ' + cfg.concessionaria + ' — emitido em ' + dataBR(hojeISO()), M, ALT - 8);
-    txt('Página ' + (p - 1) + ' de ' + (n - 1), M + UTIL, ALT - 8, {align:'right'});
+    txt(corta(perfil.rodape(cfg) + ' — emitido em ' + dataBR(hojeISO()), UTIL - 30), M, ALT - 8);
+    txt('Página ' + (p - 1) + ' de ' + (nPag - 1), M + UTIL, ALT - 8, {align:'right'});
   }
 
   var blob = doc.output('blob');
   if(!blob || !blob.size) throw new Error('o arquivo gerado ficou vazio');
-  var nome = 'relatorio-interferencias-' + hojeISO() + '.pdf';
-  return { blob: blob, nome: nome, paginas: n, fotosComFalha: fotosComFalha, logoFalhou: logoFalhou };
+  return { blob: blob, nome: perfil.arquivo + hojeISO() + '.pdf', paginas: nPag,
+           fotosComFalha: fotosComFalha, logoFalhou: logoFalhou };
 }
 
 /* =========================== BACKUP JSON ============================ */
 function exportarBackup(){
   try{
-    if(!estado.registros.length){
+    if(!estado.registros.length && !estado.arvores.length){
       mostrarMsg('Não há registros para exportar.', 'erro', true);
       return;
     }
     var pacote = {
       aplicativo: 'registro-interferencias-aguas-guariroba',
-      versao: 2,
+      versao: 3,
       exportadoEm: new Date().toISOString(),
-      total: estado.registros.length,
+      total: estado.registros.length + estado.arvores.length,
       config: estado.config,
-      registros: registrosOrdenados()
+      registros: registrosOrdenados(),
+      arvores: ordenarRegistros(estado.arvores)
     };
     var texto = JSON.stringify(pacote);
     var blob = new Blob([texto], { type: 'application/json' });
     var nome = 'backup-interferencias-' + hojeISO() + '.json';
     var auto = publicarArquivo(nome, blob,
-      'Backup com ' + estado.registros.length + ' registro(s) e todas as fotos (' + kb(texto.length) + '). ' +
+      'Backup com ' + estado.registros.length + ' casa(s), ' + estado.arvores.length +
+      ' árvore(s) e todas as fotos (' + kb(texto.length) + '). ' +
       'Guarde este arquivo: ele é a única cópia fora deste aparelho.');
     mostrarMsg('Backup exportado.' + (auto ? ' O download automático foi disparado.' : ''), 'sucesso');
   }catch(e){
@@ -2253,6 +2719,24 @@ function normalizarRegistro(o){
   };
 }
 
+function normalizarArvore(o){
+  if(!o || typeof o !== 'object') throw new Error('registro de árvore inválido no arquivo');
+  return {
+    id: String(o.id || novoId()),
+    rua: String(o.rua || '').trim(),
+    numero: String(o.numero || '').trim(),
+    data: String(o.data || hojeISO()),
+    fotoArv: String(o.fotoArv || ''),
+    dimArv: o.dimArv && o.dimArv.w ? { w: o.dimArv.w, h: o.dimArv.h } : null,
+    fotoEtq: String(o.fotoEtq || ''),
+    dimEtq: o.dimEtq && o.dimEtq.w ? { w: o.dimEtq.w, h: o.dimEtq.h } : null,
+    etiqueta: String(o.etiqueta || '').trim(),
+    obs: String(o.obs || '').trim(),
+    criadoEm: String(o.criadoEm || new Date().toISOString()),
+    atualizadoEm: String(o.atualizadoEm || new Date().toISOString())
+  };
+}
+
 function importarBackup(arq){
   if(!arq){ return; }
   processando(true, 'Importando backup…', arq.name || '');
@@ -2265,12 +2749,16 @@ function importarBackup(arq){
     try{
       var dados = JSON.parse(leitor.result);
       var lista = Array.isArray(dados) ? dados : (dados && Array.isArray(dados.registros) ? dados.registros : null);
-      if(!lista) throw new Error('o arquivo não contém uma lista de registros');
-      if(!lista.length) throw new Error('o arquivo de backup está vazio');
-      var regs = lista.map(normalizarRegistro);
+      var listaArv = (dados && Array.isArray(dados.arvores)) ? dados.arvores : [];
+      if(!lista && !listaArv.length) throw new Error('o arquivo não contém uma lista de registros');
+      var regs = (lista || []).map(normalizarRegistro);
+      var arvs = listaArv.map(normalizarArvore);
+      if(!regs.length && !arvs.length) throw new Error('o arquivo de backup está vazio');
 
       var jaExistem = regs.filter(function(r){
         return estado.registros.some(function(x){ return x.id === r.id; });
+      }).length + arvs.filter(function(r){
+        return estado.arvores.some(function(x){ return x.id === r.id; });
       }).length;
 
       var cfgBackup = (dados && dados.config && typeof dados.config === 'object') ? dados.config : null;
@@ -2279,16 +2767,18 @@ function importarBackup(arq){
                       cfgBackup.empresa !== estado.config.empresa);
 
       processando(false);
-      var pergunta = 'Importar ' + regs.length + ' registro(s) deste backup?\n\n' +
+      var pergunta = 'Importar ' + regs.length + ' casa(s) e ' + arvs.length + ' árvore(s) deste backup?\n\n' +
         (jaExistem ? jaExistem + ' registro(s) já existente(s) serão ATUALIZADOS.\n' : '') +
-        (regs.length - jaExistem) + ' registro(s) novo(s) serão adicionados.\n' +
+        (regs.length + arvs.length - jaExistem) + ' registro(s) novo(s) serão adicionados.\n' +
         'Os demais registros atuais serão mantidos.' +
         (trocaCfg ? '\n\nOs dados da obra também serão substituídos por: ' + cfgBackup.obra +
                     ' (' + (cfgBackup.empresa || 'sem empresa') + ').' : '');
       if(!confirm(pergunta)) return;
 
-      processando(true, 'Importando backup…', regs.length + ' registro(s)');
-      Armaz.salvarVarios(regs).then(function(){
+      processando(true, 'Importando backup…', (regs.length + arvs.length) + ' registro(s)');
+      Armaz.salvarVarios('registros', regs).then(function(){
+        return Armaz.salvarVarios('arvores', arvs);
+      }).then(function(){
         if(!trocaCfg) return;
         var novo = Object.assign({}, CFG_PADRAO, cfgBackup);
         return Armaz.salvarConfig(novo).then(function(){ estado.config = novo; });
@@ -2296,7 +2786,7 @@ function importarBackup(arq){
         return recarregar();
       }).then(function(){
         processando(false);
-        mostrarMsg('Backup importado: ' + regs.length + ' registro(s) gravado(s).', 'sucesso');
+        mostrarMsg('Backup importado: ' + regs.length + ' casa(s) e ' + arvs.length + ' árvore(s).', 'sucesso');
       }).catch(function(e){
         processando(false);
         mostrarMsg('Falha ao gravar os registros importados: ' + msgErro(e), 'erro', true);
@@ -2312,10 +2802,24 @@ function importarBackup(arq){
 
 /* ============================== EVENTOS ============================== */
 function ligarEventos(){
-  $('fab').addEventListener('click', function(){ abrirSheet(null); });
+  $('fab').addEventListener('click', function(){
+    if(estado.aba === 'arvore') abrirSheetArv(null); else abrirSheet(null);
+  });
+  var abas = document.querySelectorAll('#abas .aba');
+  for(var i=0;i<abas.length;i++){
+    abas[i].addEventListener('click', function(){ trocarAba(this.getAttribute('data-aba')); });
+  }
+  $('btFecharArv').addEventListener('click', fecharSheetArv);
+  $('btCancelarArv').addEventListener('click', fecharSheetArv);
+  $('btSalvarArv').addEventListener('click', salvarArvore);
+  $('btExcluirArv').addEventListener('click', function(){
+    if(estado.editandoArvId) excluirArvore(estado.editandoArvId);
+  });
+  $('cFotoArv').addEventListener('change', function(){ tratarEscolhaFoto('arv', this); });
+  $('cFotoEtq').addEventListener('change', function(){ tratarEscolhaFoto('etq', this); });
   $('btFechar').addEventListener('click', fecharSheet);
   $('btCancelar').addEventListener('click', fecharSheet);
-  $('fundoEscuro').addEventListener('click', function(){ fecharSheet(); fecharConfig(); });
+  $('fundoEscuro').addEventListener('click', function(){ fecharSheet(); fecharSheetArv(); fecharConfig(); });
   $('btSalvar').addEventListener('click', salvarCasa);
   $('btExcluir').addEventListener('click', function(){
     if(estado.editandoId) excluirRegistro(estado.editandoId);
@@ -2334,11 +2838,24 @@ function ligarEventos(){
   $('cFotoHid').addEventListener('change', function(){ tratarEscolhaFoto('hid', this); });
   $('cFotoEsg').addEventListener('change', function(){ tratarEscolhaFoto('esg', this); });
 
-  $('filtroRua').addEventListener('change', function(){ estado.filtro = this.value; renderizar(); });
+  $('filtroRua').addEventListener('change', function(){
+    if(estado.aba === 'arvore') estado.filtroArv = this.value; else estado.filtro = this.value;
+    renderizar();
+  });
 
   $('lista').addEventListener('click', function(ev){
-    var alvo = ev.target.closest ? ev.target.closest('[data-editar],[data-excluir]') : null;
+    var alvo = ev.target.closest ?
+      ev.target.closest('[data-editar],[data-excluir],[data-editar-arv],[data-excluir-arv]') : null;
     if(!alvo) return;
+    var idEdA = alvo.getAttribute('data-editar-arv');
+    var idExA = alvo.getAttribute('data-excluir-arv');
+    if(idEdA){
+      var arv = estado.arvores.filter(function(r){ return r.id === idEdA; })[0];
+      if(!arv){ mostrarMsg('Registro não encontrado para edição.', 'erro', true); return; }
+      abrirSheetArv(arv);
+      return;
+    }
+    if(idExA){ excluirArvore(idExA); return; }
     var idEd = alvo.getAttribute('data-editar');
     var idEx = alvo.getAttribute('data-excluir');
     if(idEd){
@@ -2366,7 +2883,7 @@ function ligarEventos(){
   });
 
   window.addEventListener('beforeunload', function(ev){
-    if(Armaz.modo === 'memoria' && estado.registros.length){
+    if(Armaz.modo === 'memoria' && (estado.registros.length || estado.arvores.length)){
       ev.preventDefault();
       ev.returnValue = '';
       return '';
@@ -2386,6 +2903,7 @@ function ligarEventos(){
 function iniciar(){
   try{
     $('cData').value = hojeISO();
+    $('cDataA').value = hojeISO();
     ligarEventos();
   }catch(e){
     try{ alert('Falha ao iniciar a interface: ' + msgErro(e)); }catch(e2){}

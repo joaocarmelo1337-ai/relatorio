@@ -3068,7 +3068,7 @@ function montarPDFMensal(Ctor, itens){
   var Y_L1 = 40.5, H_FOTO = 67.5;      // linha 1 de fotos
   var Y_TAR1 = Y_L1 + H_FOTO;          // tarja de descrição 1
   var H_TARJA = 4.5;
-  var Y_L2 = Y_TAR1 + H_TARJA + 2.0;   // linha 2 de fotos
+  var Y_L2 = Y_TAR1 + H_TARJA + 2.0;   // linha 2 de fotos (respiro branco, sem faixa verde)
   var Y_TAR2 = Y_L2 + H_FOTO;
   var Y_ROD = Y_TAR2 + H_TARJA + 2.0;  // rodapé branco
   var H_ROD = Y_FIM - 2.0 - Y_ROD;
@@ -3108,8 +3108,8 @@ function montarPDFMensal(Ctor, itens){
     setF(VERDE_MODELO);
     doc.rect(X0, Y_TOPO, LARGQ, Y_FIM - Y_TOPO, 'F');
     setF([255,255,255]);
-    doc.rect(XI, Y_CAB, WI, (Y_TAR1 + H_TARJA) - Y_CAB, 'F');   // cabeçalho + fotos de cima
-    doc.rect(XI, Y_L2, WI, (Y_TAR2 + H_TARJA) - Y_L2, 'F');      // fotos de baixo
+    // uma área branca contínua: cabeçalho e as duas linhas de fotos, sem faixa verde no meio
+    doc.rect(XI, Y_CAB, WI, (Y_TAR2 + H_TARJA) - Y_CAB, 'F');
     doc.rect(XI, Y_ROD, WI, H_ROD, 'F');                          // rodapé
   }
 
@@ -3148,25 +3148,36 @@ function montarPDFMensal(Ctor, itens){
     doc.line(XI + 1.4, Y_L1 - 0.8, XI + WI - 1.4, Y_L1 - 0.8);
   }
 
+  // Toda foto ocupa exatamente a mesma área: escala pelo lado que falta e recorta o
+  // excedente. O corte vertical sai por baixo, para não comer o carimbo de data e
+  // endereço que a câmera grava no alto da imagem.
   function celula(reg, x, y){
     if(!reg) return;
     doc.setDrawColor(150,150,150); doc.setLineWidth(0.2);
     doc.rect(x, y, W_CEL, H_FOTO);
-    var m = imagemAjustada(reg.foto, 'JPEG', reg.dim, x, y, W_CEL - 0.6, H_FOTO - 0.6);
-    if(m){
-      // recentra dentro da célula
-      doc.setFillColor(255,255,255);
-      doc.rect(x + 0.1, y + 0.1, W_CEL - 0.2, H_FOTO - 0.2, 'F');
-      var ix = x + (W_CEL - m.w)/2, iy = y + (H_FOTO - m.h)/2;
-      try{ doc.addImage(reg.foto, 'JPEG', ix, iy, m.w, m.h); }
-      catch(e){ fotosComFalha++; }
-      doc.setDrawColor(150,150,150);
-      doc.rect(x, y, W_CEL, H_FOTO);
-    }else{
+    if(!reg.foto){ fotosComFalha++; return; }
+
+    var dw = (reg.dim && reg.dim.w) || 4, dh = (reg.dim && reg.dim.h) || 3;
+    var escala = Math.max(W_CEL / dw, H_FOTO / dh);
+    var iw = dw * escala, ih = dh * escala;
+    var ix = x + (W_CEL - iw) / 2;      // sobra horizontal: metade de cada lado
+    var iy = y;                          // sobra vertical: só embaixo
+
+    try{
+      doc.saveGraphicsState();
+      doc.rect(x, y, W_CEL, H_FOTO, null);   // sem estilo: o caminho vira recorte, não traço
+      doc.clip();
+      doc.discardPath();
+      doc.addImage(reg.foto, 'JPEG', ix, iy, iw, ih);
+      doc.restoreGraphicsState();
+    }catch(e){
+      try{ doc.restoreGraphicsState(); }catch(e2){}
       fotosComFalha++;
       fonte('italic', 7, [150,150,150]);
       txt('foto não pôde ser inserida', x + W_CEL/2, y + H_FOTO/2, {align:'center'});
     }
+    doc.setDrawColor(150,150,150); doc.setLineWidth(0.2);
+    doc.rect(x, y, W_CEL, H_FOTO);
   }
 
   function tarja(reg, x, y){

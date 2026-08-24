@@ -7,7 +7,7 @@ Aplicativo web de campo com duas abas, cada uma com o seu relatório em PDF:
   Identidade em azul-petróleo.
 - **Árvores** — registro fotográfico das **árvores cortadas** por estarem no traçado do
   pavimento ou interferirem na calçada, com a foto da árvore antes do corte e a foto da
-  etiqueta de identificação. Identidade em verde escuro, e o destinatário é você quem
+  etiqueta de identificação. Identidade em marrom, e o destinatário é você quem
   escreve em "Dados da obra".
 
 A cor da tela inteira muda conforme a aba, para não haver dúvida sobre onde se está

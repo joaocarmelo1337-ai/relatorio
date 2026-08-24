@@ -24,6 +24,11 @@ body[data-aba="arvore"]{
   --azul-esc:#553318;
   --escuro:#3d2a1a;
 }
+body[data-aba="mensal"]{
+  --azul:#006600;      /* verde do modelo do relatório mensal */
+  --azul-esc:#004d00;
+  --escuro:#0b3d16;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
@@ -41,8 +46,8 @@ header#cab{
 #abas{display:flex;gap:7px;margin-top:11px}
 #abas .aba{
   flex:1;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
-  color:#e8eef3;font-family:inherit;font-size:13px;font-weight:700;
-  padding:9px 6px;border-radius:8px;min-height:40px;
+  color:#e8eef3;font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:9px 4px;border-radius:8px;min-height:40px;
 }
 #abas .aba .qtd{font-weight:600;opacity:.72}
 #abas .aba.ativa{background:#fff;color:var(--escuro);border-color:#fff}
@@ -176,22 +181,22 @@ main#lista{padding:4px 10px}
   opacity:0;pointer-events:none;transition:opacity .22s ease;
 }
 #fundoEscuro.aberto{opacity:1;pointer-events:auto}
-#sheet, #sheetConfig, #sheetArv{
+#sheet, #sheetConfig, #sheetArv, #sheetMensal{
   position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--fundo);
   border-radius:16px 16px 0 0;box-shadow:0 -6px 22px rgba(0,0,0,.25);
   max-height:94vh;display:flex;flex-direction:column;
   transform:translateY(100%);transition:transform .28s cubic-bezier(.22,.68,.36,1);
 }
-#sheet.aberto, #sheetConfig.aberto, #sheetArv.aberto{transform:translateY(0)}
-#sheet .puxador, #sheetConfig .puxador, #sheetArv .puxador{width:42px;height:4px;background:#c8cfc9;border-radius:4px;margin:8px auto 2px}
-#sheet .topo, #sheetConfig .topo, #sheetArv .topo{
+#sheet.aberto, #sheetConfig.aberto, #sheetArv.aberto, #sheetMensal.aberto{transform:translateY(0)}
+#sheet .puxador, #sheetConfig .puxador, #sheetArv .puxador, #sheetMensal .puxador{width:42px;height:4px;background:#c8cfc9;border-radius:4px;margin:8px auto 2px}
+#sheet .topo, #sheetConfig .topo, #sheetArv .topo, #sheetMensal .topo{
   display:flex;justify-content:space-between;align-items:center;
   padding:6px 14px 10px;border-bottom:1px solid var(--borda);
 }
-#sheet .topo h2, #sheetConfig .topo h2, #sheetArv .topo h2{margin:0;font-size:16px;color:var(--escuro)}
-#sheet .topo button, #sheetConfig .topo button, #sheetArv .topo button{background:none;border:none;font-size:24px;color:var(--suave);font-family:inherit;padding:0 4px}
-#sheet .conteudo, #sheetConfig .conteudo, #sheetArv .conteudo{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 16px}
-#sheet .rodape, #sheetConfig .rodape, #sheetArv .rodape{
+#sheet .topo h2, #sheetConfig .topo h2, #sheetArv .topo h2, #sheetMensal .topo h2{margin:0;font-size:16px;color:var(--escuro)}
+#sheet .topo button, #sheetConfig .topo button, #sheetArv .topo button, #sheetMensal .topo button{background:none;border:none;font-size:24px;color:var(--suave);font-family:inherit;padding:0 4px}
+#sheet .conteudo, #sheetConfig .conteudo, #sheetArv .conteudo, #sheetMensal .conteudo{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 16px}
+#sheet .rodape, #sheetConfig .rodape, #sheetArv .rodape, #sheetMensal .rodape{
   padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom));
   border-top:1px solid var(--borda);background:#fff;display:flex;gap:8px;
 }
@@ -248,6 +253,7 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
   <nav id="abas">
     <button type="button" class="aba ativa" data-aba="esgoto">Esgoto <span class="qtd" id="qtdEsgoto"></span></button>
     <button type="button" class="aba" data-aba="arvore">Árvores <span class="qtd" id="qtdArvore"></span></button>
+    <button type="button" class="aba" data-aba="mensal">Mensal <span class="qtd" id="qtdMensal"></span></button>
   </nav>
 </header>
 
@@ -435,6 +441,44 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
   </div>
 </section>
 
+<section id="sheetMensal" aria-hidden="true">
+  <div class="puxador"></div>
+  <div class="topo">
+    <h2 id="tituloSheetMensal">Nova foto do mês</h2>
+    <button type="button" id="btFecharMen" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="conteudo">
+    <div id="erroFormMen" class="erroCaixa"></div>
+    <p style="margin:0 0 14px;font-size:12.5px;color:#6b7a86">
+      A rua e a data não são pedidas aqui: elas já vêm carimbadas na própria foto.
+      Cada página do relatório leva 4 fotos, na ordem em que forem cadastradas.
+    </p>
+
+    <div class="campo">
+      <label>Foto <span class="obrig">*</span></label>
+      <div class="fotoBox" id="boxMen">
+        <img class="prev" id="prevMen" alt="Pré-visualização da foto">
+        <label class="escolher" for="cFotoMen">Tirar foto ou escolher da galeria</label>
+        <input type="file" id="cFotoMen" accept="image/*">
+        <div class="estado" id="estMen">Nenhuma foto selecionada.</div>
+      </div>
+    </div>
+    <div class="campo">
+      <label for="cDescMen">Descrição do serviço <span class="obrig">*</span></label>
+      <textarea id="cDescMen" rows="2" placeholder="Ex.: REGULARIZAÇÃO DO SUBLEITO COM MOTONIVELADORA"></textarea>
+      <div class="ajuda">Aparece na tarja cinza embaixo da foto, em maiúsculas.</div>
+    </div>
+
+    <div class="campo" id="areaExcluirMen" style="display:none">
+      <button type="button" class="bt bt-perigo" id="btExcluirMen" style="width:100%">Excluir esta foto</button>
+    </div>
+  </div>
+  <div class="rodape">
+    <button type="button" class="bt" id="btCancelarMen">Cancelar</button>
+    <button type="button" class="bt bt-prim" id="btSalvarMen">Salvar foto</button>
+  </div>
+</section>
+
 <section id="sheetConfig" aria-hidden="true">
   <div class="puxador"></div>
   <div class="topo">
@@ -490,6 +534,24 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
         <div class="estado" id="estLogo">Nenhuma logo selecionada.</div>
         <button type="button" class="remover" id="btRemoverLogo" style="display:none">Remover logo</button>
       </div>
+    </div>
+
+    <div class="secTit">Relatório fotográfico mensal</div>
+    <div class="campo">
+      <label for="cMesRef">Mês de referência</label>
+      <input type="month" id="cMesRef">
+      <div class="ajuda">Vira o período no cabeçalho: 01/07/2026 - 31/07/2026.</div>
+    </div>
+    <div class="campo">
+      <label>Brasão / logo de quem recebe o documento</label>
+      <div class="logoBox" id="boxBrasao">
+        <img class="prevLogo" id="prevBrasao" alt="Pré-visualização do brasão do destinatário">
+        <label class="escolher" for="cBrasao">Escolher imagem do brasão</label>
+        <input type="file" id="cBrasao" accept="image/*">
+        <div class="estado" id="estBrasao">Nenhuma imagem selecionada.</div>
+        <button type="button" class="remover" id="btRemoverBrasao" style="display:none">Remover brasão</button>
+      </div>
+      <div class="ajuda">Ex.: brasão da Prefeitura Municipal de Campo Grande. Vai no alto, à esquerda, em todas as páginas do relatório mensal.</div>
     </div>
 
     <div class="secTit">Assinaturas do relatório</div>
@@ -951,18 +1013,21 @@ var LIMITE_FOTO = 900 * 1024;         // ~900 KB por foto
 var LIMITE_LOGO = 500 * 1024;         // ~500 KB para a logo
 var CHAVE_LS = 'aguasguariroba_registros_v1';
 var CHAVE_LS_ARV = 'aguasguariroba_arvores_v1';
+var CHAVE_LS_MEN = 'aguasguariroba_mensais_v1';
 var CHAVE_LS_CFG = 'aguasguariroba_config_v1';
 
 // As duas coleções: ligações de esgoto/hidrômetros e árvores cortadas.
 var COLECOES = {
   registros: { loja: 'registros', ls: CHAVE_LS },
-  arvores:   { loja: 'arvores',   ls: CHAVE_LS_ARV }
+  arvores:   { loja: 'arvores',   ls: CHAVE_LS_ARV },
+  mensais:   { loja: 'mensais',   ls: CHAVE_LS_MEN }
 };
 
 // Dados que identificam o relatório: capa, cabeçalho das páginas e assinatura.
 var CFG_PADRAO = {
   obra: '', contrato: '', municipio: 'Campo Grande/MS', concessionaria: 'Águas Guariroba',
   destArv: '',
+  mesRef: '', brasao: '', brasaoTipo: 'PNG', brasaoDim: null,
   empresa: '', cnpj: '', logo: '', logoTipo: 'PNG', logoDim: null,
   resp: '', crea: '',
   dono: '', donoCrea: '',
@@ -1072,12 +1137,13 @@ var Armaz = {
         if(!pronto) rej(new Error('tempo esgotado ao abrir o banco de dados'));
       }, 8000);
       var req;
-      try{ req = indexedDB.open('aguasguariroba_db', 2); }
+      try{ req = indexedDB.open('aguasguariroba_db', 3); }
       catch(e){ clearTimeout(t); rej(e); return; }
       req.onupgradeneeded = function(ev){
         var db = ev.target.result;
         if(!db.objectStoreNames.contains('registros')) db.createObjectStore('registros', {keyPath:'id'});
         if(!db.objectStoreNames.contains('arvores')) db.createObjectStore('arvores', {keyPath:'id'});
+        if(!db.objectStoreNames.contains('mensais')) db.createObjectStore('mensais', {keyPath:'id'});
         if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
       };
       req.onsuccess = function(){ pronto = true; clearTimeout(t); res(req.result); };
@@ -1267,17 +1333,44 @@ var estado = {
   aba: 'esgoto',                     // 'esgoto' | 'arvore'
   registros: [],                     // ligações de esgoto / hidrômetros
   arvores: [],                       // árvores cortadas
+  mensais: [],                       // fotos do relatório mensal
   config: JSON.parse(JSON.stringify(CFG_PADRAO)),
   logoPendente: null,
   filtro: '',                        // filtro de rua da aba esgoto
   filtroArv: '',                     // filtro de rua da aba árvores
   editandoId: null,
   editandoArvId: null,
-  fotos: { hid: null, esg: null, arv: null, etq: null },   // {dataUrl, w, h, bytes}
+  editandoMenId: null,
+  brasaoPendente: null,
+  fotos: { hid: null, esg: null, arv: null, etq: null, men: null },   // {dataUrl, w, h, bytes}
   urlsTemp: []
 };
 
-function itensDaAba(){ return estado.aba === 'arvore' ? estado.arvores : estado.registros; }
+function itensDaAba(){
+  if(estado.aba === 'arvore') return estado.arvores;
+  if(estado.aba === 'mensal') return estado.mensais;
+  return estado.registros;
+}
+
+function mensaisOrdenadas(){
+  return estado.mensais.slice().sort(function(a,b){
+    return String(a.criadoEm||'').localeCompare(String(b.criadoEm||''));
+  });
+}
+
+// "2026-07" -> "01/07/2026 - 31/07/2026"
+function periodoDoMes(mes){
+  if(!mes || !/^\d{4}-\d{2}$/.test(mes)) return '';
+  var p = mes.split('-'), ano = +p[0], m = +p[1];
+  var ultimo = new Date(ano, m, 0).getDate();
+  var mm = String(m).padStart(2,'0');
+  return '01/' + mm + '/' + ano + ' - ' + String(ultimo).padStart(2,'0') + '/' + mm + '/' + ano;
+}
+function mesPorExtenso(mes){
+  if(!mes || !/^\d{4}-\d{2}$/.test(mes)) return '';
+  var p = mes.split('-');
+  return MESES[+p[1] - 1] + ' de ' + p[0];
+}
 
 function ordenarRegistros(lista){
   return lista.slice().sort(function(a,b){
@@ -1313,19 +1406,26 @@ function renderizarFaixaStatus(){
 }
 
 function renderizarAbas(){
-  var arv = estado.aba === 'arvore';
-  document.body.setAttribute('data-aba', estado.aba);
+  var aba = estado.aba;
+  document.body.setAttribute('data-aba', aba);
   $('qtdEsgoto').textContent = estado.registros.length ? '· ' + estado.registros.length : '';
   $('qtdArvore').textContent = estado.arvores.length ? '· ' + estado.arvores.length : '';
+  $('qtdMensal').textContent = estado.mensais.length ? '· ' + estado.mensais.length : '';
   var bts = document.querySelectorAll('#abas .aba');
   for(var i=0;i<bts.length;i++){
-    bts[i].classList.toggle('ativa', bts[i].getAttribute('data-aba') === estado.aba);
+    bts[i].classList.toggle('ativa', bts[i].getAttribute('data-aba') === aba);
   }
-  $('subCab').innerHTML = arv
-    ? 'Árvores cortadas &mdash; registro fotográfico da supressão'
-    : 'Hidrômetros e ligações de esgoto &mdash; Águas Guariroba';
-  $('btPdf').textContent = arv ? 'Gerar PDF de árvores' : 'Gerar PDF de esgoto';
-  $('fab').setAttribute('aria-label', arv ? 'Cadastrar nova árvore cortada' : 'Cadastrar nova casa');
+  var sub = {
+    esgoto: 'Hidrômetros e ligações de esgoto &mdash; Águas Guariroba',
+    arvore: 'Árvores cortadas &mdash; registro fotográfico da supressão',
+    mensal: 'Relatório fotográfico mensal de obra'
+  }[aba];
+  $('subCab').innerHTML = sub;
+  $('btPdf').textContent = { esgoto:'Gerar PDF de esgoto', arvore:'Gerar PDF de árvores',
+                             mensal:'Gerar PDF do relatório mensal' }[aba];
+  $('fab').setAttribute('aria-label', { esgoto:'Cadastrar nova casa', arvore:'Cadastrar nova árvore cortada',
+                                        mensal:'Adicionar foto do mês' }[aba]);
+  $('filtroRua').style.display = aba === 'mensal' ? 'none' : '';
 }
 
 function renderizarFiltro(grupos, total){
@@ -1413,10 +1513,49 @@ function cardArvore(r){
   '</div>';
 }
 
+function cardMensal(r, indice){
+  return '<div class="card">' +
+    '<img class="mini" src="' + esc(r.foto || '') + '" alt="Foto do relatório mensal">' +
+    '<div class="corpo">' +
+      '<div class="l1">Foto ' + indice + '</div>' +
+      '<div class="l2">' + esc(r.descricao || '') + '</div>' +
+    '</div>' +
+    '<div class="acoes">' +
+      '<button type="button" data-editar-men="' + esc(r.id) + '">Editar</button>' +
+      '<button type="button" class="ex" data-excluir-men="' + esc(r.id) + '">Excluir</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderizarListaMensal(){
+  var itens = mensaisOrdenadas();
+  var cfg = estado.config;
+  var paginas = Math.ceil(itens.length / 4) || 0;
+  $('resumoTopo').textContent = itens.length + ' foto(s) — ' + paginas + ' página(s) no PDF' +
+    (cfg.mesRef ? ' — mês de referência: ' + mesPorExtenso(cfg.mesRef) + '.' : ' — mês de referência não informado.');
+  var cx = $('lista');
+  if(!itens.length){
+    cx.innerHTML = '<div class="vazio">Nenhuma foto cadastrada ainda.<br>' +
+      'Toque no botão <b>+</b> para adicionar a primeira foto do mês.</div>';
+    return;
+  }
+  var html = '';
+  for(var i=0;i<itens.length;i+=4){
+    var bloco = itens.slice(i, i+4);
+    html += '<div class="grupoRua">';
+    html += '<div class="tituloRua"><span class="nome">Página ' + (i/4 + 1) + '</span>' +
+            '<span class="cont">' + bloco.length + ' de 4 fotos</span></div>';
+    bloco.forEach(function(r, j){ html += cardMensal(r, i + j + 1); });
+    html += '</div>';
+  }
+  cx.innerHTML = html;
+}
+
 function renderizar(){
   try{
     renderizarResumoObra();
     renderizarAbas();
+    if(estado.aba === 'mensal'){ renderizarListaMensal(); return; }
 
     var arv = estado.aba === 'arvore';
     var todos = ordenarRegistros(itensDaAba());
@@ -1469,7 +1608,7 @@ function renderizar(){
 }
 
 function trocarAba(aba){
-  if(aba !== 'esgoto' && aba !== 'arvore') return;
+  if(aba !== 'esgoto' && aba !== 'arvore' && aba !== 'mensal') return;
   estado.aba = aba;
   limparMsgs();
   $('areaDownloads').innerHTML = '';
@@ -1478,9 +1617,10 @@ function trocarAba(aba){
 }
 
 function recarregar(){
-  return Promise.all([Armaz.listar('registros'), Armaz.listar('arvores')]).then(function(r){
+  return Promise.all([Armaz.listar('registros'), Armaz.listar('arvores'), Armaz.listar('mensais')]).then(function(r){
     estado.registros = Array.isArray(r[0]) ? r[0] : [];
     estado.arvores = Array.isArray(r[1]) ? r[1] : [];
+    estado.mensais = Array.isArray(r[2]) ? r[2] : [];
     renderizar();
   }).catch(function(e){
     mostrarMsg('Não foi possível ler os registros salvos: ' + msgErro(e), 'erro', true);
@@ -1633,6 +1773,12 @@ function medirImagem(dataUrl){
 }
 
 /* ========================= FORMULÁRIO (bottom sheet) ================= */
+function mostrarErroFormMen(txt){
+  var e = $('erroFormMen');
+  if(txt){ e.textContent = txt; e.classList.add('ver'); try{ e.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(x){} }
+  else { e.textContent = ''; e.classList.remove('ver'); }
+}
+
 function mostrarErroFormArv(txt){
   var e = $('erroFormArv');
   if(txt){ e.textContent = txt; e.classList.add('ver'); try{ e.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(x){} }
@@ -1647,6 +1793,7 @@ function mostrarErroForm(txt){
 
 var IDS_FOTO = {
   hid: { est:'estHid', prev:'prevHid', box:'boxHid', botao:'btSalvar' },
+  men: { est:'estMen', prev:'prevMen', box:'boxMen', botao:'btSalvarMen' },
   esg: { est:'estEsg', prev:'prevEsg', box:'boxEsg', botao:'btSalvar' },
   arv: { est:'estArv', prev:'prevArv', box:'boxArv', botao:'btSalvarArv' },
   etq: { est:'estEtq', prev:'prevEtq', box:'boxEtq', botao:'btSalvarArv' }
@@ -1731,6 +1878,109 @@ function fecharSheet(){
     document.body.style.overflow = '';
     estado.editandoId = null;
   }catch(e){}
+}
+
+/* ------------------ folha de cadastro da foto mensal ------------------ */
+function abrirSheetMensal(reg){
+  try{
+    mostrarErroFormMen('');
+    estado.editandoMenId = reg ? reg.id : null;
+    estado.fotos.men = null;
+    $('cDescMen').value = '';
+    pintarPreview('men', null);
+    pintarEstadoFoto('men', 'Nenhuma foto selecionada.', '');
+    $('boxMen').classList.remove('faltando');
+    $('tituloSheetMensal').textContent = reg ? 'Editar foto do mês' : 'Nova foto do mês';
+    $('btSalvarMen').textContent = reg ? 'Salvar alterações' : 'Salvar foto';
+    $('areaExcluirMen').style.display = reg ? 'block' : 'none';
+
+    if(reg){
+      $('cDescMen').value = reg.descricao || '';
+      if(reg.foto){
+        estado.fotos.men = { dataUrl: reg.foto, w: (reg.dim||{}).w, h: (reg.dim||{}).h, bytes: tamanhoDataUrl(reg.foto) };
+        pintarPreview('men', reg.foto);
+        pintarEstadoFoto('men', 'Foto já cadastrada (' + kb(estado.fotos.men.bytes) + '). Escolha outra para substituir.', 'pronta');
+      }
+    }
+
+    $('sheetMensal').classList.add('aberto');
+    $('sheetMensal').setAttribute('aria-hidden','false');
+    $('fundoEscuro').classList.add('aberto');
+    document.body.style.overflow = 'hidden';
+  }catch(e){
+    mostrarMsg('Não foi possível abrir o formulário: ' + msgErro(e), 'erro', true);
+  }
+}
+
+function fecharSheetMensal(){
+  try{
+    $('sheetMensal').classList.remove('aberto');
+    $('sheetMensal').setAttribute('aria-hidden','true');
+    $('fundoEscuro').classList.remove('aberto');
+    document.body.style.overflow = '';
+    estado.editandoMenId = null;
+  }catch(e){}
+}
+
+function salvarFotoMensal(){
+  try{
+    mostrarErroFormMen('');
+    var desc = $('cDescMen').value.trim();
+    var faltas = [];
+    if(!estado.fotos.men || !estado.fotos.men.dataUrl) faltas.push('falta a FOTO');
+    if(!desc) faltas.push('falta a DESCRIÇÃO do serviço');
+    $('boxMen').classList.toggle('faltando', !(estado.fotos.men && estado.fotos.men.dataUrl));
+    if(faltas.length){
+      mostrarErroFormMen('Não foi possível salvar: ' + faltas.join('; ') + '.');
+      return;
+    }
+
+    var antigo = estado.editandoMenId
+      ? (estado.mensais.filter(function(r){ return r.id === estado.editandoMenId; })[0] || null) : null;
+    var agora = new Date().toISOString();
+    var reg = {
+      id: estado.editandoMenId || novoId(),
+      foto: estado.fotos.men.dataUrl,
+      dim: { w: estado.fotos.men.w || null, h: estado.fotos.men.h || null },
+      descricao: desc,
+      criadoEm: (antigo && antigo.criadoEm) || agora,
+      atualizadoEm: agora
+    };
+
+    $('btSalvarMen').disabled = true;
+    var edicao = !!estado.editandoMenId;
+    Armaz.salvar('mensais', reg).then(function(){
+      fecharSheetMensal();
+      return recarregar();
+    }).then(function(){
+      if(!estado.mensais.some(function(r){ return r.id === reg.id; })){
+        throw new Error('o registro não apareceu na lista após a gravação');
+      }
+      mostrarMsg((edicao ? 'Foto atualizada' : 'Foto adicionada') + ': ' + desc.slice(0,60) + '.', 'sucesso');
+    }).catch(function(e){
+      mostrarErroFormMen('ERRO AO SALVAR: ' + msgErro(e));
+      mostrarMsg('Erro ao salvar a foto: ' + msgErro(e) + ' Nada foi gravado.', 'erro', true);
+    }).then(function(){
+      $('btSalvarMen').disabled = false;
+    });
+  }catch(e){
+    $('btSalvarMen').disabled = false;
+    mostrarErroFormMen('ERRO AO SALVAR: ' + msgErro(e));
+  }
+}
+
+function excluirFotoMensal(id){
+  var reg = estado.mensais.filter(function(r){ return r.id === id; })[0];
+  if(!reg){ mostrarMsg('Registro não encontrado para exclusão.', 'erro', true); return; }
+  if(!confirm('Excluir esta foto do relatório mensal?\n\n' + (reg.descricao||'') + '\n\nEsta ação não pode ser desfeita.')) return;
+  Armaz.remover('mensais', id).then(function(){
+    if(estado.editandoMenId === id) fecharSheetMensal();
+    return recarregar();
+  }).then(function(){
+    mostrarMsg('Foto excluída do relatório mensal.', 'sucesso');
+  }).catch(function(e){
+    mostrarMsg('Não foi possível excluir: ' + msgErro(e), 'erro', true);
+  });
 }
 
 /* ---------------------- folha de cadastro de árvore ------------------- */
@@ -1890,6 +2140,33 @@ function pintarLogo(dataUrl, texto, classe){
   el.textContent = texto;
 }
 
+function pintarBrasao(dataUrl, texto, classe){
+  var img = $('prevBrasao');
+  if(dataUrl){ img.src = dataUrl; img.classList.add('ver'); }
+  else { img.removeAttribute('src'); img.classList.remove('ver'); }
+  $('btRemoverBrasao').style.display = dataUrl ? 'inline-block' : 'none';
+  var el = $('estBrasao');
+  el.className = 'estado' + (classe ? ' ' + classe : '');
+  el.textContent = texto;
+}
+
+function tratarEscolhaBrasao(input){
+  var arq = input.files && input.files[0];
+  input.value = '';
+  if(!arq) return;
+  pintarBrasao(estado.brasaoPendente ? estado.brasaoPendente.dataUrl : null, 'Processando imagem…', 'proc');
+  $('btSalvarCfg').disabled = true;
+  comprimirLogo(arq).then(function(r){
+    estado.brasaoPendente = r;
+    pintarBrasao(r.dataUrl, 'Imagem pronta — ' + r.w + '×' + r.h + ' px, ' + kb(r.bytes) + '.', 'pronta');
+  }).catch(function(e){
+    pintarBrasao(estado.brasaoPendente ? estado.brasaoPendente.dataUrl : null,
+                 'Falha ao processar a imagem: ' + msgErro(e), 'falhou');
+  }).then(function(){
+    $('btSalvarCfg').disabled = false;
+  });
+}
+
 function abrirConfig(aviso){
   try{
     var c = estado.config;
@@ -1907,6 +2184,10 @@ function abrirConfig(aviso){
     $('cDonoCrea').value = c.donoCrea || '';
     $('cFiscal').value = c.fiscal || '';
     $('cFiscalCrea').value = c.fiscalCrea || '';
+    $('cMesRef').value = c.mesRef || '';
+    estado.brasaoPendente = c.brasao ? { dataUrl: c.brasao, tipo: c.brasaoTipo, w: (c.brasaoDim||{}).w, h: (c.brasaoDim||{}).h, bytes: tamanhoDataUrl(c.brasao) } : null;
+    if(estado.brasaoPendente) pintarBrasao(c.brasao, 'Imagem salva (' + kb(estado.brasaoPendente.bytes) + '). Escolha outra para substituir.', 'pronta');
+    else pintarBrasao(null, 'Nenhuma imagem selecionada.', '');
     estado.logoPendente = c.logo ? { dataUrl: c.logo, tipo: c.logoTipo, w: (c.logoDim||{}).w, h: (c.logoDim||{}).h, bytes: tamanhoDataUrl(c.logo) } : null;
     if(estado.logoPendente) pintarLogo(c.logo, 'Logo salva (' + kb(estado.logoPendente.bytes) + '). Escolha outra para substituir.', 'pronta');
     else pintarLogo(null, 'Nenhuma logo selecionada.', '');
@@ -1961,6 +2242,10 @@ function salvarConfig(){
       municipio: $('cMunicipio').value.trim() || CFG_PADRAO.municipio,
       concessionaria: $('cConcessionaria').value.trim() || CFG_PADRAO.concessionaria,
       destArv: $('cDestArv').value.trim(),
+      mesRef: $('cMesRef').value || '',
+      brasao: estado.brasaoPendente ? estado.brasaoPendente.dataUrl : '',
+      brasaoTipo: estado.brasaoPendente ? estado.brasaoPendente.tipo : 'PNG',
+      brasaoDim: estado.brasaoPendente ? { w: estado.brasaoPendente.w, h: estado.brasaoPendente.h } : null,
       empresa: empresa,
       cnpj: $('cCnpj').value.trim(),
       logo: estado.logoPendente ? estado.logoPendente.dataUrl : '',
@@ -1976,7 +2261,7 @@ function salvarConfig(){
     $('btSalvarCfg').disabled = true;
     Armaz.salvarConfig(cfg).then(function(){
       estado.config = cfg;
-      renderizarResumoObra();
+      renderizar();          // o resumo do topo depende do mês de referência
       fecharConfig();
       mostrarMsg('Dados da obra salvos.', 'sucesso');
     }).catch(function(e){
@@ -2004,7 +2289,9 @@ function tratarEscolhaFoto(qual, input){
     estado.fotos[qual] = r;
     pintarPreview(qual, r.dataUrl);
     pintarEstadoFoto(qual, 'Foto pronta — ' + r.w + '×' + r.h + ' px, ' + kb(r.bytes) + '.', 'pronta');
-    if(qual === 'arv' || qual === 'etq') mostrarErroFormArv(''); else mostrarErroForm('');
+    if(qual === 'arv' || qual === 'etq') mostrarErroFormArv('');
+    else if(qual === 'men') mostrarErroFormMen('');
+    else mostrarErroForm('');
   }).catch(function(e){
     pintarEstadoFoto(qual, 'Falha ao processar a foto: ' + msgErro(e) + ' Tente novamente ou escolha outra imagem.', 'falhou');
   }).then(function(){
@@ -2248,6 +2535,7 @@ function gerarPDF(){
     mostrarMsg('Falha ao gerar o PDF: a biblioteca jsPDF não foi carregada neste arquivo.', 'erro', true);
     return;
   }
+  if(estado.aba === 'mensal'){ gerarPDFMensal(Ctor); return; }
   var perfil = perfilAtual();
   var todos = perfil.lista();
   if(!todos.length){
@@ -2712,28 +3000,258 @@ function montarPDF(Ctor, grupos, todos, perfil){
            fotosComFalha: fotosComFalha, logoFalhou: logoFalhou };
 }
 
+
+/* ==================== RELATÓRIO FOTOGRÁFICO MENSAL ===================
+   A4 paisagem, 4 fotos por página, no mesmo formato do modelo entregue
+   à Prefeitura: moldura verde, cabeçalho com brasão e logo, tarja cinza
+   de descrição sob cada foto e assinaturas no rodapé.
+   ===================================================================== */
+var VERDE_MODELO = [0,102,0];
+var CINZA_TARJA = [217,217,217];
+
+function gerarPDFMensal(Ctor){
+  var cfg = estado.config;
+  var itens = mensaisOrdenadas();
+  if(!itens.length){
+    mostrarMsg('Não há nada para gerar: nenhuma foto cadastrada na aba Mensal.', 'erro', true);
+    return;
+  }
+  if(!cfg.obra || !cfg.empresa){
+    mostrarMsg('Antes de gerar o relatório, informe o nome da obra e o nome da empresa.', 'erro', true);
+    abrirConfig('Preencha estes dados para poder gerar o PDF.');
+    return;
+  }
+  if(!cfg.mesRef){
+    mostrarMsg('Informe o mês de referência do relatório mensal — ele vira o período no cabeçalho.', 'erro', true);
+    abrirConfig('Escolha o mês de referência para poder gerar o relatório mensal.');
+    return;
+  }
+
+  processando(true, 'Gerando o PDF…', 'Preparando as fotos.');
+  $('btPdf').disabled = true;
+
+  var pendentes = [];
+  itens.forEach(function(r){
+    if(!r.dim || !r.dim.w) pendentes.push(medirImagem(r.foto).then(function(d){ r.dim = d; }));
+  });
+  if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)) pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
+  if(cfg.brasao && (!cfg.brasaoDim || !cfg.brasaoDim.w)) pendentes.push(medirImagem(cfg.brasao).then(function(d){ cfg.brasaoDim = d; }));
+
+  Promise.all(pendentes).then(function(){
+    return montarPDFMensal(Ctor, itens);
+  }).then(function(res){
+    processando(false);
+    var auto = publicarArquivo(res.nome, res.blob,
+      'Relatório fotográfico mensal com ' + res.paginas + ' página(s) e ' + itens.length + ' foto(s). ' +
+      'Se o download automático não abrir, use os botões abaixo.');
+    mostrarMsg('PDF gerado com sucesso.' + (auto ? ' O download automático foi disparado.' : '') +
+               (res.fotosComFalha ? ' Atenção: ' + res.fotosComFalha + ' foto(s) não puderam ser desenhadas.' : ''),
+               res.fotosComFalha ? 'erro' : 'sucesso', !!res.fotosComFalha);
+  }).catch(function(e){
+    processando(false);
+    mostrarMsg('Falha ao gerar o PDF: ' + msgErro(e) + ' Nenhum arquivo foi produzido.', 'erro', true);
+  }).then(function(){
+    $('btPdf').disabled = false;
+  });
+}
+
+function montarPDFMensal(Ctor, itens){
+  var doc = new Ctor({ orientation:'landscape', unit:'mm', format:'a4', compress:true });
+  var cfg = estado.config;
+
+  // Geometria medida no modelo (mm), página A4 paisagem 297 x 210.
+  var X0 = 42.8, LARGQ = 211.4;        // quadro externo
+  var XI = 44.8, WI = 207.6;           // área interna (dentro da borda verde)
+  var Y_TOPO = 9.1, Y_FIM = 200.8;
+  var H_BARRA_TOPO = 4.6;
+  var Y_CAB = 13.7, H_CAB = 26.8;      // cabeçalho
+  var Y_L1 = 40.5, H_FOTO = 67.5;      // linha 1 de fotos
+  var Y_TAR1 = Y_L1 + H_FOTO;          // tarja de descrição 1
+  var H_TARJA = 4.5;
+  var Y_L2 = Y_TAR1 + H_TARJA + 2.0;   // linha 2 de fotos
+  var Y_TAR2 = Y_L2 + H_FOTO;
+  var Y_ROD = Y_TAR2 + H_TARJA + 2.0;  // rodapé branco
+  var H_ROD = Y_FIM - 2.0 - Y_ROD;
+  var GAP = 2.5;
+  var W_CEL = (WI - 2*1.4 - GAP) / 2;  // largura de cada célula de foto
+  var X_C1 = XI + 1.4, X_C2 = X_C1 + W_CEL + GAP;
+  var fotosComFalha = 0;
+
+  function setT(c){ doc.setTextColor(c[0],c[1],c[2]); }
+  function setF(c){ doc.setFillColor(c[0],c[1],c[2]); }
+  function fonte(estilo, tam, c){ doc.setFont('helvetica', estilo); doc.setFontSize(tam); if(c) setT(c); }
+  function txt(s, x, y, o){ doc.text(String(s == null ? '' : s), x, y, o || undefined); }
+
+  // Reduz o corpo do texto até caber na largura; devolve o tamanho usado.
+  function ajusta(texto, larg, maior, menor){
+    var t = maior;
+    while(t > menor){
+      doc.setFontSize(t);
+      if(doc.getTextWidth(texto) <= larg) return t;
+      t -= 0.5;
+    }
+    doc.setFontSize(menor);
+    return menor;
+  }
+
+  function imagemAjustada(dataUrl, tipo, dim, x, y, maxW, maxH){
+    if(!dataUrl) return null;
+    var dw = (dim && dim.w) || 4, dh = (dim && dim.h) || 3;
+    var iw = maxW, ih = iw * (dh/dw);
+    if(ih > maxH){ ih = maxH; iw = ih * (dw/dh); }
+    try{ doc.addImage(dataUrl, tipo || 'PNG', x, y, iw, ih); return { w: iw, h: ih }; }
+    catch(e){ return null; }
+  }
+
+  function moldura(){
+    // fundo verde do quadro inteiro e recortes brancos das áreas de conteúdo
+    setF(VERDE_MODELO);
+    doc.rect(X0, Y_TOPO, LARGQ, Y_FIM - Y_TOPO, 'F');
+    setF([255,255,255]);
+    doc.rect(XI, Y_CAB, WI, (Y_TAR1 + H_TARJA) - Y_CAB, 'F');   // cabeçalho + fotos de cima
+    doc.rect(XI, Y_L2, WI, (Y_TAR2 + H_TARJA) - Y_L2, 'F');      // fotos de baixo
+    doc.rect(XI, Y_ROD, WI, H_ROD, 'F');                          // rodapé
+  }
+
+  function cabecalho(){
+    // título centrado, imagens logo abaixo e as duas linhas de texto por último
+    fonte('bold', 12, VERDE_MODELO);
+    txt('RELATÓRIO FOTOGRÁFICO DE OBRA', X0 + LARGQ/2, Y_CAB + 5.7, {align:'center'});
+
+    var yImg = Y_CAB + 7.3, hImg = 8.5;
+    if(cfg.brasao) imagemAjustada(cfg.brasao, cfg.brasaoTipo, cfg.brasaoDim, XI + 3, yImg, 22, hImg);
+    if(cfg.logo){
+      var d = cfg.logoDim || {w:4,h:1.5};
+      var iw = 24, ih = iw * ((d.h||1.5)/(d.w||4));
+      if(ih > hImg){ ih = hImg; iw = ih * ((d.w||4)/(d.h||1.5)); }
+      imagemAjustada(cfg.logo, cfg.logoTipo, cfg.logoDim, XI + WI - 3 - iw, yImg, 24, hImg);
+    }
+
+    var yTexto = Y_CAB + 19.9;
+    var largObra = WI - 6 - 46;
+    var obra = cfg.obra.toLocaleUpperCase('pt-BR');
+    fonte('bold', 6.5, [0,0,0]);
+    doc.setFontSize(ajusta(obra, largObra, 6.5, 4.2));
+    txt(doc.splitTextToSize(obra, largObra)[0], XI + 3, yTexto);
+
+    fonte('bold', 5.5, [0,0,0]);
+    txt('EMPRESA:', XI + WI - 44, yTexto);
+    fonte('normal', 6.5, [0,0,0]);
+    doc.setFontSize(ajusta(cfg.empresa, 26, 6.5, 4.2));
+    txt(doc.splitTextToSize(cfg.empresa, 26)[0], XI + WI - 29, yTexto);
+
+    fonte('bold', 6.5, [0,0,0]);
+    txt('PERÍODO: ' + periodoDoMes(cfg.mesRef), XI + 3, Y_CAB + 24.7);
+
+    // fio fino separando o cabeçalho das fotos
+    doc.setDrawColor(120,120,120); doc.setLineWidth(0.2);
+    doc.line(XI + 1.4, Y_L1 - 0.8, XI + WI - 1.4, Y_L1 - 0.8);
+  }
+
+  function celula(reg, x, y){
+    if(!reg) return;
+    doc.setDrawColor(150,150,150); doc.setLineWidth(0.2);
+    doc.rect(x, y, W_CEL, H_FOTO);
+    var m = imagemAjustada(reg.foto, 'JPEG', reg.dim, x, y, W_CEL - 0.6, H_FOTO - 0.6);
+    if(m){
+      // recentra dentro da célula
+      doc.setFillColor(255,255,255);
+      doc.rect(x + 0.1, y + 0.1, W_CEL - 0.2, H_FOTO - 0.2, 'F');
+      var ix = x + (W_CEL - m.w)/2, iy = y + (H_FOTO - m.h)/2;
+      try{ doc.addImage(reg.foto, 'JPEG', ix, iy, m.w, m.h); }
+      catch(e){ fotosComFalha++; }
+      doc.setDrawColor(150,150,150);
+      doc.rect(x, y, W_CEL, H_FOTO);
+    }else{
+      fotosComFalha++;
+      fonte('italic', 7, [150,150,150]);
+      txt('foto não pôde ser inserida', x + W_CEL/2, y + H_FOTO/2, {align:'center'});
+    }
+  }
+
+  function tarja(reg, x, y){
+    if(!reg) return;
+    setF(CINZA_TARJA);
+    doc.rect(x, y, W_CEL, H_TARJA, 'F');
+    var d = String(reg.descricao || '').toLocaleUpperCase('pt-BR');
+    fonte('bold', 7, [0,0,0]);
+    var t = ajusta(d, W_CEL - 4, 7, 4.2);
+    doc.setFontSize(t);
+    if(doc.getTextWidth(d) <= W_CEL - 4){
+      txt(d, x + W_CEL/2, y + H_TARJA/2 + t*0.35/2.83, {align:'center'});
+    }else{
+      doc.setFontSize(4.6);
+      var linhas = doc.splitTextToSize(d, W_CEL - 4);
+      txt(linhas[0], x + W_CEL/2, y + 1.9, {align:'center'});
+      txt(linhas.length > 2 ? linhas[1].slice(0, -1) + '…' : (linhas[1] || ''), x + W_CEL/2, y + 3.7, {align:'center'});
+    }
+  }
+
+  function rodape(){
+    var ass = [];
+    if(cfg.resp)   ass.push({ nome: cfg.resp,   crea: cfg.crea,       cargo: 'Responsável técnico' });
+    if(cfg.dono)   ass.push({ nome: cfg.dono,   crea: cfg.donoCrea,   cargo: 'Representante da empresa' });
+    if(cfg.fiscal) ass.push({ nome: cfg.fiscal, crea: cfg.fiscalCrea, cargo: 'Fiscal da obra' });
+    if(!ass.length) return;
+    var larg = WI / ass.length;
+    ass.forEach(function(a, i){
+      var cx = XI + larg*i + larg/2;
+      var meia = Math.min(larg*0.34, 22);
+      doc.setDrawColor(0,0,0); doc.setLineWidth(0.2);
+      doc.line(cx - meia, Y_ROD + 1.6, cx + meia, Y_ROD + 1.6);
+      fonte('bold', 5.2, [0,0,0]);
+      txt(a.cargo, cx, Y_ROD + 4.0, {align:'center'});
+      fonte('bold', 5.6, [0,0,0]);
+      txt(doc.splitTextToSize(a.nome, larg - 6)[0], cx, Y_ROD + 6.2, {align:'center'});
+      if(a.crea){
+        fonte('normal', 5.2, [0,0,0]);
+        txt(doc.splitTextToSize(a.crea, larg - 6)[0], cx, Y_ROD + 8.4, {align:'center'});
+      }
+    });
+  }
+
+  var paginas = Math.ceil(itens.length / 4);
+  for(var p=0; p<paginas; p++){
+    if(p > 0) doc.addPage();
+    moldura();
+    cabecalho();
+    var bloco = itens.slice(p*4, p*4 + 4);
+    celula(bloco[0], X_C1, Y_L1);  tarja(bloco[0], X_C1, Y_TAR1);
+    celula(bloco[1], X_C2, Y_L1);  tarja(bloco[1], X_C2, Y_TAR1);
+    celula(bloco[2], X_C1, Y_L2);  tarja(bloco[2], X_C1, Y_TAR2);
+    celula(bloco[3], X_C2, Y_L2);  tarja(bloco[3], X_C2, Y_TAR2);
+    rodape();
+  }
+
+  var blob = doc.output('blob');
+  if(!blob || !blob.size) throw new Error('o arquivo gerado ficou vazio');
+  return { blob: blob, nome: 'relatorio-fotografico-mensal-' + (cfg.mesRef || hojeISO()) + '.pdf',
+           paginas: paginas, fotosComFalha: fotosComFalha };
+}
+
 /* =========================== BACKUP JSON ============================ */
 function exportarBackup(){
   try{
-    if(!estado.registros.length && !estado.arvores.length){
+    if(!estado.registros.length && !estado.arvores.length && !estado.mensais.length){
       mostrarMsg('Não há registros para exportar.', 'erro', true);
       return;
     }
     var pacote = {
       aplicativo: 'registro-interferencias-aguas-guariroba',
-      versao: 3,
+      versao: 4,
       exportadoEm: new Date().toISOString(),
-      total: estado.registros.length + estado.arvores.length,
+      total: estado.registros.length + estado.arvores.length + estado.mensais.length,
       config: estado.config,
       registros: registrosOrdenados(),
-      arvores: ordenarRegistros(estado.arvores)
+      arvores: ordenarRegistros(estado.arvores),
+      mensais: mensaisOrdenadas()
     };
     var texto = JSON.stringify(pacote);
     var blob = new Blob([texto], { type: 'application/json' });
     var nome = 'backup-interferencias-' + hojeISO() + '.json';
     var auto = publicarArquivo(nome, blob,
       'Backup com ' + estado.registros.length + ' casa(s), ' + estado.arvores.length +
-      ' árvore(s) e todas as fotos (' + kb(texto.length) + '). ' +
+      ' árvore(s), ' + estado.mensais.length + ' foto(s) do mensal e todas as imagens (' + kb(texto.length) + '). ' +
       'Guarde este arquivo: ele é a única cópia fora deste aparelho.');
     mostrarMsg('Backup exportado.' + (auto ? ' O download automático foi disparado.' : ''), 'sucesso');
   }catch(e){
@@ -2781,6 +3299,18 @@ function normalizarArvore(o){
   };
 }
 
+function normalizarMensal(o){
+  if(!o || typeof o !== 'object') throw new Error('registro do relatório mensal inválido');
+  return {
+    id: String(o.id || novoId()),
+    foto: String(o.foto || ''),
+    dim: o.dim && o.dim.w ? { w: o.dim.w, h: o.dim.h } : null,
+    descricao: String(o.descricao || '').trim(),
+    criadoEm: String(o.criadoEm || new Date().toISOString()),
+    atualizadoEm: String(o.atualizadoEm || new Date().toISOString())
+  };
+}
+
 function importarBackup(arq){
   if(!arq){ return; }
   processando(true, 'Importando backup…', arq.name || '');
@@ -2794,15 +3324,19 @@ function importarBackup(arq){
       var dados = JSON.parse(leitor.result);
       var lista = Array.isArray(dados) ? dados : (dados && Array.isArray(dados.registros) ? dados.registros : null);
       var listaArv = (dados && Array.isArray(dados.arvores)) ? dados.arvores : [];
-      if(!lista && !listaArv.length) throw new Error('o arquivo não contém uma lista de registros');
+      var listaMen = (dados && Array.isArray(dados.mensais)) ? dados.mensais : [];
+      if(!lista && !listaArv.length && !listaMen.length) throw new Error('o arquivo não contém uma lista de registros');
       var regs = (lista || []).map(normalizarRegistro);
       var arvs = listaArv.map(normalizarArvore);
-      if(!regs.length && !arvs.length) throw new Error('o arquivo de backup está vazio');
+      var mens = listaMen.map(normalizarMensal);
+      if(!regs.length && !arvs.length && !mens.length) throw new Error('o arquivo de backup está vazio');
 
       var jaExistem = regs.filter(function(r){
         return estado.registros.some(function(x){ return x.id === r.id; });
       }).length + arvs.filter(function(r){
         return estado.arvores.some(function(x){ return x.id === r.id; });
+      }).length + mens.filter(function(r){
+        return estado.mensais.some(function(x){ return x.id === r.id; });
       }).length;
 
       var cfgBackup = (dados && dados.config && typeof dados.config === 'object') ? dados.config : null;
@@ -2811,17 +3345,20 @@ function importarBackup(arq){
                       cfgBackup.empresa !== estado.config.empresa);
 
       processando(false);
-      var pergunta = 'Importar ' + regs.length + ' casa(s) e ' + arvs.length + ' árvore(s) deste backup?\n\n' +
+      var pergunta = 'Importar ' + regs.length + ' casa(s), ' + arvs.length + ' árvore(s) e ' +
+        mens.length + ' foto(s) do relatório mensal deste backup?\n\n' +
         (jaExistem ? jaExistem + ' registro(s) já existente(s) serão ATUALIZADOS.\n' : '') +
-        (regs.length + arvs.length - jaExistem) + ' registro(s) novo(s) serão adicionados.\n' +
+        (regs.length + arvs.length + mens.length - jaExistem) + ' registro(s) novo(s) serão adicionados.\n' +
         'Os demais registros atuais serão mantidos.' +
         (trocaCfg ? '\n\nOs dados da obra também serão substituídos por: ' + cfgBackup.obra +
                     ' (' + (cfgBackup.empresa || 'sem empresa') + ').' : '');
       if(!confirm(pergunta)) return;
 
-      processando(true, 'Importando backup…', (regs.length + arvs.length) + ' registro(s)');
+      processando(true, 'Importando backup…', (regs.length + arvs.length + mens.length) + ' registro(s)');
       Armaz.salvarVarios('registros', regs).then(function(){
         return Armaz.salvarVarios('arvores', arvs);
+      }).then(function(){
+        return Armaz.salvarVarios('mensais', mens);
       }).then(function(){
         if(!trocaCfg) return;
         var novo = Object.assign({}, CFG_PADRAO, cfgBackup);
@@ -2830,7 +3367,8 @@ function importarBackup(arq){
         return recarregar();
       }).then(function(){
         processando(false);
-        mostrarMsg('Backup importado: ' + regs.length + ' casa(s) e ' + arvs.length + ' árvore(s).', 'sucesso');
+        mostrarMsg('Backup importado: ' + regs.length + ' casa(s), ' + arvs.length + ' árvore(s) e ' +
+                   mens.length + ' foto(s) do mensal.', 'sucesso');
       }).catch(function(e){
         processando(false);
         mostrarMsg('Falha ao gravar os registros importados: ' + msgErro(e), 'erro', true);
@@ -2847,7 +3385,9 @@ function importarBackup(arq){
 /* ============================== EVENTOS ============================== */
 function ligarEventos(){
   $('fab').addEventListener('click', function(){
-    if(estado.aba === 'arvore') abrirSheetArv(null); else abrirSheet(null);
+    if(estado.aba === 'arvore') abrirSheetArv(null);
+    else if(estado.aba === 'mensal') abrirSheetMensal(null);
+    else abrirSheet(null);
   });
   var abas = document.querySelectorAll('#abas .aba');
   for(var i=0;i<abas.length;i++){
@@ -2863,7 +3403,9 @@ function ligarEventos(){
   $('cFotoEtq').addEventListener('change', function(){ tratarEscolhaFoto('etq', this); });
   $('btFechar').addEventListener('click', fecharSheet);
   $('btCancelar').addEventListener('click', fecharSheet);
-  $('fundoEscuro').addEventListener('click', function(){ fecharSheet(); fecharSheetArv(); fecharConfig(); });
+  $('fundoEscuro').addEventListener('click', function(){
+    fecharSheet(); fecharSheetArv(); fecharSheetMensal(); fecharConfig();
+  });
   $('btSalvar').addEventListener('click', salvarCasa);
   $('btExcluir').addEventListener('click', function(){
     if(estado.editandoId) excluirRegistro(estado.editandoId);
@@ -2874,6 +3416,18 @@ function ligarEventos(){
   $('btCancelarCfg').addEventListener('click', fecharConfig);
   $('btSalvarCfg').addEventListener('click', salvarConfig);
   $('cLogo').addEventListener('change', function(){ tratarEscolhaLogo(this); });
+  $('cBrasao').addEventListener('change', function(){ tratarEscolhaBrasao(this); });
+  $('btRemoverBrasao').addEventListener('click', function(){
+    estado.brasaoPendente = null;
+    pintarBrasao(null, 'Imagem removida. Salve para confirmar.', '');
+  });
+  $('btFecharMen').addEventListener('click', fecharSheetMensal);
+  $('btCancelarMen').addEventListener('click', fecharSheetMensal);
+  $('btSalvarMen').addEventListener('click', salvarFotoMensal);
+  $('btExcluirMen').addEventListener('click', function(){
+    if(estado.editandoMenId) excluirFotoMensal(estado.editandoMenId);
+  });
+  $('cFotoMen').addEventListener('change', function(){ tratarEscolhaFoto('men', this); });
   $('btRemoverLogo').addEventListener('click', function(){
     estado.logoPendente = null;
     pintarLogo(null, 'Logo removida. Salve para confirmar.', '');
@@ -2889,8 +3443,17 @@ function ligarEventos(){
 
   $('lista').addEventListener('click', function(ev){
     var alvo = ev.target.closest ?
-      ev.target.closest('[data-editar],[data-excluir],[data-editar-arv],[data-excluir-arv]') : null;
+      ev.target.closest('[data-editar],[data-excluir],[data-editar-arv],[data-excluir-arv],[data-editar-men],[data-excluir-men]') : null;
     if(!alvo) return;
+    var idEdM = alvo.getAttribute('data-editar-men');
+    var idExM = alvo.getAttribute('data-excluir-men');
+    if(idEdM){
+      var men = estado.mensais.filter(function(r){ return r.id === idEdM; })[0];
+      if(!men){ mostrarMsg('Registro não encontrado para edição.', 'erro', true); return; }
+      abrirSheetMensal(men);
+      return;
+    }
+    if(idExM){ excluirFotoMensal(idExM); return; }
     var idEdA = alvo.getAttribute('data-editar-arv');
     var idExA = alvo.getAttribute('data-excluir-arv');
     if(idEdA){
@@ -2927,7 +3490,7 @@ function ligarEventos(){
   });
 
   window.addEventListener('beforeunload', function(ev){
-    if(Armaz.modo === 'memoria' && (estado.registros.length || estado.arvores.length)){
+    if(Armaz.modo === 'memoria' && (estado.registros.length || estado.arvores.length || estado.mensais.length)){
       ev.preventDefault();
       ev.returnValue = '';
       return '';

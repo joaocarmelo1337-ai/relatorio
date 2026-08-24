@@ -10,6 +10,12 @@ Aplicativo web de campo com duas abas, cada uma com o seu relatório em PDF:
   etiqueta de identificação. Identidade em marrom, e o destinatário é você quem
   escreve em "Dados da obra".
 
+- **Mensal** — relatório fotográfico mensal de obra, no formato entregue à Prefeitura:
+  A4 **paisagem**, 4 fotos por página com a descrição do serviço em tarja cinza, moldura
+  verde, cabeçalho com brasão de quem recebe, logo da empresa, obra, empresa e período,
+  e assinaturas no rodapé de todas as páginas. Aqui **não se pede rua nem data** — elas já
+  vêm carimbadas na própria foto pelo aplicativo de câmera.
+
 A cor da tela inteira muda conforme a aba, para não haver dúvida sobre onde se está
 cadastrando.
 
@@ -46,6 +52,8 @@ Dica: no Android/iOS, use "Adicionar à tela de início" para abrir como um apli
 - **Dados do relatório**: nome da obra, contrato/processo, município, concessionária,
   destinatário do relatório de árvores, empresa executora, CNPJ e logo da empresa. Só a
   obra e a empresa são obrigatórias; o resto aparece no PDF apenas se estiver preenchido.
+- **Mês de referência e brasão do destinatário**: usados pelo relatório mensal — o mês
+  vira o período `01/07/2026 - 31/07/2026` no cabeçalho.
 - **Assinaturas**: até três, todas opcionais — responsável técnico, representante/dono da
   empresa e fiscal da obra, cada uma com nome e CREA/CAU. Entram no fim do PDF apenas as
   preenchidas, lado a lado.

@@ -164,6 +164,9 @@ main#lista{padding:4px 10px}
   border:1px solid var(--borda);background:#fff;border-radius:7px;padding:7px 9px;
   font-size:12px;font-family:inherit;font-weight:600;color:var(--texto);min-width:64px;
 }
+.card .setas{display:flex;gap:5px}
+.card .setas button{min-width:0;flex:1;padding:7px 0;font-size:15px;line-height:1}
+.card .setas button[disabled]{opacity:.35}
 .card .acoes .ex{color:var(--vermelho);border-color:#e2b6b0}
 .vazio{
   text-align:center;color:var(--suave);padding:40px 22px;font-size:14px;
@@ -462,6 +465,11 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
         <input type="file" id="cFotoMen" accept="image/*">
         <div class="estado" id="estMen">Nenhuma foto selecionada.</div>
       </div>
+    </div>
+    <div class="campo">
+      <label for="cPagMen">Página do relatório</label>
+      <select id="cPagMen"></select>
+      <div class="ajuda">Cada página leva até 4 fotos. Escolha em qual delas esta foto entra.</div>
     </div>
     <div class="campo">
       <label for="cDescMen">Descrição do serviço <span class="obrig">*</span></label>
@@ -1352,10 +1360,94 @@ function itensDaAba(){
   return estado.registros;
 }
 
+var FOTOS_POR_PAGINA = 4;
+
+// Ordem do relatório: página, depois posição dentro da página. Registros antigos,
+// sem página definida, entram na sequência em que foram cadastrados.
 function mensaisOrdenadas(){
-  return estado.mensais.slice().sort(function(a,b){
+  var comPagina = [], semPagina = [];
+  estado.mensais.forEach(function(r){
+    if(r.pagina) comPagina.push(r); else semPagina.push(r);
+  });
+  comPagina.sort(function(a,b){
+    if(a.pagina !== b.pagina) return a.pagina - b.pagina;
+    if((a.ordem||0) !== (b.ordem||0)) return (a.ordem||0) - (b.ordem||0);
     return String(a.criadoEm||'').localeCompare(String(b.criadoEm||''));
   });
+  semPagina.sort(function(a,b){ return String(a.criadoEm||'').localeCompare(String(b.criadoEm||'')); });
+  return comPagina.concat(semPagina);
+}
+
+// Agrupa em páginas de no máximo 4 fotos, respeitando a página escolhida.
+function paginasMensais(){
+  var lista = mensaisOrdenadas();
+  var mapa = {}, ordem = [];
+  var proxima = 1;
+  lista.forEach(function(r){
+    var p = r.pagina || 0;
+    if(!p){
+      // sem página definida: entra na última que ainda tem espaço
+      p = proxima;
+      while(mapa[p] && mapa[p].length >= FOTOS_POR_PAGINA) p++;
+    }
+    if(!mapa[p]){ mapa[p] = []; ordem.push(p); }
+    if(mapa[p].length >= FOTOS_POR_PAGINA){
+      // página cheia: transborda para a primeira seguinte com espaço
+      var q = p + 1;
+      while(mapa[q] && mapa[q].length >= FOTOS_POR_PAGINA) q++;
+      if(!mapa[q]){ mapa[q] = []; ordem.push(q); }
+      mapa[q].push(r);
+    }else{
+      mapa[p].push(r);
+    }
+    proxima = p;
+  });
+  ordem.sort(function(a,b){ return a - b; });
+  return ordem.map(function(p){ return mapa[p]; });
+}
+
+// Reescreve página e posição de todos os registros conforme o agrupamento atual.
+// Devolve só os que mudaram, para gravar o mínimo possível.
+function renumerarMensais(paginas){
+  var alterados = [];
+  paginas.forEach(function(fotos, iPag){
+    fotos.forEach(function(r, iFoto){
+      if(r.pagina !== iPag + 1 || r.ordem !== iFoto + 1){
+        r.pagina = iPag + 1;
+        r.ordem = iFoto + 1;
+        r.atualizadoEm = new Date().toISOString();
+        alterados.push(r);
+      }
+    });
+  });
+  return alterados;
+}
+
+function gravarOrdemMensal(paginas){
+  var alterados = renumerarMensais(paginas);
+  if(!alterados.length) return Promise.resolve();
+  return Armaz.salvarVarios('mensais', alterados);
+}
+
+// Troca uma foto de lugar com a vizinha na sequência do relatório.
+function moverFotoMensal(id, direcao){
+  try{
+    var seq = [];
+    paginasMensais().forEach(function(f){ seq = seq.concat(f); });
+    var i = seq.findIndex(function(r){ return r.id === id; });
+    var j = i + direcao;
+    if(i < 0 || j < 0 || j >= seq.length) return;
+    var tmp = seq[i]; seq[i] = seq[j]; seq[j] = tmp;
+    var paginas = [];
+    for(var k=0;k<seq.length;k+=FOTOS_POR_PAGINA) paginas.push(seq.slice(k, k+FOTOS_POR_PAGINA));
+    gravarOrdemMensal(paginas).then(function(){
+      return recarregar();
+    }).catch(function(e){
+      mostrarMsg('Não foi possível mudar a foto de lugar: ' + msgErro(e), 'erro', true);
+    });
+  }catch(e){
+    mostrarMsg('Não foi possível mudar a foto de lugar: ' + msgErro(e), 'erro', true);
+  }
 }
 
 // "2026-07" -> "01/07/2026 - 31/07/2026"
@@ -1513,7 +1605,7 @@ function cardArvore(r){
   '</div>';
 }
 
-function cardMensal(r, indice){
+function cardMensal(r, indice, primeiro, ultimo){
   return '<div class="card">' +
     '<img class="mini" src="' + esc(r.foto || '') + '" alt="Foto do relatório mensal">' +
     '<div class="corpo">' +
@@ -1521,6 +1613,12 @@ function cardMensal(r, indice){
       '<div class="l2">' + esc(r.descricao || '') + '</div>' +
     '</div>' +
     '<div class="acoes">' +
+      '<div class="setas">' +
+        '<button type="button" data-subir-men="' + esc(r.id) + '" aria-label="Mover para cima"' +
+          (primeiro ? ' disabled' : '') + '>&#9650;</button>' +
+        '<button type="button" data-descer-men="' + esc(r.id) + '" aria-label="Mover para baixo"' +
+          (ultimo ? ' disabled' : '') + '>&#9660;</button>' +
+      '</div>' +
       '<button type="button" data-editar-men="' + esc(r.id) + '">Editar</button>' +
       '<button type="button" class="ex" data-excluir-men="' + esc(r.id) + '">Excluir</button>' +
     '</div>' +
@@ -1528,26 +1626,30 @@ function cardMensal(r, indice){
 }
 
 function renderizarListaMensal(){
-  var itens = mensaisOrdenadas();
+  var paginas = paginasMensais();
+  var total = estado.mensais.length;
   var cfg = estado.config;
-  var paginas = Math.ceil(itens.length / 4) || 0;
-  $('resumoTopo').textContent = itens.length + ' foto(s) — ' + paginas + ' página(s) no PDF' +
+  $('resumoTopo').textContent = total + ' foto(s) — ' + paginas.length + ' página(s) no PDF' +
     (cfg.mesRef ? ' — mês de referência: ' + mesPorExtenso(cfg.mesRef) + '.' : ' — mês de referência não informado.');
   var cx = $('lista');
-  if(!itens.length){
+  if(!total){
     cx.innerHTML = '<div class="vazio">Nenhuma foto cadastrada ainda.<br>' +
       'Toque no botão <b>+</b> para adicionar a primeira foto do mês.</div>';
     return;
   }
   var html = '';
-  for(var i=0;i<itens.length;i+=4){
-    var bloco = itens.slice(i, i+4);
+  var n = 0;
+  paginas.forEach(function(fotos, iPag){
     html += '<div class="grupoRua">';
-    html += '<div class="tituloRua"><span class="nome">Página ' + (i/4 + 1) + '</span>' +
-            '<span class="cont">' + bloco.length + ' de 4 fotos</span></div>';
-    bloco.forEach(function(r, j){ html += cardMensal(r, i + j + 1); });
+    html += '<div class="tituloRua"><span class="nome">Página ' + (iPag + 1) + '</span>' +
+            '<span class="cont">' + fotos.length + ' de ' + FOTOS_POR_PAGINA + ' fotos</span></div>';
+    fotos.forEach(function(r, j){
+      n++;
+      html += cardMensal(r, n, iPag === 0 && j === 0,
+                         iPag === paginas.length - 1 && j === fotos.length - 1);
+    });
     html += '</div>';
-  }
+  });
   cx.innerHTML = html;
 }
 
@@ -1881,9 +1983,38 @@ function fecharSheet(){
 }
 
 /* ------------------ folha de cadastro da foto mensal ------------------ */
+function preencherSeletorPagina(reg){
+  var paginas = paginasMensais();
+  var sel = $('cPagMen');
+  var html = '';
+  paginas.forEach(function(fotos, i){
+    var nesta = reg && fotos.some(function(r){ return r.id === reg.id; });
+    var vagas = FOTOS_POR_PAGINA - fotos.length + (nesta ? 1 : 0);
+    var cheia = vagas <= 0;
+    html += '<option value="' + (i+1) + '"' + (cheia ? ' disabled' : '') + '>' +
+            'Página ' + (i+1) + ' — ' + fotos.length + ' de ' + FOTOS_POR_PAGINA +
+            (cheia ? ' (cheia)' : ' (cabe mais ' + vagas + ')') + '</option>';
+  });
+  html += '<option value="nova">Nova página no fim</option>';
+  sel.innerHTML = html;
+
+  if(reg && reg.pagina){
+    sel.value = String(reg.pagina);
+    if(sel.value !== String(reg.pagina)) sel.value = 'nova';
+  }else{
+    // nova foto: primeira página com espaço, senão uma nova
+    var livre = 0;
+    for(var i=0;i<paginas.length;i++){
+      if(paginas[i].length < FOTOS_POR_PAGINA){ livre = i + 1; break; }
+    }
+    sel.value = livre ? String(livre) : 'nova';
+  }
+}
+
 function abrirSheetMensal(reg){
   try{
     mostrarErroFormMen('');
+    preencherSeletorPagina(reg);
     estado.editandoMenId = reg ? reg.id : null;
     estado.fotos.men = null;
     $('cDescMen').value = '';
@@ -1938,11 +2069,19 @@ function salvarFotoMensal(){
     var antigo = estado.editandoMenId
       ? (estado.mensais.filter(function(r){ return r.id === estado.editandoMenId; })[0] || null) : null;
     var agora = new Date().toISOString();
+    var escolha = $('cPagMen').value;
+    var paginasAtuais = paginasMensais();
+    var pagAlvo = escolha === 'nova' ? paginasAtuais.length + 1 : parseInt(escolha, 10) || 1;
+    var mudouPagina = !antigo || antigo.pagina !== pagAlvo;
+
     var reg = {
       id: estado.editandoMenId || novoId(),
       foto: estado.fotos.men.dataUrl,
       dim: { w: estado.fotos.men.w || null, h: estado.fotos.men.h || null },
       descricao: desc,
+      pagina: pagAlvo,
+      // entra no fim da página escolhida quando muda de página
+      ordem: mudouPagina ? FOTOS_POR_PAGINA + 1 : (antigo.ordem || 1),
       criadoEm: (antigo && antigo.criadoEm) || agora,
       atualizadoEm: agora
     };
@@ -1951,6 +2090,10 @@ function salvarFotoMensal(){
     var edicao = !!estado.editandoMenId;
     Armaz.salvar('mensais', reg).then(function(){
       fecharSheetMensal();
+      return recarregar();
+    }).then(function(){
+      return gravarOrdemMensal(paginasMensais());
+    }).then(function(){
       return recarregar();
     }).then(function(){
       if(!estado.mensais.some(function(r){ return r.id === reg.id; })){
@@ -1975,6 +2118,10 @@ function excluirFotoMensal(id){
   if(!confirm('Excluir esta foto do relatório mensal?\n\n' + (reg.descricao||'') + '\n\nEsta ação não pode ser desfeita.')) return;
   Armaz.remover('mensais', id).then(function(){
     if(estado.editandoMenId === id) fecharSheetMensal();
+    return recarregar();
+  }).then(function(){
+    return gravarOrdemMensal(paginasMensais());
+  }).then(function(){
     return recarregar();
   }).then(function(){
     mostrarMsg('Foto excluída do relatório mensal.', 'sucesso');
@@ -3012,6 +3159,7 @@ var CINZA_TARJA = [217,217,217];
 function gerarPDFMensal(Ctor){
   var cfg = estado.config;
   var itens = mensaisOrdenadas();
+  var paginasFotos = paginasMensais();
   if(!itens.length){
     mostrarMsg('Não há nada para gerar: nenhuma foto cadastrada na aba Mensal.', 'erro', true);
     return;
@@ -3038,7 +3186,7 @@ function gerarPDFMensal(Ctor){
   if(cfg.brasao && (!cfg.brasaoDim || !cfg.brasaoDim.w)) pendentes.push(medirImagem(cfg.brasao).then(function(d){ cfg.brasaoDim = d; }));
 
   Promise.all(pendentes).then(function(){
-    return montarPDFMensal(Ctor, itens);
+    return montarPDFMensal(Ctor, paginasFotos);
   }).then(function(res){
     processando(false);
     var auto = publicarArquivo(res.nome, res.blob,
@@ -3055,7 +3203,7 @@ function gerarPDFMensal(Ctor){
   });
 }
 
-function montarPDFMensal(Ctor, itens){
+function montarPDFMensal(Ctor, paginasFotos){
   var doc = new Ctor({ orientation:'landscape', unit:'mm', format:'a4', compress:true });
   var cfg = estado.config;
 
@@ -3065,12 +3213,12 @@ function montarPDFMensal(Ctor, itens){
   var Y_TOPO = 9.1, Y_FIM = 200.8;
   var H_BARRA_TOPO = 4.6;
   var Y_CAB = 13.7, H_CAB = 26.8;      // cabeçalho
-  var Y_L1 = 40.5, H_FOTO = 67.5;      // linha 1 de fotos
+  var Y_L1 = 40.5, H_FOTO = 64.5;      // linha 1 de fotos
   var Y_TAR1 = Y_L1 + H_FOTO;          // tarja de descrição 1
   var H_TARJA = 4.5;
   var Y_L2 = Y_TAR1 + H_TARJA + 2.0;   // linha 2 de fotos (respiro branco, sem faixa verde)
   var Y_TAR2 = Y_L2 + H_FOTO;
-  var Y_ROD = Y_TAR2 + H_TARJA + 2.0;  // rodapé branco
+  var Y_ROD = Y_TAR2 + H_TARJA + 2.0;  // área de assinatura, sem faixa verde acima
   var H_ROD = Y_FIM - 2.0 - Y_ROD;
   var GAP = 2.5;
   var W_CEL = (WI - 2*1.4 - GAP) / 2;  // largura de cada célula de foto
@@ -3108,9 +3256,9 @@ function montarPDFMensal(Ctor, itens){
     setF(VERDE_MODELO);
     doc.rect(X0, Y_TOPO, LARGQ, Y_FIM - Y_TOPO, 'F');
     setF([255,255,255]);
-    // uma área branca contínua: cabeçalho e as duas linhas de fotos, sem faixa verde no meio
-    doc.rect(XI, Y_CAB, WI, (Y_TAR2 + H_TARJA) - Y_CAB, 'F');
-    doc.rect(XI, Y_ROD, WI, H_ROD, 'F');                          // rodapé
+    // uma única área branca: cabeçalho, as duas linhas de fotos e a área de assinatura.
+    // Sem faixa verde no meio da folha nem acima das assinaturas.
+    doc.rect(XI, Y_CAB, WI, (Y_ROD + H_ROD) - Y_CAB, 'F');
   }
 
   function cabecalho(){
@@ -3205,28 +3353,28 @@ function montarPDFMensal(Ctor, itens){
     if(cfg.fiscal) ass.push({ nome: cfg.fiscal, crea: cfg.fiscalCrea, cargo: 'Fiscal da obra' });
     if(!ass.length) return;
     var larg = WI / ass.length;
+    var yLinha = Y_ROD + 7.0;          // espaço em branco acima para assinar de próprio punho
     ass.forEach(function(a, i){
       var cx = XI + larg*i + larg/2;
-      var meia = Math.min(larg*0.34, 22);
+      var meia = Math.min(larg*0.36, 26);
       doc.setDrawColor(0,0,0); doc.setLineWidth(0.2);
-      doc.line(cx - meia, Y_ROD + 1.6, cx + meia, Y_ROD + 1.6);
-      fonte('bold', 5.2, [0,0,0]);
-      txt(a.cargo, cx, Y_ROD + 4.0, {align:'center'});
+      doc.line(cx - meia, yLinha, cx + meia, yLinha);
       fonte('bold', 5.6, [0,0,0]);
-      txt(doc.splitTextToSize(a.nome, larg - 6)[0], cx, Y_ROD + 6.2, {align:'center'});
+      txt(doc.splitTextToSize(a.nome, larg - 6)[0], cx, yLinha + 2.6, {align:'center'});
+      fonte('normal', 5.2, [0,0,0]);
+      txt(a.cargo, cx, yLinha + 5.0, {align:'center'});
       if(a.crea){
-        fonte('normal', 5.2, [0,0,0]);
-        txt(doc.splitTextToSize(a.crea, larg - 6)[0], cx, Y_ROD + 8.4, {align:'center'});
+        txt(doc.splitTextToSize(a.crea, larg - 6)[0], cx, yLinha + 7.4, {align:'center'});
       }
     });
   }
 
-  var paginas = Math.ceil(itens.length / 4);
+  var paginas = paginasFotos.length;
   for(var p=0; p<paginas; p++){
     if(p > 0) doc.addPage();
     moldura();
     cabecalho();
-    var bloco = itens.slice(p*4, p*4 + 4);
+    var bloco = paginasFotos[p];
     celula(bloco[0], X_C1, Y_L1);  tarja(bloco[0], X_C1, Y_TAR1);
     celula(bloco[1], X_C2, Y_L1);  tarja(bloco[1], X_C2, Y_TAR1);
     celula(bloco[2], X_C1, Y_L2);  tarja(bloco[2], X_C1, Y_TAR2);
@@ -3317,6 +3465,8 @@ function normalizarMensal(o){
     foto: String(o.foto || ''),
     dim: o.dim && o.dim.w ? { w: o.dim.w, h: o.dim.h } : null,
     descricao: String(o.descricao || '').trim(),
+    pagina: parseInt(o.pagina, 10) || 0,
+    ordem: parseInt(o.ordem, 10) || 0,
     criadoEm: String(o.criadoEm || new Date().toISOString()),
     atualizadoEm: String(o.atualizadoEm || new Date().toISOString())
   };
@@ -3454,8 +3604,12 @@ function ligarEventos(){
 
   $('lista').addEventListener('click', function(ev){
     var alvo = ev.target.closest ?
-      ev.target.closest('[data-editar],[data-excluir],[data-editar-arv],[data-excluir-arv],[data-editar-men],[data-excluir-men]') : null;
+      ev.target.closest('[data-editar],[data-excluir],[data-editar-arv],[data-excluir-arv],[data-editar-men],[data-excluir-men],[data-subir-men],[data-descer-men]') : null;
     if(!alvo) return;
+    var idSobe = alvo.getAttribute('data-subir-men');
+    var idDesce = alvo.getAttribute('data-descer-men');
+    if(idSobe){ moverFotoMensal(idSobe, -1); return; }
+    if(idDesce){ moverFotoMensal(idDesce, 1); return; }
     var idEdM = alvo.getAttribute('data-editar-men');
     var idExM = alvo.getAttribute('data-excluir-men');
     if(idEdM){

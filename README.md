@@ -14,7 +14,9 @@ Aplicativo web de campo com duas abas, cada uma com o seu relatório em PDF:
   A4 **paisagem**, 4 fotos por página com a descrição do serviço em tarja cinza, moldura
   verde, cabeçalho com brasão de quem recebe, logo da empresa, obra, empresa e período,
   e assinaturas no rodapé de todas as páginas. Aqui **não se pede rua nem data** — elas já
-  vêm carimbadas na própria foto pelo aplicativo de câmera.
+  vêm carimbadas na própria foto pelo aplicativo de câmera. Cada foto pode ser posta na
+  página que você quiser (seletor no cadastro) e reordenada com as setas na listagem;
+  uma página pode ficar com menos de 4 fotos.
 
 A cor da tela inteira muda conforme a aba, para não haver dúvida sobre onde se está
 cadastrando.

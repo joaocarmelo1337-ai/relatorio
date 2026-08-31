@@ -64,6 +64,9 @@ Dica: no Android/iOS, use "Adicionar à tela de início" para abrir como um apli
 - **Assinaturas**: até três, todas opcionais — responsável técnico, representante/dono da
   empresa e fiscal da obra, cada uma com nome e CREA/CAU. Entram no fim do PDF apenas as
   preenchidas, lado a lado.
+- **Planilha `.xlsx`**: uma aba por módulo com dados, mais uma aba de resumo por rua —
+  escrita pelo próprio app, sem biblioteca externa. Abre no Excel e no Google Planilhas.
+  Não leva as fotos.
 - **PDF**: um único arquivo A4 estruturado como documento técnico —
   1. **capa** com a logo, a empresa, o quadro de identificação da obra e os quantitativos;
   2. **1. Apresentação** (texto formal citando obra, empresa, município e concessionária);
@@ -78,6 +81,20 @@ Dica: no Android/iOS, use "Adicionar à tela de início" para abrir como um apli
   A paginação é calculada bloco a bloco, de modo que nenhuma casa é cortada ao meio.
 - **Contagem de ligações a modificar**: considera apenas os registros cuja situação do
   **esgoto** seja *A remanejar* ou *Danificado* (não conta *Mantido* nem *Já remanejado*).
+
+## Interface
+
+- **Lista em sanfona**: a tela mostra os cards das ruas com o nome, o contador e a seta;
+  tocar abre a rua e revela os registros, tocar de novo recolhe. Uma rua aberta por vez, e a
+  rua que você acabou de usar já fica aberta. Não vale para a aba Mensal, agrupada por página.
+- **Exportações**: dois cards com ícone — **PDF** (relatório formal) e **Planilha Excel**
+  (dados para conferência). Exportar/Importar backup ficam como ações secundárias.
+- **Descrições reutilizáveis**: no cadastro, chips acima do campo preenchem a descrição com
+  um toque. Vêm de uma lista padrão de serviços (aba Mensal) e do que você já escreveu antes.
+  O botão *Gerenciar* apaga o que não serve mais.
+- **Indicador de salvamento** no cabeçalho: *Salvo no aparelho* / *Salvando…* / *Não gravado*.
+  Tocar nele explica onde os dados estão. Não há sincronização com servidor — por isso o
+  indicador fala em aparelho, e não em nuvem.
 
 ## Armazenamento
 

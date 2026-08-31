@@ -20,7 +20,7 @@ Aplicativo web de campo com duas abas, cada uma com o seu relatório em PDF:
 
 - **Ramal** — ramais de água, com a foto do ramal (obrigatória), uma foto opcional do
   depois do serviço, a rua e o ajuste de nível (**Rebaixar**, **Elevar** ou **Sem ajuste**).
-  Identidade em preto; no PDF as fichas saem duas por linha.
+  Identidade em cinza; no PDF as fichas saem duas por linha.
 
 A cor da tela inteira muda conforme a aba, para não haver dúvida sobre onde se está
 cadastrando.
@@ -54,7 +54,8 @@ Dica: no Android/iOS, use "Adicionar à tela de início" para abrir como um apli
   erro de "foto grande demais".
 - **Listagem**: registros agrupados por rua, com contagem de casas, filtro por rua e
   badges coloridos por situação (verde = Mantido, laranja = A remanejar,
-  vermelho = Danificado, cinza = Já remanejado). Permite editar e excluir.
+  vermelho = Danificado, cinza = Já remanejado, roxo = Não localizado,
+  azul-ardósia = Não instalado — estas duas só para o hidrômetro). Permite editar e excluir.
 - **Dados do relatório**: nome da obra, contrato/processo, município, concessionária,
   destinatário do relatório de árvores, empresa executora, CNPJ e logo da empresa. Só a
   obra e a empresa são obrigatórias; o resto aparece no PDF apenas se estiver preenchido.

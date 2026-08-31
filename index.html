@@ -257,6 +257,7 @@ main#lista{padding:4px 10px}
 #overlayProc .txt{font-weight:700;color:var(--escuro);font-size:14.5px}
 #overlayProc .sub{font-size:12.5px;color:var(--suave)}
 footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:var(--suave)}
+.versaoApp{margin-top:6px;font-size:10.5px;opacity:.8}
 </style>
 </head>
 <body>
@@ -295,7 +296,10 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
 <div id="resumoTopo"></div>
 <div id="areaDownloads"></div>
 <main id="lista"></main>
-<footer class="rodapeApp">Os dados ficam salvos apenas neste navegador/aparelho. Faça backups com frequência.</footer>
+<footer class="rodapeApp">
+  Os dados ficam salvos apenas neste navegador/aparelho. Faça backups com frequência.
+  <div id="versaoApp" class="versaoApp"></div>
+</footer>
 
 <button type="button" id="fab" aria-label="Cadastrar nova casa">+</button>
 
@@ -1100,6 +1104,7 @@ var COR_PDF = {'Mantido':[46,125,50],'A remanejar':[230,126,34],'Danificado':[19
                'Já remanejado':[127,140,141],'Não localizado':[142,68,173],'Não instalado':[52,73,94]};
 var LIMITE_FOTO = 900 * 1024;         // ~900 KB por foto
 var LIMITE_LOGO = 500 * 1024;         // ~500 KB para a logo
+var VERSAO_APP = '31/08/2026';       // atualizada a cada publicação
 var CHAVE_LS = 'aguasguariroba_registros_v1';
 var CHAVE_LS_ARV = 'aguasguariroba_arvores_v1';
 var CHAVE_LS_MEN = 'aguasguariroba_mensais_v1';
@@ -4097,6 +4102,7 @@ function iniciar(){
   try{
     $('cData').value = hojeISO();
     $('cDataA').value = hojeISO();
+    $('versaoApp').textContent = 'Versão de ' + VERSAO_APP;
     ligarEventos();
   }catch(e){
     try{ alert('Falha ao iniciar a interface: ' + msgErro(e)); }catch(e2){}

@@ -29,6 +29,11 @@ body[data-aba="mensal"]{
   --azul-esc:#004d00;
   --escuro:#0b3d16;
 }
+body[data-aba="ramal"]{
+  --azul:#111111;      /* preto: aba e relatório de ramais de água */
+  --azul-esc:#000000;
+  --escuro:#000000;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
@@ -44,10 +49,11 @@ header#cab{
 #cab .tit{font-size:16px;font-weight:700;letter-spacing:.2px}
 #cab .sub{font-size:11.5px;color:#c3d0da;margin-top:2px}
 #abas{display:flex;gap:7px;margin-top:11px}
+#abas{flex-wrap:wrap}
 #abas .aba{
-  flex:1;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
-  color:#e8eef3;font-family:inherit;font-size:12.5px;font-weight:700;
-  padding:9px 4px;border-radius:8px;min-height:40px;
+  flex:1 1 22%;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);
+  color:#e8eef3;font-family:inherit;font-size:11.5px;font-weight:700;
+  padding:9px 2px;border-radius:8px;min-height:40px;white-space:nowrap;
 }
 #abas .aba .qtd{font-weight:600;opacity:.72}
 #abas .aba.ativa{background:#fff;color:var(--escuro);border-color:#fff}
@@ -159,6 +165,9 @@ main#lista{padding:4px 10px}
 .b-danificado{background:var(--vermelho)}
 .b-ja{background:var(--cinza)}
 .b-cortada{background:#6b4423}
+.b-rebaixar{background:#b5651d}
+.b-elevar{background:#2f6f8f}
+.b-semajuste{background:var(--cinza)}
 .card .acoes{display:flex;flex-direction:column;gap:6px;justify-content:center}
 .card .acoes button{
   border:1px solid var(--borda);background:#fff;border-radius:7px;padding:7px 9px;
@@ -184,22 +193,22 @@ main#lista{padding:4px 10px}
   opacity:0;pointer-events:none;transition:opacity .22s ease;
 }
 #fundoEscuro.aberto{opacity:1;pointer-events:auto}
-#sheet, #sheetConfig, #sheetArv, #sheetMensal{
+#sheet, #sheetConfig, #sheetArv, #sheetMensal, #sheetRamal{
   position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--fundo);
   border-radius:16px 16px 0 0;box-shadow:0 -6px 22px rgba(0,0,0,.25);
   max-height:94vh;display:flex;flex-direction:column;
   transform:translateY(100%);transition:transform .28s cubic-bezier(.22,.68,.36,1);
 }
-#sheet.aberto, #sheetConfig.aberto, #sheetArv.aberto, #sheetMensal.aberto{transform:translateY(0)}
-#sheet .puxador, #sheetConfig .puxador, #sheetArv .puxador, #sheetMensal .puxador{width:42px;height:4px;background:#c8cfc9;border-radius:4px;margin:8px auto 2px}
-#sheet .topo, #sheetConfig .topo, #sheetArv .topo, #sheetMensal .topo{
+#sheet.aberto, #sheetConfig.aberto, #sheetArv.aberto, #sheetMensal.aberto, #sheetRamal.aberto{transform:translateY(0)}
+#sheet .puxador, #sheetConfig .puxador, #sheetArv .puxador, #sheetMensal .puxador, #sheetRamal .puxador{width:42px;height:4px;background:#c8cfc9;border-radius:4px;margin:8px auto 2px}
+#sheet .topo, #sheetConfig .topo, #sheetArv .topo, #sheetMensal .topo, #sheetRamal .topo{
   display:flex;justify-content:space-between;align-items:center;
   padding:6px 14px 10px;border-bottom:1px solid var(--borda);
 }
-#sheet .topo h2, #sheetConfig .topo h2, #sheetArv .topo h2, #sheetMensal .topo h2{margin:0;font-size:16px;color:var(--escuro)}
-#sheet .topo button, #sheetConfig .topo button, #sheetArv .topo button, #sheetMensal .topo button{background:none;border:none;font-size:24px;color:var(--suave);font-family:inherit;padding:0 4px}
-#sheet .conteudo, #sheetConfig .conteudo, #sheetArv .conteudo, #sheetMensal .conteudo{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 16px}
-#sheet .rodape, #sheetConfig .rodape, #sheetArv .rodape, #sheetMensal .rodape{
+#sheet .topo h2, #sheetConfig .topo h2, #sheetArv .topo h2, #sheetMensal .topo h2, #sheetRamal .topo h2{margin:0;font-size:16px;color:var(--escuro)}
+#sheet .topo button, #sheetConfig .topo button, #sheetArv .topo button, #sheetMensal .topo button, #sheetRamal .topo button{background:none;border:none;font-size:24px;color:var(--suave);font-family:inherit;padding:0 4px}
+#sheet .conteudo, #sheetConfig .conteudo, #sheetArv .conteudo, #sheetMensal .conteudo, #sheetRamal .conteudo{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 16px}
+#sheet .rodape, #sheetConfig .rodape, #sheetArv .rodape, #sheetMensal .rodape, #sheetRamal .rodape{
   padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom));
   border-top:1px solid var(--borda);background:#fff;display:flex;gap:8px;
 }
@@ -257,6 +266,7 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
     <button type="button" class="aba ativa" data-aba="esgoto">Esgoto <span class="qtd" id="qtdEsgoto"></span></button>
     <button type="button" class="aba" data-aba="arvore">Árvores <span class="qtd" id="qtdArvore"></span></button>
     <button type="button" class="aba" data-aba="mensal">Mensal <span class="qtd" id="qtdMensal"></span></button>
+    <button type="button" class="aba" data-aba="ramal">Ramal <span class="qtd" id="qtdRamal"></span></button>
   </nav>
 </header>
 
@@ -441,6 +451,65 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
   <div class="rodape">
     <button type="button" class="bt" id="btCancelarArv">Cancelar</button>
     <button type="button" class="bt bt-prim" id="btSalvarArv">Salvar árvore</button>
+  </div>
+</section>
+
+<section id="sheetRamal" aria-hidden="true">
+  <div class="puxador"></div>
+  <div class="topo">
+    <h2 id="tituloSheetRamal">Novo ramal de água</h2>
+    <button type="button" id="btFecharRam" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="conteudo">
+    <div id="erroFormRam" class="erroCaixa"></div>
+
+    <div class="campo">
+      <label for="cRuaR">Rua <span class="obrig">*</span></label>
+      <input type="text" id="cRuaR" list="listaRuas" autocomplete="off" placeholder="Ex.: Rua das Palmeiras">
+    </div>
+    <div class="campo">
+      <label for="cAjusteR">Ajuste de nível</label>
+      <select id="cAjusteR">
+        <option>Rebaixar</option>
+        <option>Elevar</option>
+        <option>Sem ajuste</option>
+      </select>
+    </div>
+
+    <div class="secTit">Foto do ramal</div>
+    <div class="campo">
+      <label>Foto do ramal <span class="obrig">*</span></label>
+      <div class="fotoBox" id="boxRam">
+        <img class="prev" id="prevRam" alt="Pré-visualização da foto do ramal">
+        <label class="escolher" for="cFotoRam">Tirar foto ou escolher da galeria</label>
+        <input type="file" id="cFotoRam" accept="image/*">
+        <div class="estado" id="estRam">Nenhuma foto selecionada.</div>
+      </div>
+    </div>
+    <div class="campo">
+      <label>Foto depois do serviço</label>
+      <div class="fotoBox" id="boxRam2">
+        <img class="prev" id="prevRam2" alt="Pré-visualização da foto depois do serviço">
+        <label class="escolher" for="cFotoRam2">Tirar foto ou escolher da galeria</label>
+        <input type="file" id="cFotoRam2" accept="image/*">
+        <div class="estado" id="estRam2">Opcional — nenhuma foto selecionada.</div>
+        <button type="button" class="remover" id="btRemoverFoto2" style="display:none">Remover esta foto</button>
+      </div>
+    </div>
+
+    <div class="secTit">Observações</div>
+    <div class="campo">
+      <label for="cObsR">Observações</label>
+      <textarea id="cObsR" rows="3" placeholder="Opcional."></textarea>
+    </div>
+
+    <div class="campo" id="areaExcluirRam" style="display:none">
+      <button type="button" class="bt bt-perigo" id="btExcluirRam" style="width:100%">Excluir este registro</button>
+    </div>
+  </div>
+  <div class="rodape">
+    <button type="button" class="bt" id="btCancelarRam">Cancelar</button>
+    <button type="button" class="bt bt-prim" id="btSalvarRam">Salvar ramal</button>
   </div>
 </section>
 
@@ -1016,19 +1085,25 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 /* ------------------------- utilitários gerais ------------------------ */
 var SITUACOES = ['Mantido','A remanejar','Danificado','Já remanejado'];
 var CLASSE_BADGE = {'Mantido':'b-mantido','A remanejar':'b-remanejar','Danificado':'b-danificado','Já remanejado':'b-ja'};
+var AJUSTES = ['Rebaixar','Elevar','Sem ajuste'];
+var CLASSE_AJUSTE = {'Rebaixar':'b-rebaixar','Elevar':'b-elevar','Sem ajuste':'b-semajuste'};
+var COR_AJUSTE = {'Rebaixar':[181,101,29],'Elevar':[47,111,143],'Sem ajuste':[127,140,141]};
+function contaRamal(aj){ return aj === 'Rebaixar' || aj === 'Elevar'; }
 var COR_PDF = {'Mantido':[46,125,50],'A remanejar':[230,126,34],'Danificado':[192,57,43],'Já remanejado':[127,140,141]};
 var LIMITE_FOTO = 900 * 1024;         // ~900 KB por foto
 var LIMITE_LOGO = 500 * 1024;         // ~500 KB para a logo
 var CHAVE_LS = 'aguasguariroba_registros_v1';
 var CHAVE_LS_ARV = 'aguasguariroba_arvores_v1';
 var CHAVE_LS_MEN = 'aguasguariroba_mensais_v1';
+var CHAVE_LS_RAM = 'aguasguariroba_ramais_v1';
 var CHAVE_LS_CFG = 'aguasguariroba_config_v1';
 
 // As duas coleções: ligações de esgoto/hidrômetros e árvores cortadas.
 var COLECOES = {
   registros: { loja: 'registros', ls: CHAVE_LS },
   arvores:   { loja: 'arvores',   ls: CHAVE_LS_ARV },
-  mensais:   { loja: 'mensais',   ls: CHAVE_LS_MEN }
+  mensais:   { loja: 'mensais',   ls: CHAVE_LS_MEN },
+  ramais:    { loja: 'ramais',    ls: CHAVE_LS_RAM }
 };
 
 // Dados que identificam o relatório: capa, cabeçalho das páginas e assinatura.
@@ -1145,13 +1220,14 @@ var Armaz = {
         if(!pronto) rej(new Error('tempo esgotado ao abrir o banco de dados'));
       }, 8000);
       var req;
-      try{ req = indexedDB.open('aguasguariroba_db', 3); }
+      try{ req = indexedDB.open('aguasguariroba_db', 4); }
       catch(e){ clearTimeout(t); rej(e); return; }
       req.onupgradeneeded = function(ev){
         var db = ev.target.result;
         if(!db.objectStoreNames.contains('registros')) db.createObjectStore('registros', {keyPath:'id'});
         if(!db.objectStoreNames.contains('arvores')) db.createObjectStore('arvores', {keyPath:'id'});
         if(!db.objectStoreNames.contains('mensais')) db.createObjectStore('mensais', {keyPath:'id'});
+        if(!db.objectStoreNames.contains('ramais')) db.createObjectStore('ramais', {keyPath:'id'});
         if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
       };
       req.onsuccess = function(){ pronto = true; clearTimeout(t); res(req.result); };
@@ -1342,21 +1418,25 @@ var estado = {
   registros: [],                     // ligações de esgoto / hidrômetros
   arvores: [],                       // árvores cortadas
   mensais: [],                       // fotos do relatório mensal
+  ramais: [],                        // ramais de água
   config: JSON.parse(JSON.stringify(CFG_PADRAO)),
   logoPendente: null,
   filtro: '',                        // filtro de rua da aba esgoto
   filtroArv: '',                     // filtro de rua da aba árvores
+  filtroRam: '',                     // filtro de rua da aba ramais
   editandoId: null,
   editandoArvId: null,
   editandoMenId: null,
+  editandoRamId: null,
   brasaoPendente: null,
-  fotos: { hid: null, esg: null, arv: null, etq: null, men: null },   // {dataUrl, w, h, bytes}
+  fotos: { hid: null, esg: null, arv: null, etq: null, men: null, ram: null, ram2: null },
   urlsTemp: []
 };
 
 function itensDaAba(){
   if(estado.aba === 'arvore') return estado.arvores;
   if(estado.aba === 'mensal') return estado.mensais;
+  if(estado.aba === 'ramal') return estado.ramais;
   return estado.registros;
 }
 
@@ -1503,6 +1583,7 @@ function renderizarAbas(){
   $('qtdEsgoto').textContent = estado.registros.length ? '· ' + estado.registros.length : '';
   $('qtdArvore').textContent = estado.arvores.length ? '· ' + estado.arvores.length : '';
   $('qtdMensal').textContent = estado.mensais.length ? '· ' + estado.mensais.length : '';
+  $('qtdRamal').textContent = estado.ramais.length ? '· ' + estado.ramais.length : '';
   var bts = document.querySelectorAll('#abas .aba');
   for(var i=0;i<bts.length;i++){
     bts[i].classList.toggle('ativa', bts[i].getAttribute('data-aba') === aba);
@@ -1510,35 +1591,44 @@ function renderizarAbas(){
   var sub = {
     esgoto: 'Hidrômetros e ligações de esgoto &mdash; Águas Guariroba',
     arvore: 'Árvores cortadas &mdash; registro fotográfico da supressão',
-    mensal: 'Relatório fotográfico mensal de obra'
+    mensal: 'Relatório fotográfico mensal de obra',
+    ramal:  'Ramais de água &mdash; ajuste de nível'
   }[aba];
   $('subCab').innerHTML = sub;
   $('btPdf').textContent = { esgoto:'Gerar PDF de esgoto', arvore:'Gerar PDF de árvores',
-                             mensal:'Gerar PDF do relatório mensal' }[aba];
+                             mensal:'Gerar PDF do relatório mensal', ramal:'Gerar PDF de ramais' }[aba];
   $('fab').setAttribute('aria-label', { esgoto:'Cadastrar nova casa', arvore:'Cadastrar nova árvore cortada',
-                                        mensal:'Adicionar foto do mês' }[aba]);
+                                        mensal:'Adicionar foto do mês', ramal:'Cadastrar novo ramal' }[aba]);
   $('filtroRua').style.display = aba === 'mensal' ? 'none' : '';
+}
+
+function filtroDaAba(){
+  if(estado.aba === 'arvore') return estado.filtroArv;
+  if(estado.aba === 'ramal') return estado.filtroRam;
+  return estado.filtro;
+}
+function definirFiltroDaAba(v){
+  if(estado.aba === 'arvore') estado.filtroArv = v;
+  else if(estado.aba === 'ramal') estado.filtroRam = v;
+  else estado.filtro = v;
 }
 
 function renderizarFiltro(grupos, total){
   var sel = $('filtroRua');
-  var arv = estado.aba === 'arvore';
-  var atual = arv ? estado.filtroArv : estado.filtro;
-  var html = '<option value="">Todas as ruas (' + total + (arv ? ' árvores)' : ' casas)') + '</option>';
+  var atual = filtroDaAba();
+  var rot = { arvore:' árvores)', ramal:' ramais)' }[estado.aba] || ' casas)';
+  var html = '<option value="">Todas as ruas (' + total + rot + '</option>';
   grupos.forEach(function(g){
     html += '<option value="' + esc(chaveRua(g.nome)) + '">' + esc(g.nome) + ' (' + g.itens.length + ')</option>';
   });
   sel.innerHTML = html;
   sel.value = atual;
-  if(sel.value !== atual){
-    if(arv) estado.filtroArv = ''; else estado.filtro = '';
-    sel.value = '';
-  }
+  if(sel.value !== atual){ definirFiltroDaAba(''); sel.value = ''; }
 }
 
 function renderizarRuasDatalist(){
   var vistas = {}, nomes = [];
-  estado.registros.concat(estado.arvores).forEach(function(r){
+  estado.registros.concat(estado.arvores).concat(estado.ramais).forEach(function(r){
     var n = String(r.rua||'').trim();
     if(!n) return;
     var k = chaveRua(n);
@@ -1653,6 +1743,23 @@ function renderizarListaMensal(){
   cx.innerHTML = html;
 }
 
+function cardRamal(r){
+  var extra = r.foto2 ? ' &middot; com foto depois do serviço' : '';
+  return '<div class="card">' +
+    '<img class="mini" src="' + esc(r.foto || '') + '" alt="Foto do ramal">' +
+    '<div class="corpo">' +
+      '<div class="l1">Ramal de água</div>' +
+      '<div class="l2">' + esc(r.rua || '') + extra + '</div>' +
+      '<div class="badges"><span class="badge ' + (CLASSE_AJUSTE[r.ajuste] || 'b-semajuste') + '">' +
+        esc(r.ajuste || 'Sem ajuste') + '</span></div>' +
+    '</div>' +
+    '<div class="acoes">' +
+      '<button type="button" data-editar-ram="' + esc(r.id) + '">Editar</button>' +
+      '<button type="button" class="ex" data-excluir-ram="' + esc(r.id) + '">Excluir</button>' +
+    '</div>' +
+  '</div>';
+}
+
 function renderizar(){
   try{
     renderizarResumoObra();
@@ -1660,12 +1767,17 @@ function renderizar(){
     if(estado.aba === 'mensal'){ renderizarListaMensal(); return; }
 
     var arv = estado.aba === 'arvore';
+    var ram = estado.aba === 'ramal';
     var todos = ordenarRegistros(itensDaAba());
     var gruposTodos = agruparPorRua(todos);
     renderizarFiltro(gruposTodos, todos.length);
     renderizarRuasDatalist();
 
-    if(arv){
+    if(ram){
+      var aAjustar = todos.filter(function(r){ return contaRamal(r.ajuste); }).length;
+      $('resumoTopo').textContent = todos.length + ' ramal(is) em ' + gruposTodos.length +
+        ' rua(s) — ' + aAjustar + ' a ajustar.';
+    }else if(arv){
       $('resumoTopo').textContent = todos.length + ' árvore(s) cortada(s) em ' + gruposTodos.length + ' rua(s).';
     }else{
       var totalEsg = todos.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
@@ -1673,13 +1785,14 @@ function renderizar(){
         ' rua(s) — ' + totalEsg + ' ligação(ões) de esgoto a modificar.';
     }
 
-    var filtro = arv ? estado.filtroArv : estado.filtro;
+    var filtro = filtroDaAba();
     var grupos = filtro ? gruposTodos.filter(function(g){ return chaveRua(g.nome) === filtro; }) : gruposTodos;
     var cx = $('lista');
 
     if(!todos.length){
       cx.innerHTML = '<div class="vazio">' +
-        (arv ? 'Nenhuma árvore cadastrada ainda.<br>Toque no botão <b>+</b> para registrar a primeira árvore cortada.'
+        (ram ? 'Nenhum ramal cadastrado ainda.<br>Toque no botão <b>+</b> para registrar o primeiro ramal de água.'
+         : arv ? 'Nenhuma árvore cadastrada ainda.<br>Toque no botão <b>+</b> para registrar a primeira árvore cortada.'
              : 'Nenhuma casa cadastrada ainda.<br>Toque no botão <b>+</b> para registrar a primeira.') +
         '</div>';
       return;
@@ -1693,14 +1806,18 @@ function renderizar(){
     grupos.forEach(function(g){
       html += '<div class="grupoRua">';
       html += '<div class="tituloRua"><span class="nome">' + esc(g.nome) + '</span>' +
-              '<span class="cont">' + g.itens.length + (arv ? ' árvore(s)' : ' casa(s)') + '</span></div>';
-      if(arv){
+              '<span class="cont">' + g.itens.length +
+              (ram ? ' ramal(is)' : arv ? ' árvore(s)' : ' casa(s)') + '</span></div>';
+      if(ram){
+        var nAj = g.itens.filter(function(r){ return contaRamal(r.ajuste); }).length;
+        html += '<div class="subRua">Ramais a ajustar nesta rua: <b>' + nAj + '</b></div>';
+      }else if(arv){
         html += '<div class="subRua">Árvores cortadas nesta rua: <b>' + g.itens.length + '</b></div>';
       }else{
         var nEsg = g.itens.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
         html += '<div class="subRua">Ligações de esgoto a modificar nesta rua: <b>' + nEsg + '</b></div>';
       }
-      g.itens.forEach(function(r){ html += arv ? cardArvore(r) : cardEsgoto(r); });
+      g.itens.forEach(function(r){ html += ram ? cardRamal(r) : arv ? cardArvore(r) : cardEsgoto(r); });
       html += '</div>';
     });
     cx.innerHTML = html;
@@ -1710,7 +1827,7 @@ function renderizar(){
 }
 
 function trocarAba(aba){
-  if(aba !== 'esgoto' && aba !== 'arvore' && aba !== 'mensal') return;
+  if(['esgoto','arvore','mensal','ramal'].indexOf(aba) < 0) return;
   estado.aba = aba;
   limparMsgs();
   $('areaDownloads').innerHTML = '';
@@ -1719,10 +1836,12 @@ function trocarAba(aba){
 }
 
 function recarregar(){
-  return Promise.all([Armaz.listar('registros'), Armaz.listar('arvores'), Armaz.listar('mensais')]).then(function(r){
+  return Promise.all([Armaz.listar('registros'), Armaz.listar('arvores'),
+                      Armaz.listar('mensais'), Armaz.listar('ramais')]).then(function(r){
     estado.registros = Array.isArray(r[0]) ? r[0] : [];
     estado.arvores = Array.isArray(r[1]) ? r[1] : [];
     estado.mensais = Array.isArray(r[2]) ? r[2] : [];
+    estado.ramais = Array.isArray(r[3]) ? r[3] : [];
     renderizar();
   }).catch(function(e){
     mostrarMsg('Não foi possível ler os registros salvos: ' + msgErro(e), 'erro', true);
@@ -1875,6 +1994,12 @@ function medirImagem(dataUrl){
 }
 
 /* ========================= FORMULÁRIO (bottom sheet) ================= */
+function mostrarErroFormRam(txt){
+  var e = $('erroFormRam');
+  if(txt){ e.textContent = txt; e.classList.add('ver'); try{ e.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(x){} }
+  else { e.textContent = ''; e.classList.remove('ver'); }
+}
+
 function mostrarErroFormMen(txt){
   var e = $('erroFormMen');
   if(txt){ e.textContent = txt; e.classList.add('ver'); try{ e.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(x){} }
@@ -1896,6 +2021,8 @@ function mostrarErroForm(txt){
 var IDS_FOTO = {
   hid: { est:'estHid', prev:'prevHid', box:'boxHid', botao:'btSalvar' },
   men: { est:'estMen', prev:'prevMen', box:'boxMen', botao:'btSalvarMen' },
+  ram: { est:'estRam', prev:'prevRam', box:'boxRam', botao:'btSalvarRam' },
+  ram2:{ est:'estRam2', prev:'prevRam2', box:'boxRam2', botao:'btSalvarRam' },
   esg: { est:'estEsg', prev:'prevEsg', box:'boxEsg', botao:'btSalvar' },
   arv: { est:'estArv', prev:'prevArv', box:'boxArv', botao:'btSalvarArv' },
   etq: { est:'estEtq', prev:'prevEtq', box:'boxEtq', botao:'btSalvarArv' }
@@ -1980,6 +2107,129 @@ function fecharSheet(){
     document.body.style.overflow = '';
     estado.editandoId = null;
   }catch(e){}
+}
+
+/* ------------------- folha de cadastro do ramal de água --------------- */
+function abrirSheetRamal(reg){
+  try{
+    mostrarErroFormRam('');
+    estado.editandoRamId = reg ? reg.id : null;
+    estado.fotos.ram = null;
+    estado.fotos.ram2 = null;
+    $('cRuaR').value = '';
+    $('cAjusteR').value = 'Rebaixar';
+    $('cObsR').value = '';
+    pintarPreview('ram', null); pintarPreview('ram2', null);
+    pintarEstadoFoto('ram', 'Nenhuma foto selecionada.', '');
+    pintarEstadoFoto('ram2', 'Opcional — nenhuma foto selecionada.', '');
+    $('boxRam').classList.remove('faltando');
+    $('btRemoverFoto2').style.display = 'none';
+    $('tituloSheetRamal').textContent = reg ? 'Editar ramal de água' : 'Novo ramal de água';
+    $('btSalvarRam').textContent = reg ? 'Salvar alterações' : 'Salvar ramal';
+    $('areaExcluirRam').style.display = reg ? 'block' : 'none';
+
+    if(reg){
+      $('cRuaR').value = reg.rua || '';
+      $('cAjusteR').value = AJUSTES.indexOf(reg.ajuste) >= 0 ? reg.ajuste : 'Rebaixar';
+      $('cObsR').value = reg.obs || '';
+      if(reg.foto){
+        estado.fotos.ram = { dataUrl: reg.foto, w: (reg.dim||{}).w, h: (reg.dim||{}).h, bytes: tamanhoDataUrl(reg.foto) };
+        pintarPreview('ram', reg.foto);
+        pintarEstadoFoto('ram', 'Foto já cadastrada (' + kb(estado.fotos.ram.bytes) + '). Escolha outra para substituir.', 'pronta');
+      }
+      if(reg.foto2){
+        estado.fotos.ram2 = { dataUrl: reg.foto2, w: (reg.dim2||{}).w, h: (reg.dim2||{}).h, bytes: tamanhoDataUrl(reg.foto2) };
+        pintarPreview('ram2', reg.foto2);
+        pintarEstadoFoto('ram2', 'Foto já cadastrada (' + kb(estado.fotos.ram2.bytes) + '). Escolha outra para substituir.', 'pronta');
+        $('btRemoverFoto2').style.display = 'inline-block';
+      }
+    }else if(estado.ultimaRuaRam){
+      $('cRuaR').value = estado.ultimaRuaRam;
+    }
+
+    $('sheetRamal').classList.add('aberto');
+    $('sheetRamal').setAttribute('aria-hidden','false');
+    $('fundoEscuro').classList.add('aberto');
+    document.body.style.overflow = 'hidden';
+  }catch(e){
+    mostrarMsg('Não foi possível abrir o formulário do ramal: ' + msgErro(e), 'erro', true);
+  }
+}
+
+function fecharSheetRamal(){
+  try{
+    $('sheetRamal').classList.remove('aberto');
+    $('sheetRamal').setAttribute('aria-hidden','true');
+    $('fundoEscuro').classList.remove('aberto');
+    document.body.style.overflow = '';
+    estado.editandoRamId = null;
+  }catch(e){}
+}
+
+function salvarRamal(){
+  try{
+    mostrarErroFormRam('');
+    var rua = $('cRuaR').value.trim();
+    var faltas = [];
+    if(!rua) faltas.push('informe a rua');
+    if(!estado.fotos.ram || !estado.fotos.ram.dataUrl) faltas.push('falta a FOTO DO RAMAL');
+    $('boxRam').classList.toggle('faltando', !(estado.fotos.ram && estado.fotos.ram.dataUrl));
+    if(faltas.length){
+      mostrarErroFormRam('Não foi possível salvar: ' + faltas.join('; ') + '.');
+      return;
+    }
+
+    var antigo = estado.editandoRamId
+      ? (estado.ramais.filter(function(r){ return r.id === estado.editandoRamId; })[0] || null) : null;
+    var agora = new Date().toISOString();
+    var reg = {
+      id: estado.editandoRamId || novoId(),
+      rua: rua,
+      ajuste: $('cAjusteR').value,
+      foto: estado.fotos.ram.dataUrl,
+      dim: { w: estado.fotos.ram.w || null, h: estado.fotos.ram.h || null },
+      foto2: estado.fotos.ram2 ? estado.fotos.ram2.dataUrl : '',
+      dim2: estado.fotos.ram2 ? { w: estado.fotos.ram2.w || null, h: estado.fotos.ram2.h || null } : null,
+      obs: $('cObsR').value.trim(),
+      criadoEm: (antigo && antigo.criadoEm) || agora,
+      atualizadoEm: agora
+    };
+
+    $('btSalvarRam').disabled = true;
+    var edicao = !!estado.editandoRamId;
+    Armaz.salvar('ramais', reg).then(function(){
+      estado.ultimaRuaRam = rua;
+      fecharSheetRamal();
+      return recarregar();
+    }).then(function(){
+      if(!estado.ramais.some(function(r){ return r.id === reg.id; })){
+        throw new Error('o registro não apareceu na lista após a gravação');
+      }
+      mostrarMsg((edicao ? 'Ramal atualizado' : 'Ramal cadastrado') + ': ' + rua + ' — ' + reg.ajuste + '.', 'sucesso');
+    }).catch(function(e){
+      mostrarErroFormRam('ERRO AO SALVAR: ' + msgErro(e));
+      mostrarMsg('Erro ao salvar o ramal: ' + msgErro(e) + ' Nada foi gravado.', 'erro', true);
+    }).then(function(){
+      $('btSalvarRam').disabled = false;
+    });
+  }catch(e){
+    $('btSalvarRam').disabled = false;
+    mostrarErroFormRam('ERRO AO SALVAR: ' + msgErro(e));
+  }
+}
+
+function excluirRamal(id){
+  var reg = estado.ramais.filter(function(r){ return r.id === id; })[0];
+  if(!reg){ mostrarMsg('Registro não encontrado para exclusão.', 'erro', true); return; }
+  if(!confirm('Excluir o ramal de ' + reg.rua + ' (' + reg.ajuste + ')?\n\nEsta ação não pode ser desfeita.')) return;
+  Armaz.remover('ramais', id).then(function(){
+    if(estado.editandoRamId === id) fecharSheetRamal();
+    return recarregar();
+  }).then(function(){
+    mostrarMsg('Ramal excluído: ' + reg.rua + '.', 'sucesso');
+  }).catch(function(e){
+    mostrarMsg('Não foi possível excluir o registro: ' + msgErro(e), 'erro', true);
+  });
 }
 
 /* ------------------ folha de cadastro da foto mensal ------------------ */
@@ -2438,6 +2688,10 @@ function tratarEscolhaFoto(qual, input){
     pintarEstadoFoto(qual, 'Foto pronta — ' + r.w + '×' + r.h + ' px, ' + kb(r.bytes) + '.', 'pronta');
     if(qual === 'arv' || qual === 'etq') mostrarErroFormArv('');
     else if(qual === 'men') mostrarErroFormMen('');
+    else if(qual === 'ram' || qual === 'ram2'){
+      mostrarErroFormRam('');
+      if(qual === 'ram2') $('btRemoverFoto2').style.display = 'inline-block';
+    }
     else mostrarErroForm('');
   }).catch(function(e){
     pintarEstadoFoto(qual, 'Falha ao processar a foto: ' + msgErro(e) + ' Tente novamente ou escolha outra imagem.', 'falhou');
@@ -2610,7 +2864,13 @@ var PERFIL_ESGOTO = {
     { tit:'A MODIFICAR', val: function(g, perfil){ return g.itens.filter(perfil.conta).length; }, forte:true }
   ],
   totalGeralRot: 'TOTAL GERAL DE LIGAÇÕES DE ESGOTO A MODIFICAR:',
-  quadroSituacoes: true,
+  quadroFinal: {
+    titulo: 'Quadro geral por situação encontrada',
+    valores: SITUACOES,
+    cor: function(v){ return COR_PDF[v]; },
+    colunas: [{ tit:'HIDRÔMETROS', val: function(r, v){ return r.sitHid === v; } },
+              { tit:'ESGOTOS', val: function(r, v){ return r.sitEsg === v; } }]
+  },
   fecho: function(todos, grupos){
     return 'Documento gerado a partir do levantamento de campo, contendo ' + todos.length +
            ' registro(s) fotográfico(s) distribuído(s) em ' + grupos.length + ' rua(s).';
@@ -2666,14 +2926,82 @@ var PERFIL_ARVORE = {
     { tit:'ÁRVORES CORTADAS', val: function(g){ return g.itens.length; }, forte:true }
   ],
   totalGeralRot: 'TOTAL GERAL DE ÁRVORES CORTADAS:',
-  quadroSituacoes: false,
+  quadroFinal: null,
   fecho: function(todos, grupos){
     return 'Documento gerado a partir do levantamento de campo, contendo ' + todos.length +
            ' árvore(s) cortada(s) distribuída(s) em ' + grupos.length + ' rua(s).';
   }
 };
 
-function perfilAtual(){ return estado.aba === 'arvore' ? PERFIL_ARVORE : PERFIL_ESGOTO; }
+var PERFIL_RAMAL = {
+  chave: 'ramal',
+  cor: [0,0,0],                       // identidade preta
+  titulo: 'RELATÓRIO DE RAMAIS DE ÁGUA',
+  sub1: 'Registro fotográfico dos ramais e do ajuste de nível',
+  sub2: 'Obra de pavimentação asfáltica',
+  arquivo: 'relatorio-ramais-',
+  semDados: 'Não há nada para gerar: nenhum ramal cadastrado na aba Ramal.',
+  lista: function(){ return ordenarRegistros(estado.ramais); },
+  identExtra: function(cfg){ return [['CONCESSIONÁRIA', cfg.concessionaria]]; },
+  rodape: function(cfg){ return 'Relatório de ramais de água — ' + cfg.concessionaria; },
+  apresentacao: function(cfg){
+    return 'Este documento apresenta o registro fotográfico dos ramais de água identificados nas ruas ' +
+      'contempladas pela obra "' + cfg.obra + '", executada por ' + cfg.empresa + ', no município de ' +
+      cfg.municipio + '. Cada ramal é apresentado com a indicação do ajuste de nível necessário em razão ' +
+      'do novo greide do pavimento e do alinhamento da calçada — rebaixar ou elevar —, com a finalidade ' +
+      'de subsidiar a comunicação técnica com a concessionária ' + cfg.concessionaria + ' e permitir o ' +
+      'planejamento conjunto das intervenções. As fotografias foram obtidas em campo, uma a uma.';
+  },
+  classificacao: false,
+  criterio:
+    'Os quantitativos deste relatório consideram os ramais classificados como "Rebaixar" ou "Elevar", ' +
+    'que são os que demandam intervenção da concessionária. Os ramais classificados como "Sem ajuste" ' +
+    'constam do registro fotográfico por terem sido vistoriados e estarem na cota adequada, mas não são ' +
+    'somados aos totais por rua nem ao total geral.',
+  conta: function(r){ return contaRamal(r.ajuste); },
+  quantitativos: function(grupos, todos, total){
+    return [[String(grupos.length), 'RUAS LEVANTADAS'],
+            [String(todos.length), 'RAMAIS REGISTRADOS'],
+            [String(total), 'RAMAIS A AJUSTAR']];
+  },
+  totalRua: function(n){ return 'Total de ramais de água a ajustar nesta rua: ' + n; },
+  itensRua: function(n){ return 'Ramais registrados: ' + n; },
+  tituloItem: function(){ return ''; },      // a rua já é o cabeçalho da seção
+  semData: true,
+  itensPorLinha: 2,
+  alturaFoto: 50,
+  legendasDe: function(r){ return r.foto2 ? ['RAMAL','DEPOIS DO SERVIÇO'] : ['RAMAL DE ÁGUA']; },
+  fotos: function(r){
+    var f = [[r.foto, r.dim]];
+    if(r.foto2) f.push([r.foto2, r.dim2]);
+    return f;
+  },
+  infos: function(r){
+    return [{ rot:'Ajuste', val:r.ajuste, cor:COR_AJUSTE[r.ajuste] }];
+  },
+  resumoNota: 'Ramais de água a ajustar por rua (classificados como "Rebaixar" ou "Elevar").',
+  colunasResumo: [
+    { tit:'RAMAIS', val: function(g){ return g.itens.length; } },
+    { tit:'A AJUSTAR', val: function(g, perfil){ return g.itens.filter(perfil.conta).length; }, forte:true }
+  ],
+  totalGeralRot: 'TOTAL GERAL DE RAMAIS DE ÁGUA A AJUSTAR:',
+  quadroFinal: {
+    titulo: 'Quadro geral por ajuste',
+    valores: AJUSTES,
+    cor: function(v){ return COR_AJUSTE[v]; },
+    colunas: [{ tit:'RAMAIS', val: function(r, v){ return r.ajuste === v; } }]
+  },
+  fecho: function(todos, grupos){
+    return 'Documento gerado a partir do levantamento de campo, contendo ' + todos.length +
+           ' ramal(is) de água distribuído(s) em ' + grupos.length + ' rua(s).';
+  }
+};
+
+function perfilAtual(){
+  if(estado.aba === 'arvore') return PERFIL_ARVORE;
+  if(estado.aba === 'ramal') return PERFIL_RAMAL;
+  return PERFIL_ESGOTO;
+}
 
 function gerarPDF(){
   limparMsgs();
@@ -2706,16 +3034,12 @@ function gerarPDF(){
   var pendentes = [];
   todos.forEach(function(r){
     var f = perfil.fotos(r);
-    if(!f[0][1] || !f[0][1].w){
-      pendentes.push(medirImagem(f[0][0]).then(function(d){
-        if(perfil.chave === 'arvore') r.dimArv = d; else r.dimHid = d;
-      }));
-    }
-    if(!f[1][1] || !f[1][1].w){
-      pendentes.push(medirImagem(f[1][0]).then(function(d){
-        if(perfil.chave === 'arvore') r.dimEtq = d; else r.dimEsg = d;
-      }));
-    }
+    var campos = { esgoto: ['dimHid','dimEsg'], arvore: ['dimArv','dimEtq'], ramal: ['dim','dim2'] }[perfil.chave];
+    f.forEach(function(par, i){
+      if(par[0] && (!par[1] || !par[1].w)){
+        pendentes.push(medirImagem(par[0]).then(function(d){ r[campos[i]] = d; }));
+      }
+    });
   });
   if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)){
     pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
@@ -2727,7 +3051,7 @@ function gerarPDF(){
     processando(false);
     var auto = publicarArquivo(res.nome, res.blob,
       'PDF com ' + res.paginas + ' página(s), ' + todos.length +
-      (perfil.chave === 'arvore' ? ' árvore(s) ' : ' casa(s) ') + 'e ' + grupos.length + ' rua(s). ' +
+      ({ arvore:' árvore(s) ', ramal:' ramal(is) ' }[perfil.chave] || ' casa(s) ') + 'e ' + grupos.length + ' rua(s). ' +
       'Se o download automático não abrir, use os botões abaixo.');
     var extra = '';
     if(res.fotosComFalha) extra += ' Atenção: ' + res.fotosComFalha + ' foto(s) não puderam ser desenhadas e aparecem como moldura vazia.';
@@ -2750,8 +3074,8 @@ function montarPDF(Ctor, grupos, todos, perfil){
 
   var M = 14, LARG = 210, ALT = 297, UTIL = LARG - 2*M;
   var TOPO = 22, LIM = 276;           // área útil entre cabeçalho e rodapé
-  var COL = (UTIL - 6) / 2;           // largura de cada foto
-  var H_MOLD = 52;                    // altura da moldura da foto
+  var COL = (UTIL - 6) / 2;           // metade útil: coluna de foto ou de ficha
+  var H_MOLD = perfil.alturaFoto || 52;
   var y = TOPO;
   var fotosComFalha = 0, logoFalhou = false;
   var totalGeral = todos.filter(perfil.conta).length;
@@ -2900,57 +3224,72 @@ function montarPDF(Ctor, grupos, todos, perfil){
     }
   }
 
-  function linhaInfo(info, x, yy){
+  function linhaInfo(info, x, yy, W){
     fonte('normal', 9, [80,90,98]);
     txt(info.rot + ': ', x, yy);
     var lw = doc.getTextWidth(info.rot + ': ');
     var c = info.cor || [80,90,98];
     fonte('bold', 9, c);
-    txt(corta(info.val || '—', COL - lw), x + lw, yy);
+    txt(corta(info.val || '—', (W || COL) - lw), x + lw, yy);
   }
 
-  function alturaObs(obs){
+  function alturaObs(obs, W){
     if(!obs) return 0;
     fonte('italic', 8.5);
-    return 1.5 + doc.splitTextToSize('Observações: ' + obs, UTIL).length * 4;
+    return 1.5 + doc.splitTextToSize('Observações: ' + obs, W || UTIL).length * 4;
   }
 
-  function alturaItem(r){
-    return 5.5 + 1.5 + 4.2 + H_MOLD + 3 + 5 + alturaObs(r.obs) + 5;
+  // Altura de uma ficha, sem a linha separadora que o chamador acrescenta.
+  function alturaItem(r, W){
+    W = W || UTIL;
+    var h = perfil.tituloItem(r) ? 7 : 0;
+    return h + 4.2 + H_MOLD + 3 + 5 + alturaObs(r.obs, W);
   }
 
-  function desenhaItem(r){
-    fonte('bold', 10.5, C_ESCURO);
-    txt(corta(perfil.tituloItem(r), UTIL - 34), M, y + 4);
-    fonte('normal', 9, C_CINZA);
-    txt(dataBR(r.data), M + UTIL, y + 4, {align:'right'});
-    y += 5.5 + 1.5;
-
-    fonte('bold', 8, COR);
-    txt(perfil.legendas[0], M + COL/2, y + 3, {align:'center'});
-    txt(perfil.legendas[1], M + COL + 6 + COL/2, y + 3, {align:'center'});
-    y += 4.2;
+  // Desenha uma ficha a partir de (x, yy) e devolve a altura usada, sem mexer no y global.
+  function desenhaItem(r, x, W, yy){
+    var y0 = yy;
+    var titulo = perfil.tituloItem(r);
+    if(titulo){
+      fonte('bold', W > 120 ? 10.5 : 9.5, C_ESCURO);
+      txt(corta(titulo, W - (perfil.semData ? 4 : 34)), x, yy + 4);
+      if(!perfil.semData){
+        fonte('normal', 9, C_CINZA);
+        txt(dataBR(r.data), x + W, yy + 4, {align:'right'});
+      }
+      yy += 7;
+    }
 
     var f = perfil.fotos(r);
-    desenhaFoto(f[0][0], f[0][1], M, y, COL, H_MOLD);
-    desenhaFoto(f[1][0], f[1][1], M + COL + 6, y, COL, H_MOLD);
-    y += H_MOLD + 3;
+    var legendas = perfil.legendasDe ? perfil.legendasDe(r) : perfil.legendas;
+    var gap = W > 120 ? 6 : 4;
+    var wf = f.length > 1 ? (W - gap) / f.length : W;
+
+    fonte('bold', W > 120 ? 8 : 7, COR);
+    for(var i=0;i<f.length;i++){
+      txt(legendas[i] || '', x + (wf + gap)*i + wf/2, yy + 3, {align:'center'});
+    }
+    yy += 4.2;
+
+    for(var j=0;j<f.length;j++){
+      desenhaFoto(f[j][0], f[j][1], x + (wf + gap)*j, yy, wf, H_MOLD);
+    }
+    yy += H_MOLD + 3;
 
     var infos = perfil.infos(r);
-    linhaInfo(infos[0], M, y + 3.4);
-    linhaInfo(infos[1], M + COL + 6, y + 3.4);
-    y += 5;
+    var wi = infos.length > 1 ? (W - gap) / infos.length : W;
+    for(var k=0;k<infos.length;k++){
+      linhaInfo(infos[k], x + (wi + gap)*k, yy + 3.4, wi);
+    }
+    yy += 5;
 
     if(r.obs){
       fonte('italic', 8.5, [90,100,108]);
-      var linhas = doc.splitTextToSize('Observações: ' + r.obs, UTIL);
-      y += 1.5;
-      for(var i=0;i<linhas.length;i++){ txt(linhas[i], M, y + 3); y += 4; }
+      var linhas = doc.splitTextToSize('Observações: ' + r.obs, W);
+      yy += 1.5;
+      for(var m=0;m<linhas.length;m++){ txt(linhas[m], x, yy + 3); yy += 4; }
     }
-
-    setD(C_LINHA);
-    doc.line(M, y + 2, M + UTIL, y + 2);
-    y += 5;
+    return yy - y0;
   }
 
   function barraRua(rotulo, continuacao){
@@ -2992,7 +3331,7 @@ function montarPDF(Ctor, grupos, todos, perfil){
     var nConta = itens.filter(perfil.conta).length;
     var rotulo = nRegistro + '.' + (iRua + 1) + '  ' + String(g.nome).toLocaleUpperCase('pt-BR');
 
-    if(!cabe(9 + 2 + 8 + 3 + alturaItem(itens[0]))) novaPag();
+    if(!cabe(9 + 2 + 8 + 3 + alturaItem(itens[0], perfil.itensPorLinha === 2 ? COL : UTIL))) novaPag();
     barraRua(rotulo, false);
 
     setF(C_SUAVE); setD(C_LINHA);
@@ -3005,13 +3344,29 @@ function montarPDF(Ctor, grupos, todos, perfil){
     }
     y += 8 + 3;
 
-    itens.forEach(function(r){
-      if(!cabe(alturaItem(r))){
-        novaPag();
-        barraRua(rotulo, true);
+    if(perfil.itensPorLinha === 2){
+      for(var i=0; i<itens.length; i+=2){
+        var par = itens.slice(i, i+2);
+        var h = Math.max.apply(null, par.map(function(r){ return alturaItem(r, COL); }));
+        if(!cabe(h + 5)){ novaPag(); barraRua(rotulo, true); }
+        desenhaItem(par[0], M, COL, y);
+        if(par[1]) desenhaItem(par[1], M + COL + 6, COL, y);
+        y += h;
+        setD(C_LINHA);
+        doc.line(M, y + 2, M + UTIL, y + 2);
+        y += 5;
       }
-      desenhaItem(r);
-    });
+    }else{
+      itens.forEach(function(r){
+        var h = alturaItem(r, UTIL);
+        if(!cabe(h + 5)){ novaPag(); barraRua(rotulo, true); }
+        desenhaItem(r, M, UTIL, y);
+        y += h;
+        setD(C_LINHA);
+        doc.line(M, y + 2, M + UTIL, y + 2);
+        y += 5;
+      });
+    }
     y += 4;
   });
 
@@ -3060,25 +3415,25 @@ function montarPDF(Ctor, grupos, todos, perfil){
   txt(String(totalGeral), M + UTIL - 4, y + 8.8, {align:'right'});
   y += 13 + 10;
 
-  if(perfil.quadroSituacoes){
-    if(!cabe(14 + SITUACOES.length * 7)) novaPag();
+  var qf = perfil.quadroFinal;
+  if(qf){
+    if(!cabe(14 + qf.valores.length * 8)) novaPag();
     fonte('bold', 9.5, C_ESCURO);
-    txt('Quadro geral por situação encontrada', M, y + 3);
+    txt(qf.titulo, M, y + 3);
     y += 8;
+    var xq = function(i){ return M + UTIL - (qf.colunas.length - 1 - i) * 42; };
     fonte('bold', 8.5, COR);
     txt('SITUAÇÃO', M, y);
-    txt('HIDRÔMETROS', M + UTIL - 42, y, {align:'right'});
-    txt('ESGOTOS', M + UTIL, y, {align:'right'});
+    qf.colunas.forEach(function(c, i){ txt(c.tit, xq(i), y, {align:'right'}); });
     y += 2;
     setD(COR); doc.line(M, y, M + UTIL, y);
     y += 5;
-    SITUACOES.forEach(function(sit){
-      var nh = todos.filter(function(r){ return r.sitHid === sit; }).length;
-      var ne = todos.filter(function(r){ return r.sitEsg === sit; }).length;
-      chip(sit, COR_PDF[sit], M, y - 1.4, 34);
+    qf.valores.forEach(function(v){
+      chip(v, qf.cor(v), M, y - 1.4, 34);
       fonte('normal', 9.5, C_TEXTO);
-      txt(String(nh), M + UTIL - 42, y + 3, {align:'right'});
-      txt(String(ne), M + UTIL, y + 3, {align:'right'});
+      qf.colunas.forEach(function(c, i){
+        txt(String(todos.filter(function(r){ return c.val(r, v); }).length), xq(i), y + 3, {align:'right'});
+      });
       setD([228,232,229]); doc.line(M, y + 5, M + UTIL, y + 5);
       y += 7.5;
     });
@@ -3391,26 +3746,28 @@ function montarPDFMensal(Ctor, paginasFotos){
 /* =========================== BACKUP JSON ============================ */
 function exportarBackup(){
   try{
-    if(!estado.registros.length && !estado.arvores.length && !estado.mensais.length){
+    if(!estado.registros.length && !estado.arvores.length && !estado.mensais.length && !estado.ramais.length){
       mostrarMsg('Não há registros para exportar.', 'erro', true);
       return;
     }
     var pacote = {
       aplicativo: 'registro-interferencias-aguas-guariroba',
-      versao: 4,
+      versao: 5,
       exportadoEm: new Date().toISOString(),
-      total: estado.registros.length + estado.arvores.length + estado.mensais.length,
+      total: estado.registros.length + estado.arvores.length + estado.mensais.length + estado.ramais.length,
       config: estado.config,
       registros: registrosOrdenados(),
       arvores: ordenarRegistros(estado.arvores),
-      mensais: mensaisOrdenadas()
+      mensais: mensaisOrdenadas(),
+      ramais: ordenarRegistros(estado.ramais)
     };
     var texto = JSON.stringify(pacote);
     var blob = new Blob([texto], { type: 'application/json' });
     var nome = 'backup-interferencias-' + hojeISO() + '.json';
     var auto = publicarArquivo(nome, blob,
       'Backup com ' + estado.registros.length + ' casa(s), ' + estado.arvores.length +
-      ' árvore(s), ' + estado.mensais.length + ' foto(s) do mensal e todas as imagens (' + kb(texto.length) + '). ' +
+      ' árvore(s), ' + estado.mensais.length + ' foto(s) do mensal, ' + estado.ramais.length +
+      ' ramal(is) e todas as imagens (' + kb(texto.length) + '). ' +
       'Guarde este arquivo: ele é a única cópia fora deste aparelho.');
     mostrarMsg('Backup exportado.' + (auto ? ' O download automático foi disparado.' : ''), 'sucesso');
   }catch(e){
@@ -3458,6 +3815,22 @@ function normalizarArvore(o){
   };
 }
 
+function normalizarRamal(o){
+  if(!o || typeof o !== 'object') throw new Error('registro de ramal inválido');
+  return {
+    id: String(o.id || novoId()),
+    rua: String(o.rua || '').trim(),
+    ajuste: AJUSTES.indexOf(o.ajuste) >= 0 ? o.ajuste : 'Rebaixar',
+    foto: String(o.foto || ''),
+    dim: o.dim && o.dim.w ? { w: o.dim.w, h: o.dim.h } : null,
+    foto2: String(o.foto2 || ''),
+    dim2: o.dim2 && o.dim2.w ? { w: o.dim2.w, h: o.dim2.h } : null,
+    obs: String(o.obs || '').trim(),
+    criadoEm: String(o.criadoEm || new Date().toISOString()),
+    atualizadoEm: String(o.atualizadoEm || new Date().toISOString())
+  };
+}
+
 function normalizarMensal(o){
   if(!o || typeof o !== 'object') throw new Error('registro do relatório mensal inválido');
   return {
@@ -3486,11 +3859,15 @@ function importarBackup(arq){
       var lista = Array.isArray(dados) ? dados : (dados && Array.isArray(dados.registros) ? dados.registros : null);
       var listaArv = (dados && Array.isArray(dados.arvores)) ? dados.arvores : [];
       var listaMen = (dados && Array.isArray(dados.mensais)) ? dados.mensais : [];
-      if(!lista && !listaArv.length && !listaMen.length) throw new Error('o arquivo não contém uma lista de registros');
+      var listaRam = (dados && Array.isArray(dados.ramais)) ? dados.ramais : [];
+      if(!lista && !listaArv.length && !listaMen.length && !listaRam.length){
+        throw new Error('o arquivo não contém uma lista de registros');
+      }
       var regs = (lista || []).map(normalizarRegistro);
       var arvs = listaArv.map(normalizarArvore);
       var mens = listaMen.map(normalizarMensal);
-      if(!regs.length && !arvs.length && !mens.length) throw new Error('o arquivo de backup está vazio');
+      var rams = listaRam.map(normalizarRamal);
+      if(!regs.length && !arvs.length && !mens.length && !rams.length) throw new Error('o arquivo de backup está vazio');
 
       var jaExistem = regs.filter(function(r){
         return estado.registros.some(function(x){ return x.id === r.id; });
@@ -3498,6 +3875,8 @@ function importarBackup(arq){
         return estado.arvores.some(function(x){ return x.id === r.id; });
       }).length + mens.filter(function(r){
         return estado.mensais.some(function(x){ return x.id === r.id; });
+      }).length + rams.filter(function(r){
+        return estado.ramais.some(function(x){ return x.id === r.id; });
       }).length;
 
       var cfgBackup = (dados && dados.config && typeof dados.config === 'object') ? dados.config : null;
@@ -3506,20 +3885,22 @@ function importarBackup(arq){
                       cfgBackup.empresa !== estado.config.empresa);
 
       processando(false);
-      var pergunta = 'Importar ' + regs.length + ' casa(s), ' + arvs.length + ' árvore(s) e ' +
-        mens.length + ' foto(s) do relatório mensal deste backup?\n\n' +
+      var pergunta = 'Importar ' + regs.length + ' casa(s), ' + arvs.length + ' árvore(s), ' +
+        mens.length + ' foto(s) do mensal e ' + rams.length + ' ramal(is) deste backup?\n\n' +
         (jaExistem ? jaExistem + ' registro(s) já existente(s) serão ATUALIZADOS.\n' : '') +
-        (regs.length + arvs.length + mens.length - jaExistem) + ' registro(s) novo(s) serão adicionados.\n' +
+        (regs.length + arvs.length + mens.length + rams.length - jaExistem) + ' registro(s) novo(s) serão adicionados.\n' +
         'Os demais registros atuais serão mantidos.' +
         (trocaCfg ? '\n\nOs dados da obra também serão substituídos por: ' + cfgBackup.obra +
                     ' (' + (cfgBackup.empresa || 'sem empresa') + ').' : '');
       if(!confirm(pergunta)) return;
 
-      processando(true, 'Importando backup…', (regs.length + arvs.length + mens.length) + ' registro(s)');
+      processando(true, 'Importando backup…', (regs.length + arvs.length + mens.length + rams.length) + ' registro(s)');
       Armaz.salvarVarios('registros', regs).then(function(){
         return Armaz.salvarVarios('arvores', arvs);
       }).then(function(){
         return Armaz.salvarVarios('mensais', mens);
+      }).then(function(){
+        return Armaz.salvarVarios('ramais', rams);
       }).then(function(){
         if(!trocaCfg) return;
         var novo = Object.assign({}, CFG_PADRAO, cfgBackup);
@@ -3528,8 +3909,8 @@ function importarBackup(arq){
         return recarregar();
       }).then(function(){
         processando(false);
-        mostrarMsg('Backup importado: ' + regs.length + ' casa(s), ' + arvs.length + ' árvore(s) e ' +
-                   mens.length + ' foto(s) do mensal.', 'sucesso');
+        mostrarMsg('Backup importado: ' + regs.length + ' casa(s), ' + arvs.length + ' árvore(s), ' +
+                   mens.length + ' foto(s) do mensal e ' + rams.length + ' ramal(is).', 'sucesso');
       }).catch(function(e){
         processando(false);
         mostrarMsg('Falha ao gravar os registros importados: ' + msgErro(e), 'erro', true);
@@ -3548,6 +3929,7 @@ function ligarEventos(){
   $('fab').addEventListener('click', function(){
     if(estado.aba === 'arvore') abrirSheetArv(null);
     else if(estado.aba === 'mensal') abrirSheetMensal(null);
+    else if(estado.aba === 'ramal') abrirSheetRamal(null);
     else abrirSheet(null);
   });
   var abas = document.querySelectorAll('#abas .aba');
@@ -3565,7 +3947,7 @@ function ligarEventos(){
   $('btFechar').addEventListener('click', fecharSheet);
   $('btCancelar').addEventListener('click', fecharSheet);
   $('fundoEscuro').addEventListener('click', function(){
-    fecharSheet(); fecharSheetArv(); fecharSheetMensal(); fecharConfig();
+    fecharSheet(); fecharSheetArv(); fecharSheetMensal(); fecharSheetRamal(); fecharConfig();
   });
   $('btSalvar').addEventListener('click', salvarCasa);
   $('btExcluir').addEventListener('click', function(){
@@ -3589,6 +3971,20 @@ function ligarEventos(){
     if(estado.editandoMenId) excluirFotoMensal(estado.editandoMenId);
   });
   $('cFotoMen').addEventListener('change', function(){ tratarEscolhaFoto('men', this); });
+  $('btFecharRam').addEventListener('click', fecharSheetRamal);
+  $('btCancelarRam').addEventListener('click', fecharSheetRamal);
+  $('btSalvarRam').addEventListener('click', salvarRamal);
+  $('btExcluirRam').addEventListener('click', function(){
+    if(estado.editandoRamId) excluirRamal(estado.editandoRamId);
+  });
+  $('cFotoRam').addEventListener('change', function(){ tratarEscolhaFoto('ram', this); });
+  $('cFotoRam2').addEventListener('change', function(){ tratarEscolhaFoto('ram2', this); });
+  $('btRemoverFoto2').addEventListener('click', function(){
+    estado.fotos.ram2 = null;
+    pintarPreview('ram2', null);
+    pintarEstadoFoto('ram2', 'Foto removida. Salve para confirmar.', '');
+    this.style.display = 'none';
+  });
   $('btRemoverLogo').addEventListener('click', function(){
     estado.logoPendente = null;
     pintarLogo(null, 'Logo removida. Salve para confirmar.', '');
@@ -3598,14 +3994,23 @@ function ligarEventos(){
   $('cFotoEsg').addEventListener('change', function(){ tratarEscolhaFoto('esg', this); });
 
   $('filtroRua').addEventListener('change', function(){
-    if(estado.aba === 'arvore') estado.filtroArv = this.value; else estado.filtro = this.value;
+    definirFiltroDaAba(this.value);
     renderizar();
   });
 
   $('lista').addEventListener('click', function(ev){
     var alvo = ev.target.closest ?
-      ev.target.closest('[data-editar],[data-excluir],[data-editar-arv],[data-excluir-arv],[data-editar-men],[data-excluir-men],[data-subir-men],[data-descer-men]') : null;
+      ev.target.closest('[data-editar],[data-excluir],[data-editar-arv],[data-excluir-arv],[data-editar-men],[data-excluir-men],[data-subir-men],[data-descer-men],[data-editar-ram],[data-excluir-ram]') : null;
     if(!alvo) return;
+    var idEdR = alvo.getAttribute('data-editar-ram');
+    var idExR = alvo.getAttribute('data-excluir-ram');
+    if(idEdR){
+      var ram = estado.ramais.filter(function(r){ return r.id === idEdR; })[0];
+      if(!ram){ mostrarMsg('Registro não encontrado para edição.', 'erro', true); return; }
+      abrirSheetRamal(ram);
+      return;
+    }
+    if(idExR){ excluirRamal(idExR); return; }
     var idSobe = alvo.getAttribute('data-subir-men');
     var idDesce = alvo.getAttribute('data-descer-men');
     if(idSobe){ moverFotoMensal(idSobe, -1); return; }
@@ -3655,7 +4060,8 @@ function ligarEventos(){
   });
 
   window.addEventListener('beforeunload', function(ev){
-    if(Armaz.modo === 'memoria' && (estado.registros.length || estado.arvores.length || estado.mensais.length)){
+    if(Armaz.modo === 'memoria' && (estado.registros.length || estado.arvores.length ||
+                                    estado.mensais.length || estado.ramais.length)){
       ev.preventDefault();
       ev.returnValue = '';
       return '';

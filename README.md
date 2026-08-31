@@ -18,6 +18,10 @@ Aplicativo web de campo com duas abas, cada uma com o seu relatório em PDF:
   página que você quiser (seletor no cadastro) e reordenada com as setas na listagem;
   uma página pode ficar com menos de 4 fotos.
 
+- **Ramal** — ramais de água, com a foto do ramal (obrigatória), uma foto opcional do
+  depois do serviço, a rua e o ajuste de nível (**Rebaixar**, **Elevar** ou **Sem ajuste**).
+  Identidade em preto; no PDF as fichas saem duas por linha.
+
 A cor da tela inteira muda conforme a aba, para não haver dúvida sobre onde se está
 cadastrando.
 

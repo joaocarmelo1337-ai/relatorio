@@ -30,9 +30,9 @@ body[data-aba="mensal"]{
   --escuro:#0b3d16;
 }
 body[data-aba="ramal"]{
-  --azul:#111111;      /* preto: aba e relatório de ramais de água */
-  --azul-esc:#000000;
-  --escuro:#000000;
+  --azul:#5a6063;      /* cinza: aba e relatório de ramais de água */
+  --azul-esc:#474c4e;
+  --escuro:#3a3f41;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -165,6 +165,8 @@ main#lista{padding:4px 10px}
 .b-danificado{background:var(--vermelho)}
 .b-ja{background:var(--cinza)}
 .b-cortada{background:#6b4423}
+.b-naoloc{background:#8e44ad}
+.b-naoinst{background:#34495e}
 .b-rebaixar{background:#b5651d}
 .b-elevar{background:#2f6f8f}
 .b-semajuste{background:var(--cinza)}
@@ -345,6 +347,8 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
         <option>A remanejar</option>
         <option>Danificado</option>
         <option>Já remanejado</option>
+        <option>Não localizado</option>
+        <option>Não instalado</option>
       </select>
     </div>
 
@@ -1084,12 +1088,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
 /* ------------------------- utilitários gerais ------------------------ */
 var SITUACOES = ['Mantido','A remanejar','Danificado','Já remanejado'];
-var CLASSE_BADGE = {'Mantido':'b-mantido','A remanejar':'b-remanejar','Danificado':'b-danificado','Já remanejado':'b-ja'};
+// O hidrômetro aceita duas situações a mais, que não existem para o esgoto.
+var SITUACOES_HID = SITUACOES.concat(['Não localizado','Não instalado']);
+var CLASSE_BADGE = {'Mantido':'b-mantido','A remanejar':'b-remanejar','Danificado':'b-danificado',
+                    'Já remanejado':'b-ja','Não localizado':'b-naoloc','Não instalado':'b-naoinst'};
 var AJUSTES = ['Rebaixar','Elevar','Sem ajuste'];
 var CLASSE_AJUSTE = {'Rebaixar':'b-rebaixar','Elevar':'b-elevar','Sem ajuste':'b-semajuste'};
 var COR_AJUSTE = {'Rebaixar':[181,101,29],'Elevar':[47,111,143],'Sem ajuste':[127,140,141]};
 function contaRamal(aj){ return aj === 'Rebaixar' || aj === 'Elevar'; }
-var COR_PDF = {'Mantido':[46,125,50],'A remanejar':[230,126,34],'Danificado':[192,57,43],'Já remanejado':[127,140,141]};
+var COR_PDF = {'Mantido':[46,125,50],'A remanejar':[230,126,34],'Danificado':[192,57,43],
+               'Já remanejado':[127,140,141],'Não localizado':[142,68,173],'Não instalado':[52,73,94]};
 var LIMITE_FOTO = 900 * 1024;         // ~900 KB por foto
 var LIMITE_LOGO = 500 * 1024;         // ~500 KB para a logo
 var CHAVE_LS = 'aguasguariroba_registros_v1';
@@ -1121,7 +1129,9 @@ var DESCR_SITUACAO = {
   'Mantido': 'permanece no local, sem interferência com a obra.',
   'A remanejar': 'precisa ser deslocado ou adequado antes da execução do pavimento.',
   'Danificado': 'encontrado com avaria; requer substituição ou reparo pela concessionária.',
-  'Já remanejado': 'já adequado anteriormente; registrado para comprovação.'
+  'Já remanejado': 'já adequado anteriormente; registrado para comprovação.',
+  'Não localizado': 'não encontrado no imóvel durante a vistoria (somente hidrômetro).',
+  'Não instalado': 'ligação sem hidrômetro instalado até a data da vistoria (somente hidrômetro).'
 };
 
 var MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho',
@@ -2071,7 +2081,7 @@ function abrirSheet(reg){
       $('cNumero').value = reg.numero || '';
       $('cData').value = reg.data || hojeISO();
       $('cNumHid').value = reg.numHid || '';
-      $('cSitHid').value = SITUACOES.indexOf(reg.sitHid) >= 0 ? reg.sitHid : 'Mantido';
+      $('cSitHid').value = SITUACOES_HID.indexOf(reg.sitHid) >= 0 ? reg.sitHid : 'Mantido';
       $('cSitEsg').value = SITUACOES.indexOf(reg.sitEsg) >= 0 ? reg.sitEsg : 'Mantido';
       $('cObs').value = reg.obs || '';
       if(reg.fotoHid){
@@ -2866,7 +2876,7 @@ var PERFIL_ESGOTO = {
   totalGeralRot: 'TOTAL GERAL DE LIGAÇÕES DE ESGOTO A MODIFICAR:',
   quadroFinal: {
     titulo: 'Quadro geral por situação encontrada',
-    valores: SITUACOES,
+    valores: SITUACOES_HID,
     cor: function(v){ return COR_PDF[v]; },
     colunas: [{ tit:'HIDRÔMETROS', val: function(r, v){ return r.sitHid === v; } },
               { tit:'ESGOTOS', val: function(r, v){ return r.sitEsg === v; } }]
@@ -2935,7 +2945,7 @@ var PERFIL_ARVORE = {
 
 var PERFIL_RAMAL = {
   chave: 'ramal',
-  cor: [0,0,0],                       // identidade preta
+  cor: [90,96,99],                    // identidade cinza
   titulo: 'RELATÓRIO DE RAMAIS DE ÁGUA',
   sub1: 'Registro fotográfico dos ramais e do ajuste de nível',
   sub2: 'Obra de pavimentação asfáltica',
@@ -3101,8 +3111,10 @@ function montarPDF(Ctor, grupos, todos, perfil){
     y += 3;
   }
 
-  function secao(n, titulo){
-    if(!cabe(18)) novaPag();
+  // altMin: quando informado, o título só fica nesta página se couber junto o que vem
+  // logo abaixo — evita cabeçalho de seção sozinho no pé da folha.
+  function secao(n, titulo, altMin){
+    if(!cabe(altMin || 18)) novaPag();
     fonte('bold', 11.5, C_ESCURO);
     txt(n + '.  ' + titulo, M, y + 5);
     setD(COR); doc.setLineWidth(0.6);
@@ -3310,7 +3322,7 @@ function montarPDF(Ctor, grupos, todos, perfil){
 
   if(perfil.classificacao){
     secao(String(n++), 'CLASSIFICAÇÃO ADOTADA');
-    SITUACOES.forEach(function(sit){
+    SITUACOES_HID.forEach(function(sit){
       if(!cabe(9)) novaPag();
       chip(sit, COR_PDF[sit], M, y, 34);
       fonte('normal', 9, C_TEXTO);
@@ -3324,7 +3336,10 @@ function montarPDF(Ctor, grupos, todos, perfil){
   paragrafo(perfil.criterio);
 
   var nRegistro = n++;
-  secao(String(nRegistro), 'REGISTRO FOTOGRÁFICO POR RUA');
+  var primeiroBloco = grupos.length
+    ? 12.5 + 9 + 2 + 8 + 3 + alturaItem(grupos[0].itens[0], perfil.itensPorLinha === 2 ? COL : UTIL)
+    : 18;
+  secao(String(nRegistro), 'REGISTRO FOTOGRÁFICO POR RUA', primeiroBloco);
 
   grupos.forEach(function(g, iRua){
     var itens = g.itens;
@@ -3777,7 +3792,7 @@ function exportarBackup(){
 
 function normalizarRegistro(o){
   if(!o || typeof o !== 'object') throw new Error('registro inválido no arquivo');
-  var sitH = SITUACOES.indexOf(o.sitHid) >= 0 ? o.sitHid : 'Mantido';
+  var sitH = SITUACOES_HID.indexOf(o.sitHid) >= 0 ? o.sitHid : 'Mantido';
   var sitE = SITUACOES.indexOf(o.sitEsg) >= 0 ? o.sitEsg : 'Mantido';
   return {
     id: String(o.id || novoId()),

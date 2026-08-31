@@ -484,7 +484,7 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
       </select>
     </div>
 
-    <div class="secTit">Foto do ramal</div>
+    <div class="secTit">Fotos</div>
     <div class="campo">
       <label>Foto do ramal <span class="obrig">*</span></label>
       <div class="fotoBox" id="boxRam">
@@ -495,7 +495,7 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
       </div>
     </div>
     <div class="campo">
-      <label>Foto depois do serviço</label>
+      <label>Foto complementar</label>
       <div class="fotoBox" id="boxRam2">
         <img class="prev" id="prevRam2" alt="Pré-visualização da foto depois do serviço">
         <label class="escolher" for="cFotoRam2">Tirar foto ou escolher da galeria</label>
@@ -1759,7 +1759,7 @@ function renderizarListaMensal(){
 }
 
 function cardRamal(r){
-  var extra = r.foto2 ? ' &middot; com foto depois do serviço' : '';
+  var extra = r.foto2 ? ' &middot; com foto complementar' : '';
   return '<div class="card">' +
     '<img class="mini" src="' + esc(r.foto || '') + '" alt="Foto do ramal">' +
     '<div class="corpo">' +
@@ -2984,8 +2984,8 @@ var PERFIL_RAMAL = {
   tituloItem: function(){ return ''; },      // a rua já é o cabeçalho da seção
   semData: true,
   itensPorLinha: 2,
-  alturaFoto: 50,
-  legendasDe: function(r){ return r.foto2 ? ['RAMAL','DEPOIS DO SERVIÇO'] : ['RAMAL DE ÁGUA']; },
+  alturaFoto: 58,
+  legendasDe: function(r){ return r.foto2 ? ['RAMAL DE ÁGUA','FOTO COMPLEMENTAR'] : ['RAMAL DE ÁGUA']; },
   fotos: function(r){
     var f = [[r.foto, r.dim]];
     if(r.foto2) f.push([r.foto2, r.dim2]);
@@ -3365,17 +3365,28 @@ function montarPDF(Ctor, grupos, todos, perfil){
     y += 8 + 3;
 
     if(perfil.itensPorLinha === 2){
-      for(var i=0; i<itens.length; i+=2){
-        var par = itens.slice(i, i+2);
-        var h = Math.max.apply(null, par.map(function(r){ return alturaItem(r, COL); }));
+      // Duas fichas por linha só quando cada uma tem uma foto; a ficha com duas fotos
+      // ocupa a linha inteira, para que toda foto saia com a mesma largura. As de uma
+      // foto vêm primeiro, em pares, senão sobrariam meias linhas vazias entre elas.
+      var simples = [], duplas = [];
+      itens.forEach(function(r){
+        if(perfil.fotos(r).length > 1) duplas.push(r); else simples.push(r);
+      });
+      var linhas = [];
+      for(var i=0; i<simples.length; i+=2){
+        linhas.push({ itens: simples.slice(i, i+2), larg: COL });
+      }
+      duplas.forEach(function(r){ linhas.push({ itens:[r], larg: UTIL }); });
+      linhas.forEach(function(ln){
+        var h = Math.max.apply(null, ln.itens.map(function(r){ return alturaItem(r, ln.larg); }));
         if(!cabe(h + 5)){ novaPag(); barraRua(rotulo, true); }
-        desenhaItem(par[0], M, COL, y);
-        if(par[1]) desenhaItem(par[1], M + COL + 6, COL, y);
+        desenhaItem(ln.itens[0], M, ln.larg, y);
+        if(ln.itens[1]) desenhaItem(ln.itens[1], M + COL + 6, ln.larg, y);
         y += h;
         setD(C_LINHA);
         doc.line(M, y + 2, M + UTIL, y + 2);
         y += 5;
-      }
+      });
     }else{
       itens.forEach(function(r){
         var h = alturaItem(r, UTIL);

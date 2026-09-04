@@ -1,0 +1,222 @@
+# ============================================================================
+# normas.yaml - CONSTANTES E TABELAS NORMATIVAS
+# ============================================================================
+# REGRA DESTE ARQUIVO: nada aqui e' invencao. Cada bloco traz o campo `fonte`
+# dizendo de onde saiu. Ha tres categorias:
+#
+#   fonte: "arquivos originais"  -> o valor estava em build.js / detalhe*.py /
+#                                   figs.py / LEIAME.md que voce me passou.
+#   fonte: "derivado"            -> formula ajustada aos pontos tabelados dos
+#                                   SEUS arquivos; ha teste em tests/ provando
+#                                   que ela reproduz cada linha da sua tabela.
+#   valor: PENDENTE              -> NAO consta nos seus arquivos. O motor
+#                                   levanta erro claro se precisar. Preencha.
+#
+# O motor nunca interpola nem chuta um PENDENTE.
+# ============================================================================
+
+meta:
+  norma_flexao: "ABNT NBR 6118"
+  norma_acoes: "ABNT NBR 6120"
+  norma_barras: "ABNT NBR 7480"
+
+# ---------------------------------------------------------------------------
+# 1. BLOCO DE DIAGRAMA RETANGULAR: lambda e alpha_c
+# ---------------------------------------------------------------------------
+# A tabela abaixo esta *literalmente* na secao 5.1 do build.js original.
+# As formulas reproduzem os 5 pontos com erro < 1e-9 (ver tests/test_normas.py).
+bloco_retangular:
+  fonte: "arquivos originais (tabela da secao 5.1 do build.js)"
+  formula_lambda: "0.80 se fck<=50; senao 0.80 - (fck-50)/400"
+  formula_alpha_c: "0.85 se fck<=50; senao 0.85*(1 - (fck-50)/200)"
+  tabela:            # fck [MPa], lambda, alpha_c
+    - [50, 0.800, 0.850]
+    - [60, 0.775, 0.808]
+    - [70, 0.750, 0.765]
+    - [80, 0.725, 0.723]
+    - [90, 0.700, 0.680]
+
+# ---------------------------------------------------------------------------
+# 2. DUCTILIDADE
+# ---------------------------------------------------------------------------
+ductilidade:
+  kx_limite:
+    fonte: "arquivos originais (secao 5.2 do build.js)"
+    ate_50_MPa: 0.45
+    acima_50_MPa: 0.35
+  eps_su_permil:
+    fonte: "arquivos originais ('menor que o limite de 10 permil')"
+    valor: 10.0
+  # eps_cu: deformacao ultima do concreto na compressao.
+  # Para fck <= 50 o valor 3.5 permil aparece nos seus arquivos
+  # (secao 5.2: 'eps_s = 3,5 permil x (d-x)/x').
+  # Acima de 50 MPa a NBR 6118 usa outra expressao, que NAO consta nos
+  # arquivos que voce me mandou. Troque PENDENTE pela expressao da norma
+  # (variavel disponivel: fck, em MPa) e o motor passa a aceitar fck > 50
+  # no calculo de deformacoes.
+  eps_cu_permil:
+    fonte: "arquivos originais (ate 50 MPa); acima disso PENDENTE"
+    ate_50_MPa: 3.5
+    formula_acima_50_MPa: PENDENTE
+  # Limite dominio 2/3 = eps_cu / (eps_cu + eps_su).
+  # Com 3.5 e 10.0 da 0.2593, que bate com o 0,259 do seu figs.py.
+  formula_limite_dominio_2_3: "eps_cu / (eps_cu + eps_su)"
+
+# ---------------------------------------------------------------------------
+# 3. TAXA MINIMA DE ARMADURA (rho_min)
+# ---------------------------------------------------------------------------
+# Seus arquivos (secao 6.1 do build.js) trazem SOMENTE 4 pontos:
+#   "O rho_min de 0,15% vale ate C30. Acima disso ele sobe: 0,179% em C40,
+#    0,208% em C50, chegando a 0,256% em C90."
+# Os intermediarios (C35, C45, C55, C60, C65, C70, C75, C80, C85) NAO estao
+# nos arquivos. Ficam PENDENTE: o motor PARA com mensagem pedindo o valor -
+# ele nao interpola nem arredonda por conta propria.
+rho_min_percent:
+  fonte: "arquivos originais (4 pontos); demais linhas PENDENTE"
+  tabela:
+    20: 0.150
+    25: 0.150
+    30: 0.150
+    35: PENDENTE
+    40: 0.179
+    45: PENDENTE
+    50: 0.208
+    55: PENDENTE
+    60: PENDENTE
+    65: PENDENTE
+    70: PENDENTE
+    75: PENDENTE
+    80: PENDENTE
+    85: PENDENTE
+    90: 0.256
+
+# ---------------------------------------------------------------------------
+# 4. ACO
+# ---------------------------------------------------------------------------
+acos:
+  CA-25: {fyk_MPa: 250, nervurada: false, fonte: "arquivos originais (eta1 = 1,00 para barras lisas CA-25)"}
+  CA-50: {fyk_MPa: 500, nervurada: true,  fonte: "arquivos originais (eta1 = 2,25 para barras nervuradas CA-50)"}
+  CA-60: {fyk_MPa: 600, nervurada: false, fonte: "arquivos originais (eta1 = 1,00 para barras lisas CA-60)"}
+# Modulo de elasticidade do aco. NAO consta nos seus arquivos.
+# So e' usado para marcar eps_yd no diagrama de deformacoes; com PENDENTE
+# o diagrama sai sem essa marca e nenhum outro numero muda.
+Es_GPa:
+  fonte: "PENDENTE - nao consta nos arquivos originais"
+  valor: PENDENTE
+
+# ---------------------------------------------------------------------------
+# 5. ADERENCIA E ANCORAGEM
+# ---------------------------------------------------------------------------
+aderencia:
+  fonte: "arquivos originais (secao 7 do build.js)"
+  formula_fctd: "0.21 * fck**(2/3) / gamma_c"      # fck em MPa -> fctd em MPa
+  formula_fbd: "eta1 * eta2 * eta3 * fctd"
+  formula_lb: "(phi/4) * (fyd/fbd)"
+  formula_lb_nec: "alpha * lb * As_calc / As_ef"
+  eta1: {nervurada: 2.25, lisa: 1.00}
+  eta2: {boa: 1.00, ma: 0.70}
+  eta3_ate_32mm: 1.00
+  formula_eta3_acima_32mm: "(132 - phi_mm)/100"
+  alpha_ancoragem: {reta: 1.0, com_gancho: 0.7}
+  lb_min:
+    fonte: "arquivos originais ('maior entre 0,3.lb, 10.phi e 10 cm')"
+    fracao_lb: 0.30
+    n_phi: 10
+    absoluto_cm: 10.0
+
+ganchos:
+  fonte: "arquivos originais (Tabela A da secao 7.4)"
+  ponta_reta_min_n_phi:      # multiplos de phi
+    semicircular_180: 2
+    angulo_45: 4
+    angulo_reto_90: 8
+pino_dobramento_longitudinal:
+  fonte: "arquivos originais (Tabela B da secao 7.4)"
+  abaixo_20mm: {CA-25: 4, CA-50: 5, CA-60: 6}
+  desde_20mm:  {CA-25: 5, CA-50: 8, CA-60: null}
+ganchos_estribo:
+  fonte: "arquivos originais (Tabela C da secao 7.4)"
+  semicircular_ou_45: {n_phi: 5, minimo_cm: 5.0}
+  angulo_reto_90:     {n_phi: 10, minimo_cm: 7.0}
+pino_dobramento_estribo:
+  fonte: "arquivos originais (Tabela D da secao 7.4)"
+  ate_10mm: 3
+  de_12_5_a_16mm: 4
+  desde_20mm: 5
+
+# ---------------------------------------------------------------------------
+# 6. ARMADURAS SECUNDARIAS
+# ---------------------------------------------------------------------------
+armadura_distribuicao:
+  fonte: "arquivos originais (secao 6.2 do build.js)"
+  fracao_da_principal: 0.20
+  fracao_da_minima: 0.50
+  absoluto_min_cm2_m: 0.90
+  espacamento_max_cm: 33.0
+armadura_borda:
+  fonte: "arquivos originais (secao 6.3 do build.js)"
+  fracao_da_minima: 0.67
+  extensao_fracao_vao_menor: 0.15
+
+# ---------------------------------------------------------------------------
+# 7. GEOMETRIA / ESPESSURAS
+# ---------------------------------------------------------------------------
+espessura_minima_cm:
+  fonte: "arquivos originais (secao 3 do build.js)"
+  laje_piso: 8.0
+  laje_balanco: 10.0
+  formula_gamma_n_balanco: "1.95 - 0.05*h_cm"
+  estimativa_inicial: "h = vao/40"
+blondel:
+  fonte: "arquivos originais (secao 1 do build.js)"
+  soma_min_cm: 60.0
+  soma_max_cm: 64.0
+  piso_min_cm: 25.0
+  espelho_max_cm: 19.0
+
+# ---------------------------------------------------------------------------
+# 8. AREAS NOMINAIS DAS BARRAS (NBR 7480) - secao 5.4 do build.js
+# ---------------------------------------------------------------------------
+# Area unitaria nominal em cm2: e' a coluna "1" da sua tabela.
+# A secao 5.4 do build.js tabela com 2 casas (0,79 para Ø10). A secao 5.3 do
+# MESMO arquivo usa 3 casas (0,785 para Ø10 e 1,227 para Ø12,5) - e' com esses
+# que As,ef = 10,47 cm2/m fecha. Guardamos 3 casas: sao pi.phi2/4 arredondado,
+# e tests/test_normas.py prova que cada linha bate com as duas tabelas suas.
+areas_nominais_cm2:
+  fonte: "arquivos originais (secoes 5.3 e 5.4 do build.js)"
+  tabela:
+    5.0: 0.196
+    6.3: 0.312
+    8.0: 0.503
+    10.0: 0.785
+    12.5: 1.227
+    16.0: 2.011
+    20.0: 3.142
+# Massa linear (kg/m), so para a coluna de peso do quadro de ferro.
+# NAO consta nos seus arquivos: fica PENDENTE e a coluna sai vazia.
+massa_linear_kg_m:
+  fonte: "PENDENTE - nao consta nos arquivos originais"
+  tabela: PENDENTE
+
+# ---------------------------------------------------------------------------
+# 9. ACOES (NBR 6120) - secao 2 do build.js
+# ---------------------------------------------------------------------------
+peso_especifico_concreto_kN_m3:
+  fonte: "arquivos originais (NBR 6120, Tabelas 1 e 4)"
+  valor: 25.0
+cargas_acidentais_kN_m2:
+  fonte: "arquivos originais (NBR 6120, Tabela 10, linha 'Escadas e passarelas')"
+  tabela:
+    "Residencial ou hotel, dentro da unidade": 2.5
+    "Residencial ou hotel, uso comum": 3.0
+    "Hospitais": 3.0
+    "Escolas": 3.0
+    "Comercial, clubes, escritórios, bibliotecas": 3.0
+    "Cinemas, centros comerciais, shopping": 4.0
+    "Centros de exposição e de convenções": 5.0
+    "Servindo arquibancada": 5.0
+    "Com acesso público (caso geral)": 3.0
+    "Sem acesso público (caso geral)": 2.5
+  carga_concentrada_degrau_isolado_kN:
+    fonte: "arquivos originais (secao 2.2 do build.js)"
+    valor: 2.5

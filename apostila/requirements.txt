@@ -1,0 +1,10 @@
+# Dependencias Python. Fora do pip sao necessarios:
+#   pandoc              -> monta o .docx a partir do Markdown  (obrigatorio)
+#   libreoffice-writer  -> converte o .docx em PDF             (recomendado)
+# Sem o LibreOffice o build cai no WeasyPrint, que gera o PDF a partir do
+# HTML com doc/impressao.css - mesmo conteudo, layout proprio.
+PyYAML>=6.0
+Jinja2>=3.1
+cairosvg>=2.7
+pytest>=8.0
+weasyprint>=60    # opcional: so para o PDF de reserva

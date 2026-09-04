@@ -1,0 +1,111 @@
+# ============================================================================
+# exemplo_padrao.yaml - O UNICO ARQUIVO QUE VOCE PRECISA EDITAR
+# ============================================================================
+# Mude os valores aqui e rode `make`. Todas as figuras e todos os numeros do
+# texto se atualizam sozinhos. Para gerar a apostila de outro exemplo, copie
+# este arquivo, edite e rode `make CONFIG=config/meu_exemplo.yaml`.
+#
+# Unidades: comprimentos em cm, forcas em kN, tensoes em MPa (salvo indicado).
+# ============================================================================
+
+projeto:
+  titulo: "Cálculo e detalhamento da armadura de escadas"
+  subtitulo: "Apostila prática segundo a ABNT NBR 6118 e NBR 6120"
+  caso: "Escada de laje maciça — lance com patamar"
+  autor: "Apostila de escadas"
+
+# ---------------------------------------------------------------------------
+# GEOMETRIA
+# ---------------------------------------------------------------------------
+geometria:
+  piso_s: 28.0                 # profundidade do degrau (s)
+  espelho_e: 18.5              # altura do degrau (e)
+  n_degraus: 8                 # numero de espelhos do lance
+  patamar_inferior: 120.0      # comprimento em planta do patamar de partida
+  patamar_superior: 120.0      # comprimento em planta do patamar de chegada
+  largura_lance: 121.0         # largura util (perpendicular a subida)
+  espessura_h: 12.0            # espessura da laje, medida perpendicular
+  cobrimento_c: 2.5            # cobrimento nominal
+  # Arredondamento da espessura media (hm) usada no peso proprio.
+  # 1.0  = arredonda ao cm cheio (pratica usual, e' o que o exemplo original fez)
+  # null = usa o valor exato h/cos(alpha) + e/2
+  arredondar_hm_cm: 1.0
+  # Esquema estrutural do conjunto patamar + lance + patamar.
+  # "biapoiado" e' o unico implementado; o motor recusa outros com erro claro.
+  esquema: biapoiado
+
+# ---------------------------------------------------------------------------
+# MATERIAIS
+# ---------------------------------------------------------------------------
+materiais:
+  fck: 25                      # MPa
+  aco_principal: CA-50
+  aco_distribuicao: CA-60
+  gamma_c: 1.4
+  gamma_s: 1.15
+  gamma_f: 1.4                 # majoracao das acoes (Md = gamma_f * Mk)
+  aderencia: boa               # "boa" ou "ma" -> escolhe eta2 em normas.yaml
+
+# ---------------------------------------------------------------------------
+# ACOES
+# ---------------------------------------------------------------------------
+acoes:
+  # Chave EXATA de cargas_acidentais_kN_m2.tabela em normas.yaml.
+  # Deixe `acidental_kN_m2` como null para usar a tabela; preencha para forcar
+  # um valor proprio (o motor registra que foi imposto).
+  uso: "Residencial ou hotel, dentro da unidade"
+  acidental_kN_m2: null
+  revestimento_kN_m2: 1.2
+  guarda_corpo_kN_m2: 0.0
+
+# ---------------------------------------------------------------------------
+# ESFORCOS
+# ---------------------------------------------------------------------------
+esforcos:
+  # null  -> o motor calcula Mk a partir das acoes e da geometria (recomendado)
+  # numero -> pina o Mk caracteristico em kN.m e ignora o calculado
+  #           (o valor calculado ainda aparece no relatorio, para conferencia)
+  momento_caracteristico_kNm: null
+
+# ---------------------------------------------------------------------------
+# ARMADURAS ADOTADAS
+# ---------------------------------------------------------------------------
+# O motor calcula As necessario; aqui voce diz o que foi ADOTADO em obra.
+# Se o adotado nao cobrir o calculado, o build falha avisando.
+armaduras:
+  principal:
+    bitola_mm: 10.0
+    espacamento_cm: 7.5
+    ancoragem: com_gancho      # "reta" ou "com_gancho"
+    tipo_gancho: angulo_reto_90
+  distribuicao:
+    bitola_mm: 6.3
+    espacamento_cm: 15.0
+  borda:
+    bitola_mm: 6.3
+    espacamento_cm: 25.0
+  # Bitolas que a secao 5.3 compara para o leitor escolher.
+  bitolas_comparadas_mm: [10.0, 12.5]
+  # Barras de ancoragem dos cantos reentrantes.
+  ancoragem_canto:
+    bitola_mm: 6.3
+    barras_por_canto: 2
+
+# ---------------------------------------------------------------------------
+# DETALHAMENTO
+# ---------------------------------------------------------------------------
+detalhamento:
+  # Se true, a N2 (principal do lance) e' desenhada e quantificada dividida em
+  # arranque (N2a) + barra do lance (N2b), unidas por traspasse >= lb,nec.
+  dividir_n2: false
+  reforco_divisa:
+    incluir: true
+    bitola_mm: 10.0
+    quantidade: 1
+
+# ---------------------------------------------------------------------------
+# SAIDA
+# ---------------------------------------------------------------------------
+saida:
+  nome_arquivo: "Apostila_Armadura_Escadas"
+  formatos: [docx, pdf]

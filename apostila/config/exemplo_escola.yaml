@@ -1,0 +1,62 @@
+# Segundo exemplo: mesma apostila, outra escada.
+# Gerado para provar que nada esta preso ao exemplo original.
+projeto:
+  titulo: Cálculo e detalhamento da armadura de escadas
+  subtitulo: Apostila prática segundo a ABNT NBR 6118 e NBR 6120
+  caso: Escada de escola — lance longo, C30, patamares desiguais
+  autor: Apostila de escadas
+geometria:
+  piso_s: 30.0
+  espelho_e: 17.0
+  n_degraus: 11
+  patamar_inferior: 150.0
+  patamar_superior: 110.0
+  largura_lance: 140.0
+  espessura_h: 15.0
+  cobrimento_c: 3.0
+  arredondar_hm_cm: 1.0
+  esquema: biapoiado
+materiais:
+  fck: 30
+  aco_principal: CA-50
+  aco_distribuicao: CA-60
+  gamma_c: 1.4
+  gamma_s: 1.15
+  gamma_f: 1.4
+  aderencia: boa
+acoes:
+  uso: Escolas
+  acidental_kN_m2: null
+  revestimento_kN_m2: 1.2
+  guarda_corpo_kN_m2: 0.0
+esforcos:
+  momento_caracteristico_kNm: null
+armaduras:
+  principal:
+    bitola_mm: 10.0
+    espacamento_cm: auto
+    ancoragem: com_gancho
+    tipo_gancho: angulo_reto_90
+  distribuicao:
+    bitola_mm: 6.3
+    espacamento_cm: auto
+  borda:
+    bitola_mm: 6.3
+    espacamento_cm: auto
+  bitolas_comparadas_mm:
+  - 10.0
+  - 12.5
+  ancoragem_canto:
+    bitola_mm: 6.3
+    barras_por_canto: 2
+detalhamento:
+  dividir_n2: false
+  reforco_divisa:
+    incluir: true
+    bitola_mm: 10.0
+    quantidade: 1
+saida:
+  nome_arquivo: Apostila_Escola_C30
+  formatos:
+  - docx
+  - pdf

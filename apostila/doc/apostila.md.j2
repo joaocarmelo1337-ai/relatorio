@@ -1,0 +1,688 @@
+---
+title: "{{ cfg.projeto.titulo }}"
+subtitle: "{{ cfg.projeto.subtitulo }}"
+author: "{{ cfg.projeto.caso }}"
+lang: pt-BR
+toc-title: "Sumário"
+---
+
+{{ quebra() }}
+
+# Como usar esta apostila
+
+Esta apostila acompanha o cálculo completo de uma escada de concreto armado,
+do lançamento da geometria até o desenho final da ferragem. Cada seção traz a
+teoria, a aplicação no exemplo numérico e o desenho correspondente.
+
+Duas regras valem do começo ao fim:
+
+- **Toda armadura aparece desenhada**, e sempre que existe mais de um formato
+  válido os dois (ou os quatro) aparecem lado a lado, com uma tabela dizendo
+  quando cada um é boa escolha. A escolha entre eles é decisão de projeto e de
+  obra, não regra fixa.
+- **Toda posição de barra vem com a descrição do que ela é** — no desenho, na
+  tabela e no texto. Nunca só o código.
+
+Termos técnicos aparecem explicados entre parênteses na primeira vez que são
+usados.
+
+> **Todos os números desta apostila são calculados.** Não há valor digitado no
+> texto. Eles saem de `config/{{ nome_config }}` através do motor em
+> `engine/`, e as figuras saem da mesma fonte. Mude o arquivo de configuração e
+> rode `make`: texto e desenhos se atualizam juntos.
+
+## Dados do exemplo
+
+| Item | Valor |
+|---|---|
+| Concreto | C{{ n(mat.fck) }} (f~ck~ = {{ n(mat.fck) }} MPa) |
+| Aço | {{ mat.aco_principal }} (principal) e {{ mat.aco_distribuicao }} (distribuição) |
+| Espessura da laje (h) | {{ n(geo.h, 1) }} cm |
+| Cobrimento (c) | {{ n(geo.c, 1) }} cm |
+| Altura útil (d) | {{ n(geo.d, 1) }} cm |
+| Piso do degrau (s) | {{ n(geo.s, 1) }} cm |
+| Espelho do degrau (e) | {{ n(geo.e, 1) }} cm |
+| Número de degraus | {{ geo.n }} |
+| Patamares | {{ n(geo.patamar_inf) }} cm e {{ n(geo.patamar_sup) }} cm |
+| Largura do lance | {{ n(geo.largura) }} cm |
+| Uso (carga acidental) | {{ cargas.uso }} — {{ n(cargas.acidental, 1) }} kN/m² |
+
+{{ quebra() }}
+
+# 1. Parâmetros de projeto
+
+A geometria de uma escada nasce de dois números: o **piso** (s), profundidade
+onde o pé apoia, e o **espelho** (e), altura de cada degrau. Eles se relacionam
+pela fórmula de Blondel:
+
+$$s + 2e = {{ n(blondel.min) }} \text{ a } {{ n(blondel.max) }}\ \text{cm}$$
+
+Essa faixa garante um passo confortável. Fora dela a escada fica cansativa
+(degraus curtos demais) ou perigosa (degraus longos demais).
+
+No exemplo: s + 2e = {{ n(geo.s, 1) }} + 2 × {{ n(geo.e, 1) }} =
+**{{ n(blondel.soma, 1) }} cm**.
+{% if blondel.atende %}Dentro da faixa recomendada.{% else %}
+**Atenção: fora da faixa recomendada de {{ n(blondel.min) }} a
+{{ n(blondel.max) }} cm.** O passo fica desconfortável. Para corrigir sem mexer
+no desnível, reduza o piso ou o espelho — mas repare que reduzir o espelho
+aumenta o número de degraus e alonga o lance.{% endif %}
+
+Limites práticos adotados:
+
+- s ≥ {{ n(blondel.piso_min) }} cm — {% if blondel.piso_atende %}atendido ({{ n(geo.s, 1) }} cm){% else %}**não atendido** ({{ n(geo.s, 1) }} cm){% endif %}
+- e ≤ {{ n(blondel.espelho_max) }} cm — {% if blondel.espelho_atende %}atendido ({{ n(geo.e, 1) }} cm){% else %}**não atendido** ({{ n(geo.e, 1) }} cm){% endif %}
+
+{{ figura("geometria") }}
+
+## 1.1 Número de degraus e projeção
+
+O número de degraus (n) sai da altura total a vencer dividida pelo espelho:
+
+$$e = \ell_v / n \qquad\Rightarrow\qquad \ell_v = {{ geo.n }} \times {{ n(geo.e, 1) }} = {{ n(geo.subida) }}\ \text{cm}$$
+
+A projeção horizontal dos pisos usa (n − 1) degraus, porque o último degrau não
+soma piso — ele já é o patamar de chegada:
+
+$$\ell_h = (n-1) \times s = {{ geo.n - 1 }} \times {{ n(geo.s, 1) }} = {{ n(geo.projecao_pisos) }}\ \text{cm}$$
+
+Já a **projeção do lance em planta**, que é a que entra no vão, mede
+{{ geo.n }} × {{ n(geo.s, 1) }} = {{ n(geo.projecao_lance) }} cm: o último
+espelho sobe para dentro do patamar superior. Somando os patamares, o vão total
+é {{ n(geo.patamar_inf) }} + {{ n(geo.projecao_lance) }} +
+{{ n(geo.patamar_sup) }} = **{{ n(geo.vao_total) }} cm**.
+
+## 1.2 Altura média da laje (hm)
+
+A laje da escada é inclinada, então a espessura que interessa para o peso
+próprio não é h, mas a espessura média medida **na vertical**, considerando
+também os degraus:
+
+$$h_1 = \frac{h}{\cos\alpha} \qquad h_m = h_1 + \frac{e}{2}$$
+
+No exemplo: α = arctan({{ n(geo.subida) }} / {{ n(geo.projecao_lance) }}) =
+**{{ n(geo.alpha_graus, 2) }}°**, portanto
+h₁ = {{ n(geo.h, 1) }} / cos α = **{{ n(geo.h1, 2) }} cm** e
+hm = {{ n(geo.h1, 2) }} + {{ n(geo.e / 2, 2) }} = **{{ n(geo.hm_exato, 2) }} cm**.
+{% if geo.hm != geo.hm_exato %}Adotado {{ n(geo.hm, 1) }} cm, arredondado ao
+centímetro — é o que se faz na prática para estimativa de carga.{% endif %}
+
+Este é o ponto em que mais se erra: usar h no lugar de hm subestima o peso
+próprio do lance em
+{{ n(100 * (geo.hm - geo.h) / geo.h) }} % neste exemplo.
+
+{{ quebra() }}
+
+# 2. Ações (cargas)
+
+## 2.1 Ações permanentes
+
+São as cargas que ficam ali para sempre: o peso da própria estrutura e do que é
+fixo sobre ela.
+
+| Carga | Expressão | No lance | No patamar |
+|---|---|---|---|
+| Peso próprio | γ~conc~ × espessura média | {{ n(peso_conc, 1) }} × {{ n(geo.hm/100, 3) }} = **{{ n(cargas.pp_lance, 2) }}** kN/m² | {{ n(peso_conc, 1) }} × {{ n(geo.h/100, 3) }} = **{{ n(cargas.pp_patamar, 2) }}** kN/m² |
+| Revestimento | conforme material | {{ n(cargas.revestimento, 2) }} kN/m² | {{ n(cargas.revestimento, 2) }} kN/m² |
+| Guarda-corpo | carga linear ÷ área de influência | {{ n(cargas.guarda_corpo, 2) }} kN/m² | {{ n(cargas.guarda_corpo, 2) }} kN/m² |
+| **Total permanente (g)** | | **{{ n(cargas.g_lance, 2) }} kN/m²** | **{{ n(cargas.g_patamar, 2) }} kN/m²** |
+
+O peso específico do concreto armado ({{ n(peso_conc, 1) }} kN/m³) e os pesos
+de revestimento vêm da NBR 6120, Tabelas 1 e 4.
+
+## 2.2 Ações variáveis (carga acidental)
+
+Esta é a carga de uso — o peso das pessoas e do que elas carregam. Não existe
+um valor único: depende do tipo de edifício que a escada atende. Os valores
+estão na NBR 6120, Tabela 10, linha "Escadas e passarelas".
+
+| Uso da escada | Carga (kN/m²) |
+|---|---|
+{% for uso, valor in tabela_acidental %}| {{ uso }}{% if uso == cargas.uso %} **← adotado**{% endif %} | {{ n(valor, 1) }} |
+{% endfor %}
+
+Adotado: **{{ n(cargas.acidental, 1) }} kN/m²**
+{%- if cargas.acidental_da_tabela %} (da tabela, para "{{ cargas.uso }}"){% else %} (valor imposto no arquivo de configuração){% endif %}.
+
+Verificação adicional exigida pela norma: em degraus isolados em balanço ou
+biapoiados, verificar separadamente uma carga concentrada de
+{{ n(carga_concentrada, 1) }} kN na posição mais desfavorável — sem somar com a
+carga distribuída.
+
+## 2.3 Sobrecarga no patamar
+
+Quando um lance se apoia diretamente no patamar (e não numa viga inclinada
+própria), o patamar recebe, além do seu próprio carregamento, a reação vertical
+desse lance:
+
+$$R = \frac{P_{lance} \times \ell_{lance}}{2}$$
+
+dividida pela área de influência do patamar para virar kN/m².
+
+**Isso não acontece quando o lance tem viga de apoio própria nas duas
+extremidades** — nesse caso a carga vai direto para as vigas, sem passar pelo
+patamar. É o caso deste exemplo: o conjunto patamar + lance + patamar é
+analisado como uma peça só, biapoiada nas vigas de extremidade.
+
+{{ quebra() }}
+
+# 3. Espessura da laje
+
+Estimativa inicial a partir do vão:
+
+$$h \approx \frac{\ell}{40} = \frac{{ '{' }}{{ n(geo.vao_total) }}{{ '}' }}{40} = {{ n(esp.estimativa_vao_40, 1) }}\ \text{cm}$$
+
+Mínimos exigidos pela NBR 6118:
+
+| Situação | Espessura mínima |
+|---|---|
+| Laje de piso, não em balanço | {{ n(esp_min.laje_piso) }} cm |
+| Laje em balanço | {{ n(esp_min.laje_balanco) }} cm |
+
+Em lajes em balanço, os esforços ainda devem ser majorados por
+γ~n~ = 1,95 − 0,05 × h.
+
+No exemplo adotou-se **h = {{ n(geo.h, 1) }} cm**,
+{% if esp.atende %}com folga sobre o mínimo de {{ n(esp_min.laje_piso) }} cm{% else %}**abaixo do mínimo de {{ n(esp_min.laje_piso) }} cm**{% endif %}.
+
+A altura útil é d = h − c − Ø/2 = {{ n(geo.h, 1) }} − {{ n(geo.c, 1) }} − 0,5 =
+**{{ n(geo.d, 1) }} cm**.
+
+{{ quebra() }}
+
+# 4. Esforços solicitantes
+
+O conjunto é analisado como uma viga de 1 metro de largura (uma "fatia" da
+laje), biapoiada no vão de {{ n(esf.vao, 2) }} m. O carregamento não é uniforme:
+o lance pesa mais que os patamares, porque a espessura média hm é maior que h.
+
+| Trecho | Comprimento | Carga de serviço |
+|---|---|---|
+{% for t, rot in trechos_rot %}| {{ rot }} | {{ n(t.comprimento * 100) }} cm | {{ n(t.q, 2) }} kN/m² |
+{% endfor %}| **Total** | **{{ n(esf.vao * 100) }} cm** | **{{ n(esf.carga_total, 2) }} kN por metro de largura** |
+
+Por equilíbrio, as reações são R~A~ = **{{ n(esf.R_a, 2) }} kN** e
+R~B~ = **{{ n(esf.R_b, 2) }} kN**, e o momento máximo ocorre onde o cortante
+troca de sinal, a {{ n(esf.x_Mk_max, 2) }} m do apoio A:
+
+$$M_k = {{ n(esf.Mk_max, 2) }}\ \text{kN}\cdot\text{m} \qquad
+M_d = \gamma_f \times M_k = {{ n(esf.gamma_f, 1) }} \times {{ n(esf.Mk_max, 2) }} = {{ n(esf.Md, 2) }}\ \text{kN}\cdot\text{m}$$
+
+$$V_k = {{ n(esf.Vk_max, 2) }}\ \text{kN} \qquad V_d = {{ n(esf.Vd, 2) }}\ \text{kN}$$
+
+O coeficiente γ~f~ = {{ n(esf.gamma_f, 1) }} majora o momento característico
+para o valor de cálculo — é a margem de segurança que a norma exige sobre as
+ações.
+
+{{ figura("diagramas") }}
+
+Repare no diagrama de momento: ele é positivo em todo o vão, e por isso **toda
+a armadura principal fica na face inferior**. Não há momento negativo sobre os
+apoios neste esquema — se os apoios reais oferecerem engastamento parcial,
+o esquema muda e passa a exigir armadura negativa sobre eles.
+
+{{ quebra() }}
+
+# 5. Dimensionamento da armadura principal
+
+## 5.1 Posição da linha neutra
+
+A linha neutra é a fronteira dentro da seção: acima dela o concreto comprime,
+abaixo o aço traciona. Sua posição (x) define todo o resto do dimensionamento.
+
+$$x = \frac{d}{\lambda}\left[1 - \sqrt{1 - \frac{M_d}{\frac{\alpha_c}{2} b_w d^2 f_{cd}}}\right]$$
+
+**Atenção: λ e α~c~ não são constantes universais.** Acima de 50 MPa eles
+mudam, e com eles mudam os números 1,25 e 0,425 que aparecem na versão
+simplificada da fórmula.
+
+| f~ck~ | λ | α~c~ | 1/λ | α~c~/2 |
+|---|---|---|---|---|
+{% for linha in tabela_lambda %}| {{ linha[0] }} | {{ linha[1] }} | {{ linha[2] }} | {{ linha[3] }} | {{ linha[4] }} |
+{% endfor %}
+
+No exemplo (C{{ n(mat.fck) }}): λ = {{ n(flex.lam, 3) }},
+α~c~ = {{ n(flex.alpha_c, 3) }}, f~cd~ = {{ n(flex.fcd, 4) }} kN/cm².
+
+$$\frac{\alpha_c}{2} b_w d^2 f_{cd} = {{ n(flex.alpha_c / 2, 3) }} \times {{ n(flex.bw) }} \times {{ n(flex.d, 1) }}^2 \times {{ n(flex.fcd, 4) }} = {{ n(flex.Mlim) }}\ \text{kN}\cdot\text{cm}$$
+
+$$x = \frac{{ '{' }}{{ n(flex.d, 1) }}{{ '}' }}{{ '{' }}{{ n(flex.lam, 3) }}{{ '}' }}\left[1 - \sqrt{1 - \frac{{ '{' }}{{ n(flex.Md) }}{{ '}' }}{{ '{' }}{{ n(flex.Mlim) }}{{ '}' }}}\right] = \mathbf{ {{- n(flex.x, 2) -}} \ \textbf{cm}}$$
+
+## 5.2 Verificação de ductilidade (Kx)
+
+Ductilidade é a capacidade da peça de se deformar bastante antes de romper — de
+"avisar" que vai cair. O parâmetro que mede isso é Kx = x/d.
+
+$$K_x = \frac{x}{d} = \frac{{ '{' }}{{ n(flex.x, 2) }}{{ '}' }}{{ '{' }}{{ n(flex.d, 1) }}{{ '}' }} = \mathbf{ {{- n(flex.kx, 3) -}} }$$
+
+{{ figura("dominios") }}
+
+| Domínio | Faixa de Kx | O que acontece |
+|---|---|---|
+| 2 | Kx < {{ n(flex.lim_dom_23, 3) }} | O aço se alonga muito antes de o concreto esmagar. Muito seguro, pouco econômico. |
+| 3 | {{ n(flex.lim_dom_23, 3) }} a {{ n(flex.kx_lim, 2) }} | O aço escoa e o concreto chega ao limite juntos. Faixa ideal. |
+| 4 | Kx > {{ n(flex.kx_lim, 2) }} | O concreto esmaga com o aço ainda elástico. Ruptura frágil, sem aviso. Proibido. |
+
+O exemplo caiu no **domínio {{ flex.dominio }}**
+{%- if flex.ductil %} — dentro da faixa dúctil{% else %} — **fora da faixa dúctil**{% endif %}.
+
+O limite entre os domínios 2 e 3 não é um número mágico: ele vale
+ε~cu~/(ε~cu~ + ε~su~) = {{ n(flex.eps_cu, 1) }}/({{ n(flex.eps_cu, 1) }} +
+{{ n(flex.eps_su, 0) }}) = {{ n(flex.lim_dom_23, 3) }}. Para f~ck~ acima de
+50 MPa, ε~cu~ muda e esse limite anda junto — e o limite de ductilidade cai de
+{{ n(kx_lim_baixo, 2) }} para {{ n(kx_lim_alto, 2) }}.
+
+A verificação da deformação do aço confirma o domínio:
+ε~s~ = ε~cu~ × (d − x)/x = {{ n(flex.eps_cu, 1) }} × ({{ n(flex.d, 1) }} −
+{{ n(flex.x, 2) }})/{{ n(flex.x, 2) }} = **{{ n(flex.eps_s, 2) }}‰**, menor que
+o limite de {{ n(flex.eps_su, 0) }}‰.
+
+## 5.3 Área de aço e escolha da bitola
+
+$$A_s = \frac{M_d}{f_{yd}\left(d - \frac{\lambda x}{2}\right)} = \frac{{ '{' }}{{ n(flex.Md) }}{{ '}' }}{{ '{' }}{{ n(flex.fyd, 3) }} \times {{ n(flex.z, 3) }}{{ '}' }} = \mathbf{ {{- n(arm.As_calc, 2) -}} \ \textbf{cm²/m}}$$
+
+| Bitola | Área da barra | Nº de barras/m | Espaçamento |
+|---|---|---|---|
+{% for c in arm.comparacao_bitolas %}| Ø{{ n(c.bitola, 1) }} mm | {{ n(c.area, 3) }} cm² | {{ n(c.n_por_metro, 2) }} | {{ n(c.espacamento, 1) }} cm |
+{% endfor %}
+
+**Adotado: Ø{{ n(princ.bitola_mm, 1) }} mm c/ {{ n(princ.espacamento_cm, 1) }} cm**,
+resultando A~s,ef~ = {{ n(arm.As_ef, 2) }} cm²/m — maior que os
+{{ n(arm.As_calc, 2) }} cm²/m necessários.
+
+A armadura principal do patamar sai deste mesmo cálculo — mesma bitola e mesmo
+espaçamento — porque lance e patamar fazem parte do mesmo esquema estrutural.
+O que muda entre eles é apenas o formato e o comprimento da barra.
+
+## 5.4 Tabela de áreas de aço
+
+Bitolas e áreas conforme ABNT NBR 7480. Valores em cm².
+
+| Bitola | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 |
+|---|---|---|---|---|---|---|---|---|
+{% for linha in tabela_areas %}| {{ linha[0] }} | {{ linha[1] }} | {{ linha[2] }} | {{ linha[3] }} | {{ linha[4] }} | {{ linha[5] }} | {{ linha[6] }} | {{ linha[7] }} | {{ linha[8] }} |
+{% endfor %}
+
+## 5.5 Formatos possíveis da armadura principal
+
+{{ figura("alt_principal") }}
+
+{{ tabela_formatos("principal") }}
+
+{{ quebra() }}
+
+# 6. Armadura secundária, de distribuição e de borda
+
+## 6.1 Armadura mínima
+
+$$A_{s,min} = \rho_{min} \times h \times b_w = {{ n(arm.rho_min * 100, 3) }}\% \times {{ n(geo.h, 1) }} \times 100 = {{ n(arm.As_min, 2) }}\ \text{cm²/m}$$
+
+O ρ~min~ de 0,15 % vale até C30. Acima disso ele sobe: 0,179 % em C40, 0,208 %
+em C50, chegando a 0,256 % em C90. **Consulte sempre pelo f~ck~ exato** — o
+motor recusa gerar a apostila para um f~ck~ cujo ρ~min~ não esteja tabelado,
+em vez de interpolar.
+
+## 6.2 Armadura de distribuição
+
+Deve atender ao maior entre três critérios:
+
+| Critério | Valor |
+|---|---|
+{% for crit, valor in arm.criterios_dist.items() %}| {{ crit }}{% if crit == arm.governa_dist %} **← governa**{% endif %} | {{ n(valor, 2) }} cm²/m |
+{% endfor %}
+
+Governa **{{ n(arm.As_dist, 2) }} cm²/m**. Adotado
+Ø{{ n(dist.bitola_mm, 1) }} mm c/ {{ n(dist.espacamento_cm, 1) }} cm
+(A~s,ef~ = {{ n(arm.As_dist_ef, 2) }} cm²/m). O espaçamento máximo para
+armadura secundária é {{ n(esp_max_sec) }} cm.
+
+## 6.3 Armadura de borda
+
+$$A_{s,borda} = {{ n(frac_borda, 2) }} \times A_{s,min} = {{ n(arm.As_borda, 2) }}\ \text{cm²/m}$$
+
+Adotado Ø{{ n(borda.bitola_mm, 1) }} mm c/ {{ n(borda.espacamento_cm, 1) }} cm
+(A~s,ef~ = {{ n(arm.As_borda_ef, 2) }} cm²/m). Essa armadura deve se estender no
+mínimo {{ n(frac_ext_borda, 2) }} do vão menor da laje, medido a partir da face
+do apoio.
+
+## 6.4 Formatos possíveis
+
+{{ figura("alt_distribuicao") }}
+
+{{ tabela_formatos("distribuicao") }}
+
+{{ figura("alt_borda") }}
+
+{{ tabela_formatos("borda") }}
+
+## 6.5 Resumo das armaduras
+
+| Função | Bitola | Espaçamento | A~s~ necessária | A~s,ef~ |
+|---|---|---|---|---|
+| Principal (lance e patamar) | Ø{{ n(princ.bitola_mm, 1) }} | {{ n(princ.espacamento_cm, 1) }} cm | {{ n(arm.As_calc, 2) }} cm²/m | {{ n(arm.As_ef, 2) }} cm²/m |
+| Distribuição | Ø{{ n(dist.bitola_mm, 1) }} | {{ n(dist.espacamento_cm, 1) }} cm | {{ n(arm.As_dist, 2) }} cm²/m | {{ n(arm.As_dist_ef, 2) }} cm²/m |
+| Borda | Ø{{ n(borda.bitola_mm, 1) }} | {{ n(borda.espacamento_cm, 1) }} cm | {{ n(arm.As_borda, 2) }} cm²/m | {{ n(arm.As_borda_ef, 2) }} cm²/m |
+
+{{ quebra() }}
+
+# 7. Ancoragem das barras
+
+Ancorar é garantir que a barra não escorregue dentro do concreto quando
+tracionada. A força passa do aço para o concreto por **aderência** (o atrito e
+o encaixe das nervuras da barra), e isso exige um comprimento mínimo.
+
+## 7.1 Resistência de aderência
+
+$$f_{ctd} = \frac{0{,}21\sqrt[3]{f_{ck}^2}}{\gamma_c} \qquad f_{bd} = \eta_1 \eta_2 \eta_3 f_{ctd}$$
+
+| Coeficiente | Valor | Condição |
+|---|---|---|
+| η₁ | 1,00 | Barras lisas (CA-25, CA-60) |
+| η₁ | 2,25 | Barras nervuradas (CA-50) |
+| η₂ | 1,00 | Boa aderência |
+| η₂ | 0,70 | Má aderência |
+| η₃ | 1,00 | Ø ≤ 32 mm |
+| η₃ | (132 − Ø)/100 | Ø > 32 mm (Ø em mm) |
+
+No exemplo: f~ctd~ = **{{ n(anc_r.fctd, 4) }} kN/cm²** e
+f~bd~ = {{ n(anc_r.eta1, 2) }} × {{ n(anc_r.eta2, 2) }} ×
+{{ n(anc_r.eta3, 2) }} × {{ n(anc_r.fctd, 4) }} =
+**{{ n(anc_r.fbd, 4) }} kN/cm²**.
+
+**Cuidado: f~ctd~ e f~bd~ são grandezas diferentes.** Usar o f~ctd~ direto no
+lugar do f~bd~ faz o comprimento de ancoragem sair
+{{ n(anc_r.eta1 * anc_r.eta2 * anc_r.eta3, 2) }} vezes maior que o correto.
+
+## 7.2 Comprimentos de ancoragem
+
+$$\ell_b = \frac{\phi}{4}\cdot\frac{f_{yd}}{f_{bd}} = \frac{{ '{' }}{{ n(princ.bitola_mm / 10, 1) }}{{ '}' }}{4}\cdot\frac{{ '{' }}{{ n(anc_r.fyd, 3) }}{{ '}' }}{{ '{' }}{{ n(anc_r.fbd, 4) }}{{ '}' }} = \mathbf{ {{- n(anc_r.lb, 1) -}} \ \textbf{cm}} \approx {{ n(anc_r.lb_em_phi) }}\phi$$
+
+$$\ell_{b,nec} = \alpha\,\ell_b\,\frac{A_{s,calc}}{A_{s,ef}} \geq \ell_{b,min}$$
+
+| Situação | α | ℓ~b,nec~ |
+|---|---|---|
+| Barra reta | {{ n(anc_r.alpha, 1) }} | **{{ n(anc_r.lb_nec, 1) }} cm** |
+| Barra com gancho | {{ n(anc_g.alpha, 1) }} | **{{ n(anc_g.lb_nec, 1) }} cm** |
+
+ℓ~b,min~ é o maior entre 0,3·ℓ~b~ ({{ n(0.3 * anc_r.lb, 1) }} cm), 10Ø
+({{ n(princ.bitola_mm) }} cm) e 10 cm — resulta
+{{ n(anc_r.lb_min, 1) }} cm, atendido nos dois casos.
+
+## 7.3 Quando usar gancho
+
+| Situação | Gancho |
+|---|---|
+| Barras lisas | Obrigatório |
+| Barras com alternância de tração e compressão | Sem gancho |
+| Demais casos | Com ou sem gancho |
+| Ø > 32 mm ou feixes de barras | Não recomendado |
+| Barras comprimidas | Nunca com gancho |
+
+## 7.4 Tabelas de gancho e dobra
+
+**Tabela A — Ganchos da armadura longitudinal tracionada**
+
+| Tipo de gancho | Ângulo | Ponta reta mínima | Para Ø{{ n(princ.bitola_mm, 1) }} |
+|---|---|---|---|
+| Semicircular | 180° | 2Ø | {{ n(2 * princ.bitola_mm / 10, 1) }} cm |
+| Em ângulo de 45° (interno) | 45° | 4Ø | {{ n(4 * princ.bitola_mm / 10, 1) }} cm |
+| Em ângulo reto | 90° | 8Ø | {{ n(8 * princ.bitola_mm / 10, 1) }} cm |
+
+**Tabela B — Diâmetro do pino de dobramento (armadura longitudinal)**
+
+| Bitola | CA-25 | CA-50 | CA-60 |
+|---|---|---|---|
+| Ø < 20 mm | 4Ø | 5Ø | 6Ø |
+| Ø ≥ 20 mm | 5Ø | 8Ø | — |
+
+O pino de dobramento é o cilindro em volta do qual o armador dobra a barra na
+bancada. Se for fino demais, a barra aperta o concreto na curva e pode causar
+fendilhamento (o concreto abrindo em fatias).
+
+**Tabela C — Ganchos de estribo**
+
+| Tipo | Ponta reta mínima |
+|---|---|
+| Semicircular ou 45° | 5Ø~t~, nunca menor que 5 cm |
+| Em ângulo reto (90°) | 10Ø~t~, nunca menor que 7 cm |
+
+O gancho reto de 90° não pode ser usado em barras lisas. A norma prefere o
+gancho de 135° voltado para dentro da peça.
+
+**Tabela D — Diâmetro do pino de dobramento (estribos)**
+
+| Bitola do estribo | D mínimo |
+|---|---|
+| ≤ 10 mm | 3Ø~t~ |
+| 12,5 e 16 mm | 4Ø~t~ |
+| ≥ 20 mm | 5Ø~t~ |
+
+{{ quebra() }}
+
+# 8. Comprimento das barras
+
+## 8.1 De onde sai cada parcela
+
+O trecho reto tem duas origens possíveis:
+
+- **Cobrindo um vão** — é a distância entre apoios menos os cobrimentos. Vem da
+  geometria da escada.
+- **Ancorando** — é o ℓ~b,nec~ calculado na Seção 7. Vem da aderência entre aço
+  e concreto.
+
+Muitas barras somam os dois: um trecho que atravessa o vão mais um trecho de
+ancoragem em cada ponta onde emenda com a barra vizinha.
+
+O gancho (Δℓ~g~) no exemplo vale h − 2c = {{ n(geo.h, 1) }} − 2 ×
+{{ n(geo.c, 1) }} = **{{ n(det.gancho_cm, 1) }} cm**. Repare que isso **não é**
+o 8Ø da norma — é um limite geométrico: a dobra precisa caber dentro da
+espessura da laje, descontados os cobrimentos.
+
+{% if not det.gancho_cabe %}
+> **Este é o ponto que mais confunde.** O 8Ø é o *mínimo* que a norma exige
+> ({{ n(det.gancho_normativo_cm, 1) }} cm aqui); o h − 2c é o *máximo* que a
+> peça permite ({{ n(det.gancho_cm, 1) }} cm). Como o máximo físico é menor que
+> o mínimo normativo, a laje está fina para esse gancho. Saídas: aumentar h,
+> reduzir a bitola, ou mudar para gancho semicircular, que exige apenas 2Ø
+> ({{ n(2 * princ.bitola_mm / 10, 1) }} cm).
+{% else %}
+O gancho de {{ n(det.gancho_cm, 1) }} cm cabe na espessura e supera o mínimo
+normativo de {{ n(det.gancho_normativo_cm, 1) }} cm.
+{% endif %}
+
+Observação prática: a barra dobrada fica ligeiramente mais curta que a soma dos
+trechos desenhados, porque ela não dobra em canto vivo — faz uma curva com
+raio. Registre o comprimento no eixo da barra; o corte real terá esse pequeno
+desconto.
+
+{{ figura("formatos_posicoes") }}
+
+## 8.2 Como o aço positivo foi cortado
+
+A armadura de face inferior precisa cobrir o vão inteiro, de apoio a apoio.
+Executá-la numa barra só de {{ n(geo.vao_total) }} cm seria impossível de
+posicionar, então ela é cortada em três: **N1**, **N2** e **N3**.
+
+Os cortes foram levados para as duas **quebras do intradorso** (onde o patamar
+vira lance), a {{ n(det.emendas_x[0]) }} cm e {{ n(det.emendas_x[1]) }} cm do
+apoio A. Duas razões:
+
+1. São longe do momento máximo, que fica a {{ n(det.x_momento_maximo) }} cm do
+   apoio A — repare no diagrama da Seção 4 onde estão marcadas as emendas.
+2. É onde a barra muda de direção de qualquer jeito.
+
+Cada emenda vale **ℓ~b,nec~ = {{ n(anc_g.lb_nec, 1) }} cm** para cada lado.
+
+## 8.3 Quantidade de barras
+
+$$n = \left\lceil \frac{b - 2c}{s} \right\rceil + 1$$
+
+onde b é a largura livre medida perpendicularmente à direção das barras e s o
+espaçamento. Soma-se 1 porque há barra nas duas extremidades, e arredonda-se
+para cima porque o espaçamento é um **máximo**.
+
+Para as barras transversais (N4, N7), o espaçamento é medido no **comprimento
+desenvolvido** da laje — a barra acompanha o lance inclinado. O desenvolvido
+total vale {{ n(dev_total) }} cm, contra {{ n(geo.vao_total) }} cm de projeção
+em planta: contar pela projeção deixaria
+{{ (dev_total - geo.vao_total) / dist.espacamento_cm | round | int }} barras de
+fora.
+
+| Posição | O que é | Cálculo | Quantidade |
+|---|---|---|---|
+{% for b in det.posicoes %}| {{ b.codigo }} | {{ b.descricao }} | {% if b.espacamento_cm %}espaç. {{ n(b.espacamento_cm, 1) }} cm{% else %}fixa{% endif %} | {{ b.quantidade }} Ø{{ n(b.bitola_mm, 1) }} |
+{% endfor %}
+
+{{ quebra() }}
+
+# 9. Detalhamento
+
+## 9.1 Identificação das posições
+
+Toda posição vem sempre acompanhada da descrição do que ela é — no desenho, na
+tabela e no texto. Assim ninguém precisa decorar a numeração.
+
+| Pos. | Bitola | Formato | O que é | Face |
+|---|---|---|---|---|
+{% for b in det.posicoes %}| **{{ b.codigo }}** | Ø{{ n(b.bitola_mm, 1) }} | {{ formato_de(b).nome }} | {{ b.descricao }} | {{ b.face }} |
+{% endfor %}
+
+## 9.2 Corte da escada com as armaduras
+
+{{ figura("corte") }}
+
+## 9.3 Plantas separadas
+
+Separar as armaduras em desenhos distintos ajuda muito a entender o que cada
+uma faz. Abaixo, a mesma escada desenrolada, primeiro só com a face inferior e
+depois só com a face superior.
+
+{{ figura("planta_inferior") }}
+
+{{ figura("planta_superior") }}
+
+Sobrepondo as duas mentalmente, você tem a malha completa. A armadura de
+distribuição fica sempre **por cima** da principal na face inferior — quem
+precisa ficar o mais longe possível da linha neutra é a principal.
+
+## 9.4 Ancoragem dos cantos reentrantes
+
+Canto reentrante é o vértice que "entra" para dentro da peça — no encontro do
+lance com o patamar. Quando a armadura principal dobra ali, as forças de tração
+das duas pernas da barra geram uma resultante que aponta **para fora**, na
+direção do cobrimento. Essa resultante tende a arrancar a camada de concreto e
+empurrar a barra para fora da peça.
+
+{{ figura("canto") }}
+
+A solução é atravessar barras nesse vértice, segurando a armadura principal
+contra essa força. São as barras **N6 — {{ det.por_codigo("N6").descricao }}**.
+
+Existem **dois** cantos reentrantes na escada: um no encontro do patamar
+inferior com o lance, e outro no encontro do lance com o patamar superior.
+Os dois precisam das barras de ancoragem — daí a quantidade de
+{{ det.por_codigo("N6").quantidade }} barras
+({{ cfg.armaduras.ancoragem_canto.barras_por_canto }} por canto).
+
+{{ figura("alt_canto") }}
+
+{{ tabela_formatos("canto") }}
+
+## 9.5 Ideia construtiva: dividir a barra do lance
+
+A N2 pode ser executada de duas maneiras. Nenhuma delas está errada — a escolha
+é de detalhamento, não de cálculo.
+
+{{ figura("n2_dividida") }}
+
+{{ figura("alt_lance") }}
+
+{{ tabela_formatos("lance") }}
+
+A Opção 2 é uma melhoria construtiva: não corrige nenhum erro de cálculo, mas
+facilita bastante a montagem da ferragem. É o tipo de coisa que não se aprende
+no cálculo e se descobre no canteiro.
+
+**Regra do traspasse:**
+
+- A sobreposição deve ter no mínimo o ℓ~b,nec~
+  ({{ n(anc_g.lb_nec, 1) }} cm no exemplo). É por esse trecho que a força passa
+  de uma barra para a outra, através do concreto.
+- A emenda deve ficar fora do ponto de momento máximo — leve-a para uma região
+  de esforço menor.
+- Emendas de barras vizinhas devem ser escalonadas, nunca todas no mesmo ponto,
+  para não criar uma seção enfraquecida.
+
+{{ quebra() }}
+
+# 10. Quadro resumo de ferro
+
+| Pos. | Bitola | Qtd. | Formato | C (cm) | Total (m) | O que é |
+|---|---|---|---|---|---|---|
+{% for b in det.posicoes %}| **{{ b.codigo }}** | Ø{{ n(b.bitola_mm, 1) }} | {{ b.quantidade }} | {{ formato_de(b).nome }} | {{ n(b.comprimento_cm) }} | {{ n(b.comprimento_total_m, 1) }} | {{ b.descricao }} |
+{% endfor %}
+
+**Total por bitola:**
+
+| Bitola | Comprimento total |
+|---|---|
+{% for bit, metros in det.resumo_por_bitola.items() %}| Ø{{ n(bit, 1) }} | {{ n(metros, 1) }} m |
+{% endfor %}
+
+{% if not tem_massa_linear %}
+> O peso em kg não é apresentado porque a tabela de massa linear (kg/m) não
+> consta nas fontes deste projeto. Preencha `massa_linear_kg_m.tabela` em
+> `config/normas.yaml` e a coluna aparece sozinha.
+{% endif %}
+
+# 11. Verificações e avisos
+
+{% if avisos %}
+O motor levantou {{ avisos | length }}
+{{ "aviso" if avisos | length == 1 else "avisos" }} para este exemplo:
+
+{% for a in avisos %}
+{{ loop.index }}. {{ a }}
+{% endfor %}
+
+Nenhum deles impede o cálculo, mas todos merecem uma decisão consciente antes
+de o projeto ir para a obra.
+{% else %}
+Nenhum aviso: geometria, ductilidade, ancoragem e armaduras adotadas passaram
+em todas as verificações automáticas.
+{% endif %}
+
+# Normas de referência
+
+- **ABNT NBR 6118** — Projeto de estruturas de concreto: dimensionamento,
+  domínios, ancoragem, ganchos e dobras.
+- **ABNT NBR 6120** — Ações para o cálculo de estruturas de edificações: pesos
+  específicos e cargas de utilização.
+- **ABNT NBR 7480** — Barras e fios de aço para armaduras: bitolas, áreas e
+  massas nominais.
+
+# Apêndice — como regerar esta apostila
+
+Todos os números e figuras saem de dois arquivos de configuração:
+
+- `config/{{ nome_config }}` — a geometria, os materiais, as ações e as
+  armaduras adotadas deste exemplo.
+- `config/normas.yaml` — as constantes e tabelas normativas.
+
+Para gerar a apostila de outro exemplo, copie o primeiro, edite e rode:
+
+```
+make CONFIG=config/meu_exemplo.yaml
+```
+
+{% if pendentes %}
+## O que ainda está marcado como PENDENTE
+
+Estes valores **não constam** nas fontes deste projeto. Enquanto ficarem
+pendentes, o motor recusa qualquer cálculo que dependa deles — ele nunca
+interpola nem estima:
+
+{% for p in pendentes %}
+- `{{ p[0] }}` — {{ p[1] }}
+{% endfor %}
+{% endif %}

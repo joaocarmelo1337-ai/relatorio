@@ -75,6 +75,8 @@ def calcular(cfg: dict | str | Path, normas: Normas | None = None) -> Resultado:
     normas = normas or Normas.carregar()
     avisos: list[str] = []
 
+    normas.exigir_fck_na_faixa(float(cfg["materiais"]["fck"]))
+
     geo = mod_geo.construir(cfg)
     cargas = mod_cargas.calcular(cfg, geo, normas)
     esf = mod_esf.calcular(cfg, geo, cargas)

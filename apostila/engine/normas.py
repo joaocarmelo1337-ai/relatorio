@@ -52,6 +52,27 @@ class Normas:
     def __getitem__(self, chave: str) -> Any:
         return self.dados[chave]
 
+    # -- faixa coberta ----------------------------------------------------
+    def faixa_fck(self) -> tuple[float, float]:
+        f = self.dados["faixa_fck_MPa"]
+        return float(f["minimo"]), float(f["maximo"])
+
+    def exigir_fck_na_faixa(self, fck: float) -> None:
+        """Recusa fck fora do escopo do projeto.
+
+        Existe para o motor parar com uma frase clara em vez de tropecar mais
+        adiante num PENDENTE solto da tabela de rho_min.
+        """
+        lo, hi = self.faixa_fck()
+        if not (lo <= fck <= hi):
+            raise ConfiguracaoInvalida(
+                f"fck = {fck:g} MPa esta fora da faixa que este projeto cobre "
+                f"(C{lo:g} a C{hi:g}).\n"
+                f"  Para ampliar: ajuste `faixa_fck_MPa` e complete as linhas "
+                f"correspondentes de `rho_min_percent.tabela` em "
+                f"config/normas.yaml, lendo a Tabela 17.3 da NBR 6118."
+            )
+
     # -- bloco retangular -------------------------------------------------
     def lambda_(self, fck: float) -> float:
         """Altura relativa do bloco retangular de compressão."""

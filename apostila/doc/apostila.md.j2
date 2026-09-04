@@ -317,10 +317,19 @@ Bitolas e áreas conforme ABNT NBR 7480. Valores em cm².
 
 $$A_{s,min} = \rho_{min} \times h \times b_w = {{ n(arm.rho_min * 100, 3) }}\% \times {{ n(geo.h, 1) }} \times 100 = {{ n(arm.As_min, 2) }}\ \text{cm²/m}$$
 
-O ρ~min~ de 0,15 % vale até C30. Acima disso ele sobe: 0,179 % em C40, 0,208 %
-em C50, chegando a 0,256 % em C90. **Consulte sempre pelo f~ck~ exato** — o
-motor recusa gerar a apostila para um f~ck~ cujo ρ~min~ não esteja tabelado,
-em vez de interpolar.
+O ρ~min~ **não é uma constante**: ele sobe com o f~ck~. Os valores tabelados
+para a faixa que este projeto cobre (C{{ n(faixa_fck[0]) }} a
+C{{ n(faixa_fck[1]) }}):
+
+| f~ck~ | ρ~min~ | | f~ck~ | ρ~min~ |
+|---|---|---|---|---|
+{% for esq, dir in tabela_rho_min %}| {{ esq[0] }} | {{ esq[1] }} | | {{ dir[0] }} | {{ dir[1] }} |
+{% endfor %}
+
+**Consulte sempre pelo f~ck~ exato.** O motor recusa gerar a apostila para um
+f~ck~ cujo ρ~min~ não esteja tabelado — ele não interpola. E recusa também
+qualquer f~ck~ fora da faixa C{{ n(faixa_fck[0]) }}–C{{ n(faixa_fck[1]) }},
+que é o escopo declarado deste projeto.
 
 ## 6.2 Armadura de distribuição
 

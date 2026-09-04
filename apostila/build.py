@@ -54,7 +54,16 @@ def _pendentes(normas: Normas) -> list[tuple[str, str]]:
                 varrer(v, f"{caminho}.{k}" if caminho else str(k))
 
     varrer(normas.dados, "")
-    return achados
+
+    # Linhas de rho_min acima do teto de fck nunca serão consultadas: listá-las
+    # como pendência só faria ruído no apêndice.
+    _, teto = normas.faixa_fck()
+    def alcancavel(caminho: str) -> bool:
+        if not caminho.startswith("rho_min_percent.tabela."):
+            return True
+        return float(caminho.rsplit(".", 1)[1]) <= teto
+
+    return [a for a in achados if alcancavel(a[0])]
 
 
 def montar_contexto(r, figs, caminho_cfg: Path) -> dict:
@@ -120,6 +129,20 @@ def montar_contexto(r, figs, caminho_cfg: Path) -> dict:
 
     acid = normas["cargas_acidentais_kN_m2"]["tabela"]
 
+    # rho_min: só as linhas dentro da faixa coberta, em duas colunas
+    lo, hi = normas.faixa_fck()
+    linhas_rho = [
+        (f"C{fck:g}", f"{n(v, 3)} %" if v != PENDENTE else "*pendente*")
+        for fck, v in sorted(normas["rho_min_percent"]["tabela"].items())
+        if lo <= fck <= hi
+    ]
+    meio = (len(linhas_rho) + 1) // 2
+    vazio = ("", "")
+    tabela_rho_min = list(zip(
+        linhas_rho[:meio],
+        linhas_rho[meio:] + [vazio] * (meio - len(linhas_rho[meio:])),
+    ))
+
     return {
         "cfg": cfg, "geo": geo, "det": det, "flex": r.flexao,
         "esf": r.esforcos, "cargas": r.cargas, "arm": r.armadura,
@@ -136,6 +159,8 @@ def montar_contexto(r, figs, caminho_cfg: Path) -> dict:
                                    ["carga_concentrada_degrau_isolado_kN"]["valor"],
         "tabela_acidental": list(acid.items()),
         "tabela_lambda": tabela_lambda,
+        "tabela_rho_min": tabela_rho_min,
+        "faixa_fck": normas.faixa_fck(),
         "tabela_areas": tabela_areas,
         "kx_lim_baixo": normas["ductilidade"]["kx_limite"]["ate_50_MPa"],
         "kx_lim_alto": normas["ductilidade"]["kx_limite"]["acima_50_MPa"],

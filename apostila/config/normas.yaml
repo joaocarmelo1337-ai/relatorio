@@ -20,6 +20,15 @@ meta:
   norma_acoes: "ABNT NBR 6120"
   norma_barras: "ABNT NBR 7480"
 
+# Faixa de fck que este projeto se propoe a cobrir. Acima do teto o motor
+# recusa com mensagem clara, em vez de trabalhar com tabela pela metade.
+# Decisao de escopo do usuario, nao limite normativo: concreto acima de C60
+# nao aparece nos exemplos que esta apostila atende.
+faixa_fck_MPa:
+  fonte: "decisao de escopo do usuario"
+  minimo: 20
+  maximo: 60
+
 # ---------------------------------------------------------------------------
 # 1. BLOCO DE DIAGRAMA RETANGULAR: lambda e alpha_c
 # ---------------------------------------------------------------------------
@@ -88,8 +97,16 @@ rho_min_percent:
     40: 0.179
     45: PENDENTE
     50: 0.208
-    55: PENDENTE
-    60: PENDENTE
+    # C55 e C60 informados pelo usuario a partir de resumo de busca, NAO lidos
+    # da Tabela 17.3. Batem com a razao rho_min/fctm dos pontos dos arquivos
+    # originais dentro de 1,7 % (ver o comentario acima). Confira no PDF quando
+    # puder; se divergirem, e' so trocar aqui.
+    55: 0.215
+    60: 0.221
+    # Daqui para cima esta fora da faixa que o projeto cobre (faixa_fck_MPa),
+    # entao o motor nem chega a consultar estas linhas. O C90 fica registrado
+    # porque veio dos arquivos originais - e conflita com o 0,254 do mesmo
+    # resumo de busca, mais uma razao para nao confiar naquela lista.
     65: PENDENTE
     70: PENDENTE
     75: PENDENTE

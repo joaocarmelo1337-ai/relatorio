@@ -87,13 +87,25 @@ origem:
   `DadoNormativoAusente` com a mensagem dizendo o que preencher e onde.
   **Ele nunca interpola nem estima um PENDENTE.**
 
-Hoje estão pendentes: as linhas intermediárias de ρ~min~ (C35, C45, C55…C85),
-o módulo E~s~ do aço e a tabela de massa linear das barras (kg/m).
+Hoje estão pendentes: ρ~min~ para C35 e C45, o módulo E~s~ do aço e a tabela
+de massa linear das barras (kg/m).
 
 A expressão de ε~cu~ para fck > 50 MPa já está preenchida:
 `2,6 + 35·((90 − fck)/100)⁴ ‰`. Ela foi aceita porque emenda com o dado que já
 existia: em fck = 50 MPa a fórmula dá 3,496‰, ou seja, o mesmo 3,5‰ do ramo
 de baixo, arredondado. Há teste para essa continuidade.
+
+## Faixa de fck coberta
+
+`faixa_fck_MPa` em `config/normas.yaml` declara o escopo do projeto: **C20 a
+C60**. Fora dela o motor recusa com mensagem dizendo o que ampliar. É escolha
+de escopo, não limite normativo — concreto acima de C60 não aparece nos
+exemplos que esta apostila atende.
+
+Dentro da faixa, ρ~min~ está tabelado para C20–C30, C40, C50, C55 e C60.
+C55 e C60 vieram de fonte secundária e estão marcados como tal no YAML: batem
+com a razão ρ~min~/f~ctm~ dos pontos dos arquivos originais dentro de 1,7 %,
+mas convém conferir na Tabela 17.3 quando você tiver o PDF à mão.
 
 ## O que o motor verifica sozinho
 
@@ -101,8 +113,8 @@ Além de calcular, ele recusa ou avisa:
 
 | Situação | O que acontece |
 |---|---|
-| fck sem ρ~min~ tabelado | erro, com o nome da linha a preencher |
-| fck > 50 MPa sem ε~cu~ | erro, com o nome do campo a preencher |
+| fck fora de C20–C60 | erro, dizendo o que ampliar no normas.yaml |
+| fck sem ρ~min~ tabelado (C35, C45) | erro, com o nome da linha a preencher |
 | Armadura adotada não cobre a calculada | erro, dizendo quanto falta |
 | Md acima do limite da seção | erro, sugerindo aumentar h ou fck |
 | Blondel fora de 60–64 cm | aviso no documento |

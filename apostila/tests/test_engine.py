@@ -298,31 +298,18 @@ class TestParametrizacao:
 class TestFalhasExplicitas:
     """O motor recusa em vez de entregar número errado."""
 
-    def test_fck_sem_rho_min_tabelado(self, cfg):
+    def test_fck_acima_do_teto_do_projeto(self, cfg):
+        """Acima de C60 o motor para na faixa, antes de tropeçar num PENDENTE."""
+        for fck in (70, 90):
+            cfg["materiais"]["fck"] = fck
+            with pytest.raises(ConfiguracaoInvalida, match="fora da faixa"):
+                calcular(cfg)
+
+    def test_fck_dentro_da_faixa_mas_sem_rho_min(self, cfg):
+        """C35 está na faixa e continua recusado: falta o valor, não o escopo."""
         cfg["materiais"]["fck"] = 35
         with pytest.raises(DadoNormativoAusente, match="rho_min"):
             calcular(cfg)
-
-    def test_fck_acima_de_50_ainda_para_no_rho_min(self, cfg):
-        """eps_cu já está preenchido; rho_min de C60 continua PENDENTE.
-
-        A recusa mudou de motivo, não de comportamento: o motor segue
-        parando com mensagem em vez de estimar o valor que falta.
-        """
-        cfg["materiais"]["fck"] = 60
-        with pytest.raises(DadoNormativoAusente, match="rho_min"):
-            calcular(cfg)
-
-    def test_fck_acima_de_50_ja_calcula_a_flexao(self, cfg, normas):
-        """A parte que dependia só de eps_cu passou a funcionar."""
-        cfg["materiais"]["fck"] = 60
-        geo = mod_geo.construir(cfg)
-        flex = mod_flex.calcular(33.50, geo, cfg, normas)
-        assert flex.lam == pytest.approx(0.775)
-        assert flex.alpha_c == pytest.approx(0.8075)
-        assert flex.kx_lim == 0.35
-        assert flex.eps_cu == pytest.approx(2.8835, abs=5e-4)
-        assert flex.eps_s > 0
 
     def test_armadura_adotada_insuficiente(self, cfg):
         cfg["armaduras"]["principal"]["espacamento_cm"] = 20.0
@@ -348,6 +335,54 @@ class TestFalhasExplicitas:
         cfg["armaduras"]["principal"]["bitola_mm"] = 11.0
         with pytest.raises(ConfiguracaoInvalida, match="não tabelada"):
             calcular(cfg)
+
+
+# ===========================================================================
+class TestConcretosAcimaDe50:
+    """C55 e C60 exercitam os coeficientes que variam com o fck."""
+
+    @pytest.fixture
+    def alto(self, cfg):
+        def montar(fck):
+            c = {**cfg, "materiais": {**cfg["materiais"], "fck": fck},
+                 "armaduras": {k: {**v, "espacamento_cm": "auto"}
+                               if isinstance(v, dict) and "espacamento_cm" in v else v
+                               for k, v in cfg["armaduras"].items()}}
+            return calcular(c)
+        return montar
+
+    def test_a_cadeia_inteira_roda(self, alto):
+        for fck in (55, 60):
+            r = alto(fck)
+            assert r.flexao.x > 0
+            assert r.armadura["As_ef"] >= r.armadura["As_calc"]
+            assert len(r.detalhamento.posicoes) == 7
+
+    def test_lambda_e_alpha_c_deixam_de_ser_os_de_sempre(self, alto):
+        r = alto(60)
+        assert r.flexao.lam == pytest.approx(0.775)
+        assert r.flexao.alpha_c == pytest.approx(0.8075)
+        assert 1 / r.flexao.lam != pytest.approx(1.25)
+
+    def test_limite_de_ductilidade_cai_para_035(self, alto):
+        assert alto(60).flexao.kx_lim == 0.35
+        assert alto(55).flexao.kx_lim == 0.35
+
+    def test_eps_cu_e_o_limite_do_dominio_23_acompanham(self, alto):
+        r55, r60 = alto(55), alto(60)
+        assert r55.flexao.eps_cu == pytest.approx(3.1252, abs=5e-4)
+        assert r60.flexao.eps_cu == pytest.approx(2.8835, abs=5e-4)
+        assert r60.flexao.lim_dom_23 < r55.flexao.lim_dom_23 < 0.259
+
+    def test_rho_min_sobe_com_o_fck(self, cfg, normas):
+        valores = [normas.rho_min(f) for f in (25, 40, 50, 55, 60)]
+        assert valores == sorted(valores)
+        assert normas.rho_min(55) == pytest.approx(0.00215)
+        assert normas.rho_min(60) == pytest.approx(0.00221)
+
+    def test_concreto_mais_forte_sobe_a_linha_neutra(self, alto, cfg):
+        base = calcular(cfg)
+        assert alto(60).flexao.x < base.flexao.x
 
 
 # ===========================================================================

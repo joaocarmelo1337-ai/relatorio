@@ -42,11 +42,36 @@ def test_limite_dominio_2_3_bate_com_o_0259_da_figura(normas):
     assert normas.limite_dominio_2_3(25) == pytest.approx(0.259, abs=5e-4)
 
 
-def test_eps_cu_acima_de_50_esta_pendente_e_falha_alto(normas):
-    """Enquanto a formula não for preenchida, o motor recusa - não chuta."""
-    assert normas.eps_cu_permil(50) == 3.5
-    with pytest.raises(DadoNormativoAusente, match="eps_cu"):
-        normas.eps_cu_permil(60)
+def test_eps_cu_ate_50_MPa(normas):
+    for fck in (20, 25, 30, 40, 50):
+        assert normas.eps_cu_permil(fck) == 3.5
+
+
+def test_eps_cu_emenda_com_o_ramo_de_baixo_em_50_MPa(normas):
+    """A prova de que a expressão informada para fck > 50 é a certa.
+
+    A fórmula não vale em 50 MPa (lá manda o outro ramo), mas o limite dela
+    quando fck tende a 50 tem de reencontrar o 3,5 permil dos arquivos
+    originais. Dá 3,496: é o mesmo 3,5 arredondado. Se a expressão estivesse
+    errada, os dois ramos não emendariam.
+    """
+    formula = normas["ductilidade"]["eps_cu_permil"]["formula_acima_50_MPa"]
+    em_50 = eval(formula, {"__builtins__": {}}, {"fck": 50.0})
+    assert em_50 == pytest.approx(3.5, abs=5e-3)
+
+
+def test_eps_cu_acima_de_50_cai_com_o_fck(normas):
+    valores = [normas.eps_cu_permil(f) for f in (55, 60, 70, 80, 90)]
+    assert valores == sorted(valores, reverse=True)
+    assert normas.eps_cu_permil(90) == pytest.approx(2.6, abs=1e-9)
+    assert normas.eps_cu_permil(70) == pytest.approx(2.656, abs=5e-4)
+
+
+def test_limite_dominio_2_3_acompanha_o_eps_cu(normas):
+    """Não é um 0,259 fixo: ele anda junto com a deformação última."""
+    assert normas.limite_dominio_2_3(25) == pytest.approx(0.259, abs=5e-4)
+    assert normas.limite_dominio_2_3(90) < normas.limite_dominio_2_3(25)
+    assert normas.limite_dominio_2_3(90) == pytest.approx(2.6 / 12.6, abs=1e-6)
 
 
 def test_rho_min_pendente_falha_alto(normas):

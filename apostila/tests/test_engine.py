@@ -303,10 +303,26 @@ class TestFalhasExplicitas:
         with pytest.raises(DadoNormativoAusente, match="rho_min"):
             calcular(cfg)
 
-    def test_fck_acima_de_50_sem_eps_cu(self, cfg):
+    def test_fck_acima_de_50_ainda_para_no_rho_min(self, cfg):
+        """eps_cu já está preenchido; rho_min de C60 continua PENDENTE.
+
+        A recusa mudou de motivo, não de comportamento: o motor segue
+        parando com mensagem em vez de estimar o valor que falta.
+        """
         cfg["materiais"]["fck"] = 60
-        with pytest.raises(DadoNormativoAusente, match="eps_cu"):
+        with pytest.raises(DadoNormativoAusente, match="rho_min"):
             calcular(cfg)
+
+    def test_fck_acima_de_50_ja_calcula_a_flexao(self, cfg, normas):
+        """A parte que dependia só de eps_cu passou a funcionar."""
+        cfg["materiais"]["fck"] = 60
+        geo = mod_geo.construir(cfg)
+        flex = mod_flex.calcular(33.50, geo, cfg, normas)
+        assert flex.lam == pytest.approx(0.775)
+        assert flex.alpha_c == pytest.approx(0.8075)
+        assert flex.kx_lim == 0.35
+        assert flex.eps_cu == pytest.approx(2.8835, abs=5e-4)
+        assert flex.eps_s > 0
 
     def test_armadura_adotada_insuficiente(self, cfg):
         cfg["armaduras"]["principal"]["espacamento_cm"] = 20.0

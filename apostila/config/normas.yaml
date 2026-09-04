@@ -48,16 +48,16 @@ ductilidade:
     fonte: "arquivos originais ('menor que o limite de 10 permil')"
     valor: 10.0
   # eps_cu: deformacao ultima do concreto na compressao.
-  # Para fck <= 50 o valor 3.5 permil aparece nos seus arquivos
+  # Ate 50 MPa o valor 3.5 permil vem dos arquivos originais
   # (secao 5.2: 'eps_s = 3,5 permil x (d-x)/x').
-  # Acima de 50 MPa a NBR 6118 usa outra expressao, que NAO consta nos
-  # arquivos que voce me mandou. Troque PENDENTE pela expressao da norma
-  # (variavel disponivel: fck, em MPa) e o motor passa a aceitar fck > 50
-  # no calculo de deformacoes.
+  # Acima de 50 MPa a expressao foi informada pelo usuario (NBR 6118).
+  # Conferencia de continuidade feita em tests/test_normas.py: em fck = 50 a
+  # formula da 3,496 permil, ou seja, o mesmo 3,5 do ramo de baixo arredondado.
+  # Os dois ramos emendam, o que e' a evidencia de que a expressao esta certa.
   eps_cu_permil:
-    fonte: "arquivos originais (ate 50 MPa); acima disso PENDENTE"
+    fonte: "arquivos originais (ate 50 MPa); acima de 50 MPa informado pelo usuario (NBR 6118)"
     ate_50_MPa: 3.5
-    formula_acima_50_MPa: PENDENTE
+    formula_acima_50_MPa: "2.6 + 35*((90 - fck)/100)**4"
   # Limite dominio 2/3 = eps_cu / (eps_cu + eps_su).
   # Com 3.5 e 10.0 da 0.2593, que bate com o 0,259 do seu figs.py.
   formula_limite_dominio_2_3: "eps_cu / (eps_cu + eps_su)"
@@ -71,6 +71,13 @@ ductilidade:
 # Os intermediarios (C35, C45, C55, C60, C65, C70, C75, C80, C85) NAO estao
 # nos arquivos. Ficam PENDENTE: o motor PARA com mensagem pedindo o valor -
 # ele nao interpola nem arredonda por conta propria.
+#
+# NAO PREENCHER POR RESUMO DE BUSCA. Uma lista tirada de resposta automatica
+# de buscador trouxe C55 0,215 / C60 0,221 / C70 0,233 / C80 0,244 / C90 0,254,
+# e o C90 dela CONFLITA com o 0,256 que esta nos arquivos originais deste
+# projeto. A mesma fonte errou o exemplo numerico do eps_cu (disse 2,73 permil
+# para 70 MPa; a propria formula dela da 2,656). Enquanto a Tabela 17.3 nao for
+# lida direto da NBR 6118 em PDF ou do livro, estas linhas ficam PENDENTE.
 rho_min_percent:
   fonte: "arquivos originais (4 pontos); demais linhas PENDENTE"
   tabela:

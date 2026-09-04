@@ -87,9 +87,13 @@ origem:
   `DadoNormativoAusente` com a mensagem dizendo o que preencher e onde.
   **Ele nunca interpola nem estima um PENDENTE.**
 
-Hoje estão pendentes: a expressão de ε~cu~ para fck > 50 MPa, as linhas
-intermediárias de ρ~min~ (C35, C45, C55…C85), o módulo E~s~ do aço e a tabela
-de massa linear das barras (kg/m).
+Hoje estão pendentes: as linhas intermediárias de ρ~min~ (C35, C45, C55…C85),
+o módulo E~s~ do aço e a tabela de massa linear das barras (kg/m).
+
+A expressão de ε~cu~ para fck > 50 MPa já está preenchida:
+`2,6 + 35·((90 − fck)/100)⁴ ‰`. Ela foi aceita porque emenda com o dado que já
+existia: em fck = 50 MPa a fórmula dá 3,496‰, ou seja, o mesmo 3,5‰ do ramo
+de baixo, arredondado. Há teste para essa continuidade.
 
 ## O que o motor verifica sozinho
 

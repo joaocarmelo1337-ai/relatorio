@@ -55,7 +55,8 @@ desenho/                Desenho técnico em SVG. Lê o Resultado, não recalcula
 
 doc/
   apostila.md.j2        O CONTEÚDO: prosa em Markdown, números por interpolação.
-  referencia.docx       A APRESENTAÇÃO do .docx (fontes, cores, A4, margens).
+  referencia.docx       A APRESENTAÇÃO do .docx (fontes, cores, A4, margens,
+                        grade completa nas tabelas).
   gerar_referencia.py   Regenera a referência acima.
   impressao.css         A apresentação do PDF de reserva (WeasyPrint).
 

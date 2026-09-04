@@ -40,6 +40,70 @@ CORES = {
 }
 
 
+# Grade das tabelas. O padrão do pandoc é "booktabs": só um fio embaixo do
+# cabeçalho, sem linha nenhuma entre células. Aqui trocamos por grade completa,
+# que é o pedido: toda tabela sai dividida, linha a linha e coluna a coluna.
+BORDA_EXTERNA = ("8D857A", 8)      # cor, espessura em oitavos de ponto (8 = 1pt)
+BORDA_INTERNA = ("CFC8BC", 4)      # 4 = 0,5 pt
+FUNDO_CABECALHO = "F6ECEA"
+
+
+def _tbl_borders() -> str:
+    ce, se = BORDA_EXTERNA
+    ci, si = BORDA_INTERNA
+    lados = "".join(
+        f'<w:{lado} w:val="single" w:sz="{se}" w:space="0" w:color="{ce}"/>'
+        for lado in ("top", "left", "bottom", "right")
+    )
+    dentro = "".join(
+        f'<w:{lado} w:val="single" w:sz="{si}" w:space="0" w:color="{ci}"/>'
+        for lado in ("insideH", "insideV")
+    )
+    return f"<w:tblBorders>{lados}{dentro}</w:tblBorders>"
+
+
+def _estilo_tabela(xml: str) -> str:
+    """Substitui o estilo Table inteiro por um com grade e cabeçalho sombreado."""
+    faixa = _bloco_estilo(xml, "Table")
+    if not faixa:
+        return xml
+    ini, fim = faixa
+    ce, se = BORDA_EXTERNA
+    novo = (
+        '<w:style w:type="table" w:default="1" w:styleId="Table">'
+        '<w:name w:val="Table"/>'
+        '<w:basedOn w:val="TableNormal"/>'
+        '<w:qFormat/>'
+        '<w:tblPr>'
+        '<w:tblInd w:w="0" w:type="dxa"/>'
+        f'{_tbl_borders()}'
+        '<w:tblCellMar>'
+        '<w:top w:w="60" w:type="dxa"/>'
+        '<w:left w:w="108" w:type="dxa"/>'
+        '<w:bottom w:w="60" w:type="dxa"/>'
+        '<w:right w:w="108" w:type="dxa"/>'
+        '</w:tblCellMar>'
+        '</w:tblPr>'
+        '<w:tcPr><w:vAlign w:val="top"/></w:tcPr>'
+        # cabeçalho: fundo claro, negrito e fio mais forte embaixo
+        '<w:tblStylePr w:type="firstRow">'
+        '<w:rPr><w:b/></w:rPr>'
+        '<w:tcPr>'
+        '<w:vAlign w:val="bottom"/>'
+        f'<w:shd w:val="clear" w:color="auto" w:fill="{FUNDO_CABECALHO}"/>'
+        '<w:tcBorders>'
+        f'<w:bottom w:val="single" w:sz="{se}" w:space="0" w:color="{ce}"/>'
+        '</w:tcBorders>'
+        '</w:tcPr>'
+        '</w:tblStylePr>'
+        f'<w:rPr><w:rFonts w:ascii="{FONTE_TEXTO}" w:hAnsi="{FONTE_TEXTO}" '
+        f'w:cs="{FONTE_TEXTO}"/><w:sz w:val="{TAMANHOS["Table"]}"/>'
+        f'<w:szCs w:val="{TAMANHOS["Table"]}"/></w:rPr>'
+        '</w:style>'
+    )
+    return xml[:ini] + novo + xml[fim:]
+
+
 def _bloco_estilo(xml: str, style_id: str) -> tuple[int, int] | None:
     m = re.search(rf'<w:style [^>]*w:styleId="{style_id}"[^>]*>', xml)
     if not m:
@@ -99,6 +163,7 @@ def main() -> None:
              "BlockText", "TOCHeading"]
     for style_id in alvos:
         xml = _ajustar(xml, style_id)
+    xml = _estilo_tabela(xml)      # grade completa, depois dos ajustes de fonte
     estilos.write_text(xml, encoding="utf-8")
 
     # Pagina A4 com margens de 2,5 cm.

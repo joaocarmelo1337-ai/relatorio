@@ -11,10 +11,14 @@ h2 { font-size: 13.5pt; color: #333; margin: 1.2em 0 .4em; page-break-after: avo
 h3 { font-size: 11.5pt; color: #333; margin: 1em 0 .3em; page-break-after: avoid; }
 h1.title { font-size: 26pt; margin-top: 5cm; text-align: center; }
 p.subtitle, p.author { text-align: center; color: #6c6459; font-size: 12pt; }
+/* Grade completa, igual à do .docx: toda tabela sai dividida linha a linha e
+   coluna a coluna. As cores acompanham doc/gerar_referencia.py. */
 table { border-collapse: collapse; width: 100%; margin: .9em 0; font-size: 9.5pt;
-        page-break-inside: avoid; }
-th { background: #f6ecea; text-align: left; }
-th, td { border: .5pt solid #d8d2c8; padding: 4pt 6pt; vertical-align: top; }
+        page-break-inside: avoid; border: 1pt solid #8d857a; }
+th { background: #f6ecea; text-align: left; vertical-align: bottom;
+     border-bottom: 1pt solid #8d857a; }
+th, td { border: .5pt solid #cfc8bc; padding: 4pt 6pt; vertical-align: top; }
+thead { display: table-header-group; }   /* repete o cabeçalho ao virar a página */
 figure { margin: 1.2em 0; page-break-inside: avoid; text-align: center; }
 figure img { max-width: 100%; }
 figcaption { font-size: 9pt; font-style: italic; color: #6c6459; margin-top: .4em; }

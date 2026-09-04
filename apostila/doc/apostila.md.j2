@@ -524,7 +524,7 @@ Cada emenda vale **ℓ~b,nec~ = {{ n(anc_g.lb_nec, 1) }} cm** para cada lado.
 
 ## 8.3 Quantidade de barras
 
-$$n = \left\lceil \frac{b - 2c}{s} \right\rceil + 1$$
+$$n = \lceil \frac{b - 2c}{s} \rceil + 1$$
 
 onde b é a largura livre medida perpendicularmente à direção das barras e s o
 espaçamento. Soma-se 1 porque há barra nas duas extremidades, e arredonda-se
@@ -534,8 +534,8 @@ Para as barras transversais (N4, N7), o espaçamento é medido no **comprimento
 desenvolvido** da laje — a barra acompanha o lance inclinado. O desenvolvido
 total vale {{ n(dev_total) }} cm, contra {{ n(geo.vao_total) }} cm de projeção
 em planta: contar pela projeção deixaria
-{{ (dev_total - geo.vao_total) / dist.espacamento_cm | round | int }} barras de
-fora.
+{{ ((dev_total - geo.vao_total) / dist.espacamento_cm) | round | int }}
+barras de fora.
 
 | Posição | O que é | Cálculo | Quantidade |
 |---|---|---|---|

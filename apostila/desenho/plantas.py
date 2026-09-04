@@ -80,7 +80,8 @@ def _quadro(r: Resultado, face: str, largura: float, altura: float, rail: float)
             xs = {
                 "N4": det.xs_distribuicao,
                 "N7": det.xs_borda,
-                "N6": (geo.xk1, geo.xk1 + 14, geo.xk2 - 14, geo.xk2),
+                "N6": (geo.xk1 - 6, geo.xk1 + 6, geo.xk2 - 6, geo.xk2 + 6),
+                "N8": (geo.xk1, geo.xk2),
             }.get(b.codigo, (b.x_ini,))
             for x in xs:
                 if not (geo.x0 <= x <= geo.x3):
@@ -103,6 +104,7 @@ def _quadro(r: Resultado, face: str, largura: float, altura: float, rail: float)
         "N4": (det.xs_distribuicao[len(det.xs_distribuicao) // 4], geo.largura * 0.5),
         "N5": (geo.x1, geo.largura * 0.35),
         "N6": (geo.xk1, geo.largura * 0.5),
+        "N8": (geo.xk2, geo.largura * 0.32),
         "N7": (det.xs_borda[len(det.xs_borda) // 3], geo.largura - geo.c),
     }
     for b in alvos:

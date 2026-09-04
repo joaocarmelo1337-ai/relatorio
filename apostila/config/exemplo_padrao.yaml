@@ -86,10 +86,16 @@ armaduras:
     espacamento_cm: 25.0
   # Bitolas que a secao 5.3 compara para o leitor escolher.
   bitolas_comparadas_mm: [10.0, 12.5]
-  # Barras de ancoragem dos cantos reentrantes.
+  # Costura transversal dos cantos reentrantes.
   ancoragem_canto:
     bitola_mm: 6.3
     barras_por_canto: 2
+    # Barra construtiva mais grossa no vértice: não entra no cálculo, serve de
+    # apoio de montagem para a malha e para amarrar o cruzamento das principais.
+    construtiva:
+      incluir: true
+      bitola_mm: 10.0
+      por_canto: 1
 
 # ---------------------------------------------------------------------------
 # DETALHAMENTO

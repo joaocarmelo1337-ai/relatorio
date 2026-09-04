@@ -77,7 +77,9 @@ def todas(r: Resultado, destino: Path) -> dict[str, Figura]:
          lambda: formatos.alternativas(r, "borda")),
         ("alt_canto", "Canto reentrante - alternativas",
          "Barra dobrada com ancoragem no vértice, ou barras cruzadas.",
-         lambda: formatos.alternativas(r, "canto")),
+         lambda: formatos.alternativas(
+             r, "canto",
+             adotado="A" if det.detalhe_canto == "cruzadas" else "B")),
         ("alt_lance", "Barra do lance - inteira ou dividida",
          "As duas maneiras de executar a barra principal do lance.",
          lambda: formatos.alternativas(r, "lance")),

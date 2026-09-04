@@ -100,65 +100,85 @@ def geometria(r: Resultado, largura: float = 1420, altura: float = 860) -> str:
 
 
 # ===========================================================================
-def canto(r: Resultado, largura: float = 1420, altura: float = 900) -> str:
-    """Canto reentrante: a resultante que empurra o cobrimento para fora."""
+def canto(r: Resultado, largura: float = 1620, altura: float = 980) -> str:
+    """Canto reentrante superior: por que a barra não pode dobrar ali."""
     geo, det = r.geo, r.detalhamento
-    n6_, n1_ = det.por_codigo("N6"), det.por_codigo("N1")
+    n2, n3, n6 = (det.por_codigo(c) for c in ("N2", "N3", "N6"))
     rail = rail_para([
-        (f"{n6_.codigo} · {n6_.quantidade} Ø{num(n6_.bitola_mm, 1)} · "
-         f"C = {num(n6_.comprimento_cm)} cm", n6_.descricao),
-        (f"{n1_.codigo} · principal dobrando no canto", n1_.descricao),
+        ("N2 · principal do lance", "atravessa o canto e ancora na face superior"),
+        ("N3 · principal do patamar", "entra reta e termina em gancho para cima"),
+        (f"{n6.codigo} · costura no vértice", n6.descricao),
     ])
-    p = Prancha(largura, altura, rail, rail, 80, 210)
-    xa, xb = geo.x1 - 62, geo.x1 + 1.9 * geo.s
-    ya, yb = -geo.h - 10, 2.0 * geo.e
-    e = _recorte(geo, xa, xb, ya, yb, largura, altura, rail, rail, 80, 210)
+    p = Prancha(largura, altura, rail, rail, 86, 236)
+    xa, xb = geo.xk2 - 2.1 * geo.s, min(geo.x3, geo.xk2 + 1.5 * geo.s)
+    ya, yb = geo.subida - geo.h - 1.7 * geo.e, geo.subida + 0.5 * geo.e
+    e = _recorte(geo, xa, xb, ya, yb, largura, altura, rail, rail, 86, 236)
 
+    # Concreto e barras vão dentro do recorte: as barras seguem para fora da
+    # janela e sem isso vazariam pelo quadro.
     _janela(p, e, xa, xb, ya, yb)
     p.concreto(contorno_peca(geo, e))
+
+    # --- o que NÃO foi feito: a barra dobrando sobre a face tracionada -----
+    dobra = list(geo.paralela_ao_intradorso(geo.xk2 - 1.6 * geo.s, geo.xk2, n2.offset_cm))
+    dobra += [(geo.x3 - geo.c, geo.intradorso(geo.x3) + n2.offset_cm)]
+    p.poligonal([e.p(x, y) for x, y in dobra], cor=PRINCIPAL, w=3.0,
+                tracejado="9 6", opacidade=0.45)
+    # --- o que foi feito: as duas barras cruzadas -------------------------
+    p.poligonal([e.p(x, y) for x, y in n2.vertices], cor=PRINCIPAL, w=5.0)
+    p.poligonal([e.p(x, y) for x, y in n3.vertices], cor=BORDA, w=5.0)
+
+    for cod, cor in (("N6", ANCORAGEM), ("N8", DISTRIBUICAO)):
+        try:
+            b = det.por_codigo(cod)
+        except KeyError:
+            continue
+        n = max(1, b.quantidade // 2)
+        for i in range(n):
+            cx = geo.xk2 + (i - (n - 1) / 2) * 13
+            cy = geo.intradorso(cx) + b.offset_cm
+            p.circulo(e.px(cx), e.py(cy), 8.5, preenche="#ffffff", cor=cor, w=3.0)
     p.fechar_recorte()
 
-    n1 = det.por_codigo("N1")
-    p.caminho(caminho_barra(geo, e, xa + 10, geo.x1 + 1.7 * geo.s, n1.offset_cm),
-              cor=PRINCIPAL, w=5.0)
-
-    # resultante no vértice
-    vx, vy = ponto_na_barra(geo, geo.xk1, n1.offset_cm)
-    bis = (geo.alpha_rad) / 2 + math.pi
-    dx, dy = math.cos(bis), math.sin(bis)
+    vx, vy = dobra[-2]
+    ang = geo.alpha_rad / 2 - math.pi / 2          # bissetriz, para fora
+    dx, dy = math.cos(ang), math.sin(ang)
     p._defs.append(
         f'<marker id="setaR" viewBox="0 0 10 10" refX="9" refY="5" '
         f'markerWidth="7" markerHeight="7" orient="auto">'
         f'<path d="M0 1 L9 5 L0 9 z" fill="{PRINCIPAL}"/></marker>')
     p.add(f'<line x1="{e.px(vx):.1f}" y1="{e.py(vy):.1f}" '
-          f'x2="{e.px(vx) + dx * 130:.1f}" y2="{e.py(vy) - dy * 130:.1f}" '
-          f'stroke="{PRINCIPAL}" stroke-width="3.0" marker-end="url(#setaR)"/>')
-    p.texto(e.px(vx) + dx * 140, e.py(vy) - dy * 140 + 6,
-            "resultante: empurra o cobrimento para fora", 14, PRINCIPAL, "end",
-            negrito=True)
+          f'x2="{e.px(vx) + dx * 120:.1f}" y2="{e.py(vy) - dy * 120:.1f}" '
+          f'stroke="{PRINCIPAL}" stroke-width="3.2" marker-end="url(#setaR)"/>')
+    p.texto(e.px(vx) + dx * 128, e.py(vy) - dy * 128 + 16,
+            f"R = 2·T·sen(α/2) = {num(2 * math.sin(geo.alpha_rad / 2), 2)}·T",
+            14.5, PRINCIPAL, "middle", negrito=True)
+    p.texto(e.px(vx) + dx * 128, e.py(vy) - dy * 128 + 36,
+            "se a barra dobrasse aqui, empurraria o cobrimento para fora",
+            13, PRINCIPAL, "middle")
 
-    # barras N6
-    n6 = det.por_codigo("N6")
-    for i in range(int(r.cfg["armaduras"]["ancoragem_canto"]["barras_por_canto"])):
-        cx, cy = ponto_na_barra(geo, geo.xk1 + i * 15 - 6, n6.offset_cm)
-        p.circulo(e.px(cx), e.py(cy), 9, preenche="#ffffff", cor=ANCORAGEM, w=3.2)
-    cx, cy = ponto_na_barra(geo, geo.xk1 + 4, n6.offset_cm)
-    p.chamada(e.px(cx), e.py(cy),
-              f"{n6.codigo} · {n6.quantidade} Ø{num(n6.bitola_mm, 1)} · "
-              f"C = {num(n6.comprimento_cm)} cm", n6.descricao, ANCORAGEM)
-    px_, py_ = ponto_na_barra(geo, geo.x1 - 34, n1.offset_cm)
-    p.chamada(e.px(px_), e.py(py_), f"{n1.codigo} · principal dobrando no canto",
-              n1.descricao, PRINCIPAL)
+    # --- chamadas ---------------------------------------------------------
+    mx, my = n2.vertices[-3]
+    p.chamada(e.px(mx), e.py(my), "N2 · principal do lance",
+              "atravessa o canto e ancora na face superior", PRINCIPAL)
+    kx, ky = n3.vertices[1]
+    p.chamada(e.px(kx), e.py(ky), "N3 · principal do patamar",
+              "entra reta e termina em gancho para cima", BORDA)
+    p.chamada(e.px(geo.xk2), e.py(geo.intradorso(geo.xk2) + n6.offset_cm),
+              f"{n6.codigo} · costura no vértice", n6.descricao, ANCORAGEM)
 
     p.carimbo(
-        "CANTO REENTRANTE — mecanismo e ancoragem",
+        "CANTO REENTRANTE SUPERIOR — barras cruzadas",
         [
-            "Ao dobrar no vértice, as trações das duas pernas da barra geram "
-            "uma resultante dirigida para fora da peca.",
-            f"Ela tende a arrancar a camada de cobrimento ({num(geo.c, 1)} cm). "
-            f"As barras {n6.codigo} atravessam o vértice e seguram a principal.",
-            "Existem DOIS cantos reentrantes na escada (um por patamar); "
-            "os dois precisam das barras de ancoragem.",
+            f"Numa dobra sob tração a resultante R = 2·T·sen(α/2) = "
+            f"{num(2 * math.sin(geo.alpha_rad / 2), 2)}·T aponta para o lado "
+            f"CÔNCAVO da curva. Aqui esse lado é o cobrimento do intradorso.",
+            "Por isso nenhuma das duas barras muda de direção sobre a face "
+            "tracionada: a N2 segue reta até emergir na face superior do "
+            "patamar e a N3 termina em gancho para cima. Elas se cruzam.",
+            "Na quebra INFERIOR a situação se inverte — lá o lado côncavo é a "
+            "massa de concreto, e a barra pode acompanhar a dobra. É o que a "
+            "N1 faz.",
         ],
     )
     return p.render()

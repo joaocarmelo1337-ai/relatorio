@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 
 from . import formatos as fmt
 from .ancoragem import Ancoragem
-from .geometria import Geometria
+from .geometria import Geometria, comprimento
 from .normas import Normas
 
 
@@ -37,7 +37,11 @@ class Posicao:
     # extensão no corte longitudinal, em abscissa da seção (cm)
     x_ini: float | None = None
     x_fim: float | None = None
-    offset_cm: float | None = None   # distancia do intradorso ao eixo da barra
+    offset_cm: float | None = None   # distância do intradorso ao eixo da barra
+    # Poligonal da barra em coordenadas do projeto (cm), ganchos inclusos.
+    # Só as longitudinais têm: são as que aparecem no corte. O desenho apenas
+    # projeta estes pontos - ele não recalcula traçado nenhum.
+    vertices: tuple[tuple[float, float], ...] = ()
     nota: str = ""
 
     @property
@@ -46,7 +50,7 @@ class Posicao:
 
     @property
     def rotulo(self) -> str:
-        """Nunca só o código: é está string que vai para desenho e tabela."""
+        """Nunca só o código: é esta string que vai para desenho e tabela."""
         return f"{self.codigo} - {self.descricao}"
 
     @property
@@ -65,6 +69,11 @@ class Posicao:
     @property
     def comprimento_total_m(self) -> float:
         return self.quantidade * self.comprimento_cm / 100.0
+
+
+def num_cm(v: float) -> str:
+    """Número curto para mensagens de aviso."""
+    return f"{v:.0f}".replace(".", ",")
 
 
 def _num(v: float) -> str:
@@ -120,6 +129,51 @@ def _avancar(geo: Geometria, x0: float, desenvolvido: float, sentido: int) -> fl
     return x
 
 
+def _gancho_no_ponto(pts, ponta: str, comprimento: float, sentido: int,
+                     phi: float):
+    """Gancho perpendicular à barra na ponta indicada.
+
+    `sentido` é declarado por quem chama, +1 para cima e -1 para baixo: numa
+    barra de face inferior o gancho sobe, numa de face superior ele desce.
+    Inferir isso da geometria local dá errado justamente onde importa - dentro
+    do bloco do último degrau, onde a barra do patamar termina.
+
+    O comprimento agendado é h - 2c (a folga livre entre cobrimentos, que é o
+    que a Seção 8 explica). No traçado ele é medido no eixo da barra, então
+    desconta-se phi para o gancho não furar o cobrimento no desenho.
+    """
+    if comprimento <= 0:
+        return list(pts)
+    (x, y) = pts[0] if ponta == "inicio" else pts[-1]
+    L = max(0.0, comprimento - phi)
+    ponto = (x, y + sentido * L)
+    return [ponto] + list(pts) if ponta == "inicio" else list(pts) + [ponto]
+
+
+def _emergir_na_face_superior(geo: Geometria, off: float, lb: float):
+    """Traçado da N2 atravessando o canto reentrante superior.
+
+    A barra NÃO dobra sobre a face tracionada: segue reta na direção do lance
+    até emergir junto à face superior do patamar, e só ali muda de direção -
+    numa dobra cujo lado côncavo é a massa de concreto, não o cobrimento.
+
+    Devolve None quando o patamar superior é curto demais para caber a
+    travessia mais o lb,nec de ancoragem; aí o detalhe cruzado não tem onde
+    existir e o motor cai no de barra contínua, avisando.
+    """
+    y_topo = geo.subida - off
+    reta = geo.paralela_ao_intradorso(geo.xk2 - 20.0, geo.xk2, off)
+    px, py = reta[-1]
+    subir = y_topo - py
+    if subir <= 0:
+        return None
+    emerge = (px + subir / math.tan(geo.alpha_rad), y_topo)
+    fim = (emerge[0] + lb, y_topo)
+    if fim[0] > geo.x3 - geo.c:
+        return None
+    return emerge, fim
+
+
 @dataclass(frozen=True)
 class Detalhamento:
     posicoes: tuple[Posicao, ...]
@@ -132,6 +186,8 @@ class Detalhamento:
     xs_distribuicao: tuple[float, ...] = ()
     xs_borda: tuple[float, ...] = ()
     xs_principal: tuple[float, ...] = ()
+    detalhe_canto: str = "cruzadas"
+    penetracao_n3_cm: float = 0.0
     avisos: tuple[str, ...] = ()
 
     def por_codigo(self, codigo: str) -> Posicao:
@@ -203,6 +259,54 @@ def montar(
     )
     largura_util = geo.largura - 2 * c
 
+    # ---- traçado das barras longitudinais ------------------------------
+    # N1 dobra na quebra INFERIOR: ali o lado côncavo da dobra é a massa de
+    # concreto, então a resultante aperta a barra contra a laje. É a quebra
+    # segura, e a barra pode acompanhá-la.
+    reto_n1 = geo.paralela_ao_intradorso(x_ini_total, n1_fim, off_p)
+    v_n1 = _gancho_no_ponto(reto_n1, "inicio", gancho, +1, phi_p)
+
+    # Na quebra SUPERIOR nenhuma barra tracionada muda de direção sobre a face
+    # de tração. As duas viram para CIMA, para longe do cobrimento, e se
+    # cruzam no vértice.
+    trav = _emergir_na_face_superior(geo, off_p, lb_nec)
+    y_patamar = geo.intradorso(geo.x3) + off_p
+    # Até onde a N3 avança lance adentro sem sair pelo espelho do último degrau
+    penetracao = geo.penetracao_horizontal(y_patamar, geo.xk2, c + phi_p / 2)
+    n3_ini_real = geo.xk2 - penetracao
+
+    if trav is not None:
+        emerge, fim_topo = trav
+        reto_n2 = list(geo.paralela_ao_intradorso(n2_ini, geo.xk2, off_p))
+        reto_n2 += [emerge, fim_topo]
+        # ponta apoiada na face SUPERIOR do patamar: o gancho desce
+        v_n2 = _gancho_no_ponto(reto_n2, "fim", gancho, -1, phi_p)
+        n2_fim_real, fmt_n2, ganchos_n2 = fim_topo[0], "E", (gancho,)
+        detalhe_canto = "cruzadas"
+    else:
+        reto_n2 = list(geo.paralela_ao_intradorso(n2_ini, n2_fim, off_p))
+        v_n2 = reto_n2
+        n2_fim_real, fmt_n2, ganchos_n2 = n2_fim, "B", ()
+        detalhe_canto = "continua"
+        avisos.append(
+            f"O patamar superior ({num_cm(geo.patamar_sup)} cm) é curto demais "
+            f"para a N2 atravessar o canto e ainda ancorar {num_cm(lb_nec)} cm "
+            f"na face superior. O canto voltou ao detalhe de barra contínua, "
+            f"que depende inteiramente da costura transversal no vértice."
+        )
+
+    reto_n3 = [(n3_ini_real, y_patamar), (x_fim_total, y_patamar)]
+    v_n3 = _gancho_no_ponto(reto_n3, "inicio", gancho, +1, phi_p)
+    v_n3 = _gancho_no_ponto(v_n3, "fim", gancho, +1, phi_p)
+
+    if detalhe_canto == "cruzadas" and penetracao < lb_nec:
+        avisos.append(
+            f"A N3 só entra {num_cm(penetracao)} cm lance adentro antes de sair "
+            f"pelo espelho do último degrau, contra os {num_cm(lb_nec)} cm de "
+            f"lb,nec. O gancho e a N2, que passa pelo vértice, cobrem a "
+            f"diferença; um piso maior no último degrau resolveria de vez."
+        )
+
     pos: list[Posicao] = [
         Posicao(
             codigo="N1",
@@ -210,7 +314,7 @@ def montar(
             bitola_mm=arm["principal"]["bitola_mm"],
             quantidade=n_princ,
             espacamento_cm=arm["principal"]["espacamento_cm"],
-            trecho_reto_cm=_dev(geo, x_ini_total, n1_fim),
+            trecho_reto_cm=comprimento(reto_n1),
             ganchos_cm=(gancho,),
             face="inferior",
             direcao="longitudinal",
@@ -219,7 +323,10 @@ def montar(
             x_ini=x_ini_total,
             x_fim=n1_fim,
             offset_cm=off_p,
-            nota="Gancho no apoio inferior; a outra ponta emenda com a N2 por traspasse.",
+            vertices=tuple(v_n1),
+            nota="Gancho no apoio inferior; a outra ponta emenda com a N2 por "
+                 "traspasse. A dobra na quebra inferior é segura: a resultante "
+                 "aperta a barra contra a massa de concreto.",
         ),
         Posicao(
             codigo="N2",
@@ -227,16 +334,19 @@ def montar(
             bitola_mm=arm["principal"]["bitola_mm"],
             quantidade=n_princ,
             espacamento_cm=arm["principal"]["espacamento_cm"],
-            trecho_reto_cm=_dev(geo, n2_ini, n2_fim),
-            ganchos_cm=(),
+            trecho_reto_cm=comprimento(reto_n2),
+            ganchos_cm=ganchos_n2,
             face="inferior",
             direcao="longitudinal",
             familia="principal",
-            formato_adotado="B",
+            formato_adotado=fmt_n2,
             x_ini=n2_ini,
-            x_fim=n2_fim,
+            x_fim=n2_fim_real,
             offset_cm=off_p,
-            nota="Barra interna: emenda por traspasse nas duas pontas, sem gancho.",
+            vertices=tuple(v_n2),
+            nota="Atravessa o canto reentrante superior sem dobrar sobre a face "
+                 "tracionada: segue reta até emergir na face superior do patamar "
+                 "e ancora ali, cruzando com a N3.",
         ),
         Posicao(
             codigo="N3",
@@ -244,16 +354,18 @@ def montar(
             bitola_mm=arm["principal"]["bitola_mm"],
             quantidade=n_princ,
             espacamento_cm=arm["principal"]["espacamento_cm"],
-            trecho_reto_cm=_dev(geo, n3_ini, x_fim_total),
-            ganchos_cm=(gancho,),
+            trecho_reto_cm=comprimento(reto_n3),
+            ganchos_cm=(gancho, gancho),
             face="inferior",
             direcao="longitudinal",
             familia="principal",
-            formato_adotado="D",
-            x_ini=n3_ini,
+            formato_adotado="A",
+            x_ini=n3_ini_real,
             x_fim=x_fim_total,
             offset_cm=off_p,
-            nota="Gancho no apoio superior; a ponta de baixo emenda com a N2.",
+            vertices=tuple(v_n3),
+            nota="Entra reta no lance e termina em gancho para CIMA, longe do "
+                 "cobrimento. É a outra metade do cruzamento com a N2.",
         ),
         Posicao(
             codigo="N4",
@@ -307,7 +419,7 @@ def montar(
             ganchos_cm=(),
             face="superior",
             direcao="transversal",
-            familia="canto",
+            familia="distribuicao",
             formato_adotado="A",
             x_ini=geo.xk1,
             x_fim=geo.xk2,
@@ -342,6 +454,30 @@ def montar(
         )
     )
 
+    constr = arm["ancoragem_canto"].get("construtiva", {})
+    if constr.get("incluir"):
+        phi_k = constr["bitola_mm"] / 10.0
+        pos.append(
+            Posicao(
+                codigo="N8",
+                descricao="barra construtiva no vértice dos cantos reentrantes",
+                bitola_mm=constr["bitola_mm"],
+                quantidade=int(constr["por_canto"]) * 2,
+                espacamento_cm=None,
+                trecho_reto_cm=largura_util,
+                ganchos_cm=(),
+                face="superior",
+                direcao="transversal",
+                familia="distribuicao",
+                formato_adotado="A",
+                x_ini=geo.xk1,
+                x_fim=geo.xk2,
+                offset_cm=geo.h - c - phi_k / 2.0,
+                nota="Não entra no cálculo: é apoio de montagem para a malha e "
+                     "para amarrar o cruzamento das principais no vértice.",
+            )
+        )
+
     emendas = (x_emenda_1, x_emenda_2)
     folga = min(abs(e - x_momento_maximo_cm) for e in emendas)
     longe = folga >= lb_nec
@@ -360,6 +496,8 @@ def montar(
         xs_distribuicao=tuple(xs_dist),
         xs_borda=tuple(xs_borda),
         xs_principal=tuple(xs_princ),
+        detalhe_canto=detalhe_canto,
+        penetracao_n3_cm=penetracao,
         gancho_cm=gancho,
         gancho_normativo_cm=gancho_norm,
         gancho_cabe=gancho >= gancho_norm,

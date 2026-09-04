@@ -55,6 +55,18 @@ PRINCIPAL = (
         n_ganchos=0,
     ),
     Formato(
+        id="E",
+        nome="Atravessa o canto e ancora na face oposta",
+        poly=((0.0, 0.0), (0.60, 0.0), (0.72, 0.55), (1.0, 0.55), (1.0, -0.2)),
+        quando_usar="A barra precisa passar por um canto reentrante, onde uma "
+                    "dobra sobre a face tracionada empurraria o cobrimento para fora.",
+        vantagem="Elimina o empuxo ao vazio na origem: a barra não muda de "
+                 "direção sobre a face de tração, e a resultante deixa de existir.",
+        desvantagem="Barra mais longa e com dobra em ângulo; exige atenção na "
+                    "montagem para a ponta cair na face certa.",
+        n_ganchos=1,
+    ),
+    Formato(
         id="D",
         nome="Um gancho só, na ponta do apoio",
         poly=((0.0, 1.0), (0.0, 0.0), (1.0, 0.0)),
@@ -109,25 +121,31 @@ BORDA = (
     ),
 )
 
-# --- ancoragem do canto reentrante ------------------------------------------
+# --- canto reentrante -------------------------------------------------------
 CANTO = (
     Formato(
         id="A",
-        nome="Barra principal dobrada + barras de ancoragem no vértice",
-        poly=((0.0, 0.0), (1.0, 0.0)),
-        quando_usar="Solução padrão quando a principal atravessa o canto dobrando.",
-        vantagem="Menos pecas e montagem mais simples.",
-        desvantagem="Depende do posicionamento correto das transversais no vértice.",
-        n_ganchos=0,
+        nome="Barras cruzadas, ancoradas na face oposta",
+        poly=((0.0, 0.0), (0.55, 0.0), (0.68, 0.5), (1.0, 0.5)),
+        quando_usar="Sempre que houver canto reentrante na face tracionada — é "
+                    "a solução de primeira escolha.",
+        vantagem="Nenhuma barra tracionada dobra sobre o cobrimento: a "
+                 "resultante R = 2·T·sen(α/2) deixa de existir, em vez de "
+                 "precisar ser resistida.",
+        desvantagem="Barras mais longas e um cruzamento a conferir na montagem.",
+        n_ganchos=1,
     ),
     Formato(
         id="B",
-        nome="Barras cruzadas no vértice (principal interrompida)",
-        poly=((0.0, 0.8), (0.0, 0.0), (1.0, 0.0)),
-        quando_usar="Canto muito solicitado, ou quando se quer eliminar a resultante na origem.",
-        vantagem="Elimina a força de arrancamento na origem, em vez de resisti-la.",
-        desvantagem="Mais aço, mais corte e mais amarração.",
-        n_ganchos=1,
+        nome="Barra contínua dobrando no canto + costura no vértice",
+        poly=((0.0, 0.0), (0.5, 0.0), (1.0, 0.55)),
+        quando_usar="Quando a espessura não deixa a barra emergir na face "
+                    "oposta, ou quando o canto é pouco solicitado.",
+        vantagem="Menos peças e montagem mais simples.",
+        desvantagem="A resultante continua existindo e fica inteiramente por "
+                    "conta da costura transversal: se ela for mal posicionada, "
+                    "o cobrimento salta.",
+        n_ganchos=0,
     ),
 )
 

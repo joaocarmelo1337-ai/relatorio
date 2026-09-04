@@ -9,6 +9,7 @@ Uso:
 from __future__ import annotations
 
 import argparse
+import math
 import shutil
 import subprocess
 import sys
@@ -98,6 +99,10 @@ def montar_contexto(r, figs, caminho_cfg: Path) -> dict:
         for b in det.posicoes:
             if b.familia == familia:
                 usados.setdefault(b.formato_adotado, []).append(b.codigo)
+        if familia == "canto":
+            # família que descreve uma solução, não uma barra
+            usados = {"A" if det.detalhe_canto == "cruzadas" else "B":
+                      ["adotado"]}
         linhas = [
             "| Opção | Quando é boa escolha | A favor | Contra | Neste projeto |",
             "|---|---|---|---|---|",
@@ -168,6 +173,8 @@ def montar_contexto(r, figs, caminho_cfg: Path) -> dict:
         "frac_borda": normas["armadura_borda"]["fracao_da_minima"],
         "frac_ext_borda": normas["armadura_borda"]["extensao_fracao_vao_menor"],
         "dev_total": _dev(geo, geo.x0, geo.x3),
+        "sen_meio_alpha": math.sin(geo.alpha_rad / 2),
+        "tem_n8": any(b.codigo == "N8" for b in det.posicoes),
         "trechos_rot": list(zip(
             r.esforcos.trechos,
             ("Patamar inferior", "Lance (projeção em planta)", "Patamar superior"),

@@ -24,7 +24,7 @@ def _desenha_forma(p, x0, y0, larg, alt, poly, cor, lw=4.0):
 
 # ===========================================================================
 def posicoes(r: Resultado, largura: float = 1500) -> str:
-    """Uma linha por posição: forma, cotas e a descrição do que ela e'."""
+    """Uma linha por posição: forma, cotas e a descrição do que ela é."""
     det = r.detalhamento
     linha_h = 118.0
     altura = 150 + linha_h * len(det.posicoes) + 190
@@ -33,7 +33,7 @@ def posicoes(r: Resultado, largura: float = 1500) -> str:
     x_forma, larg_forma = 600.0, 560.0
     p.texto(70, 92, "FORMATOS DAS BARRAS", 17, TINTA, negrito=True)
     p.texto(70, 116,
-            "Cada posição vem com a descrição do que ela e'. O comprimento C "
+            "Cada posição vem com a descrição do que ela é. O comprimento C "
             "é medido no eixo da barra e já inclui os ganchos.", 14, COTA)
 
     y = 168.0
@@ -60,8 +60,12 @@ def posicoes(r: Resultado, largura: float = 1500) -> str:
         retos = [q[0] for q in pts]
         p.cota_h(min(retos), max(retos), y + 64, f"{num(b.trecho_reto_cm)} cm")
         if b.ganchos_cm:
-            p.texto(pts[0][0] - 8, y + 34 - alt_g - 6,
-                    f"gancho {num(det.gancho_cm)}", 12, cor, "end")
+            # o rótulo vai na ponta onde o gancho realmente está
+            no_inicio = abs(poly[0][1]) > 1e-6
+            qx = pts[0][0] if no_inicio else pts[-1][0]
+            p.texto(qx + (-8 if no_inicio else 8), y + 34 - alt_g - 6,
+                    f"gancho {num(det.gancho_cm)}", 12, cor,
+                    "end" if no_inicio else "start")
 
         p.texto(largura - 70, y + 4, f"C = {num(b.comprimento_cm)} cm", 15, cor,
                 "end", negrito=True)
@@ -93,7 +97,8 @@ TITULOS = {
 }
 
 
-def alternativas(r: Resultado, familia: str, largura: float = 1400) -> str:
+def alternativas(r: Resultado, familia: str, largura: float = 1400,
+                 adotado: str | None = None) -> str:
     """Todos os formatos válidos de uma família, lado a lado.
 
     A figura mostra só o DESENHO de cada opção; o texto de quando-usar,
@@ -107,6 +112,9 @@ def alternativas(r: Resultado, familia: str, largura: float = 1400) -> str:
     for b in r.detalhamento.posicoes:
         if b.familia == familia:
             por_formato.setdefault(b.formato_adotado, []).append(b.codigo)
+    if adotado and adotado not in por_formato:
+        # famílias que descrevem uma SOLUÇÃO, não uma barra (o canto reentrante)
+        por_formato[adotado] = ["este projeto"]
 
     bloco = 132.0
     altura = 150 + bloco * len(opcoes) + 96

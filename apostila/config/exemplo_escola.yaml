@@ -49,6 +49,10 @@ armaduras:
   ancoragem_canto:
     bitola_mm: 6.3
     barras_por_canto: 2
+    construtiva:
+      incluir: true
+      bitola_mm: 10.0
+      por_canto: 1
 detalhamento:
   dividir_n2: false
   reforco_divisa:

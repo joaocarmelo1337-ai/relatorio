@@ -219,6 +219,111 @@ class TestPosicoesDeBarra:
 
 
 # ===========================================================================
+class TestCantoReentrante:
+    """Empuxo ao vazio: nenhuma dobra pode empurrar o cobrimento para fora."""
+
+    @pytest.fixture
+    def r(self, cfg):
+        return calcular(cfg)
+
+    @staticmethod
+    def _resultante(v, i):
+        """R = u1 + u2 no vértice i. Aponta para o lado côncavo da dobra, que
+        é o lado onde a barra empurra o concreto."""
+        (xa, ya), (x, y), (xb, yb) = v[i - 1], v[i], v[i + 1]
+        u1, u2 = (xa - x, ya - y), (xb - x, yb - y)
+        n1 = math.hypot(*u1) or 1.0
+        n2 = math.hypot(*u2) or 1.0
+        return (u1[0] / n1 + u2[0] / n2, u1[1] / n1 + u2[1] / n2)
+
+    def test_nenhuma_dobra_empurra_o_cobrimento(self, r):
+        """O teste que resume a seção inteira do canto reentrante.
+
+        Em cada vértice de cada barra longitudinal, anda-se 2 cm na direção da
+        resultante. Se esse ponto cair fora do concreto, aquela dobra estoura o
+        cobrimento — e o detalhe está errado.
+        """
+        geo = r.geo
+        for b in r.detalhamento.posicoes:
+            if b.direcao != "longitudinal":
+                continue
+            v = b.vertices
+            assert len(v) >= 2, f"{b.codigo} sem traçado"
+            for i in range(1, len(v) - 1):
+                rx, ry = self._resultante(v, i)
+                mod = math.hypot(rx, ry)
+                if mod < 1e-3:
+                    continue                       # segue reta: sem resultante
+                x, y = v[i]
+                px, py = x + rx / mod * 2.0, y + ry / mod * 2.0
+                assert geo.intradorso(px) <= py <= geo.topo_real(px), (
+                    f"{b.codigo}: a dobra em x = {x:.1f} empurra para fora "
+                    f"(R/T = {rx:+.2f}, {ry:+.2f})"
+                )
+
+    def test_a_n2_atravessa_o_canto_sem_dobrar(self, r):
+        """No vértice superior a N2 segue praticamente reta: |R| ~ 0."""
+        geo, v = r.geo, r.detalhamento.por_codigo("N2").vertices
+        i = min(range(1, len(v) - 1), key=lambda k: abs(v[k][0] - geo.xk2))
+        rx, ry = self._resultante(v, i)
+        assert math.hypot(rx, ry) < 0.10, "a N2 ainda dobra no canto reentrante"
+
+    def test_a_n2_termina_na_face_superior_do_patamar(self, r):
+        geo, n2 = r.geo, r.detalhamento.por_codigo("N2")
+        x, y = n2.vertices[-2]                     # antes do gancho
+        assert x > geo.xk2, "a N2 não passou do vértice"
+        assert geo.topo_real(x) - y == pytest.approx(geo.c + 0.5, abs=0.2)
+
+    def test_a_n2_ancora_lb_nec_na_face_superior(self, r):
+        v = r.detalhamento.por_codigo("N2").vertices
+        trecho = abs(v[-2][0] - v[-3][0])
+        assert trecho == pytest.approx(r.anc_gancho.lb_nec, abs=0.5)
+
+    def test_a_n3_nao_desce_para_o_lance(self, r):
+        """Descer acompanhando o lance seria a mesma dobra proibida."""
+        v = r.detalhamento.por_codigo("N3").vertices
+        ys = [y for _, y in v[1:-1]]
+        assert max(ys) - min(ys) < 1e-6, "a N3 mudou de nível no canto"
+
+    def test_ganchos_apontam_para_dentro_da_laje(self, r):
+        geo = r.geo
+        for cod in ("N1", "N2", "N3"):
+            for x, y in r.detalhamento.por_codigo(cod).vertices:
+                assert geo.intradorso(x) - 0.6 <= y <= geo.topo_real(x) + 0.6, (
+                    f"{cod}: vértice ({x:.1f}, {y:.1f}) fora do concreto"
+                )
+
+    def test_a_penetracao_da_n3_e_limitada_pelo_degrau(self, r):
+        """A N3 para no espelho do último degrau, não no lb,nec."""
+        det, geo = r.detalhamento, r.geo
+        x_espelho = geo.x1 + (geo.n - 1) * geo.s     # base do último espelho
+        assert det.penetracao_n3_cm > 0
+        assert geo.xk2 - det.penetracao_n3_cm >= x_espelho - 1e-6
+        assert det.penetracao_n3_cm < r.anc_gancho.lb_nec   # é o que gera o aviso
+        assert any("espelho do último degrau" in a for a in r.avisos)
+
+    def test_costura_e_barra_construtiva_no_vertice(self, r):
+        n6, n8 = r.detalhamento.por_codigo("N6"), r.detalhamento.por_codigo("N8")
+        assert n6.quantidade == 4 and n6.bitola_mm == 6.3     # 2 por canto
+        assert n8.quantidade == 2 and n8.bitola_mm == 10.0    # 1 por canto
+        assert n6.face == n8.face == "superior"
+
+    def test_patamar_curto_volta_ao_detalhe_continuo(self, cfg):
+        """Sem comprimento para ancorar na face superior, o motor avisa e muda."""
+        cfg["geometria"]["patamar_superior"] = 30.0
+        for k in ("principal", "distribuicao", "borda"):
+            cfg["armaduras"][k]["espacamento_cm"] = "auto"
+        r = calcular(cfg)
+        assert r.detalhamento.detalhe_canto == "continua"
+        assert any("barra contínua" in a for a in r.avisos)
+        assert r.detalhamento.por_codigo("N2").formato_adotado == "B"
+
+    def test_patamar_normal_usa_o_detalhe_cruzado(self, r):
+        assert r.detalhamento.detalhe_canto == "cruzadas"
+        assert r.detalhamento.por_codigo("N2").formato_adotado == "E"
+
+
+# ===========================================================================
 class TestParametrizacao:
     """Mudar o config tem de mudar TUDO, sem editar codigo."""
 
@@ -356,7 +461,7 @@ class TestConcretosAcimaDe50:
             r = alto(fck)
             assert r.flexao.x > 0
             assert r.armadura["As_ef"] >= r.armadura["As_calc"]
-            assert len(r.detalhamento.posicoes) == 7
+            assert len(r.detalhamento.posicoes) == 8
 
     def test_lambda_e_alpha_c_deixam_de_ser_os_de_sempre(self, alto):
         r = alto(60)

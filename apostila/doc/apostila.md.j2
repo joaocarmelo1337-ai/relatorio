@@ -512,15 +512,21 @@ A armadura de face inferior precisa cobrir o vão inteiro, de apoio a apoio.
 Executá-la numa barra só de {{ n(geo.vao_total) }} cm seria impossível de
 posicionar, então ela é cortada em três: **N1**, **N2** e **N3**.
 
-Os cortes foram levados para as duas **quebras do intradorso** (onde o patamar
-vira lance), a {{ n(det.emendas_x[0]) }} cm e {{ n(det.emendas_x[1]) }} cm do
-apoio A. Duas razões:
+As duas quebras do intradorso não são iguais, e por isso os dois cortes são
+diferentes. A Seção 9.4 explica o porquê; aqui fica o resultado:
 
-1. São longe do momento máximo, que fica a {{ n(det.x_momento_maximo) }} cm do
-   apoio A — repare no diagrama da Seção 4 onde estão marcadas as emendas.
-2. É onde a barra muda de direção de qualquer jeito.
+**Quebra inferior, a {{ n(det.emendas_x[0]) }} cm do apoio A — emenda por
+traspasse.** N1 e N2 se sobrepõem ali por
+**ℓ~b,nec~ = {{ n(anc_g.lb_nec, 1) }} cm**. As duas acompanham a dobra, porque
+naquele vértice a resultante aperta a barra contra a massa de concreto. O ponto
+também é longe do momento máximo, que fica a {{ n(det.x_momento_maximo) }} cm do
+apoio A — repare no diagrama da Seção 4 onde as emendas estão marcadas.
 
-Cada emenda vale **ℓ~b,nec~ = {{ n(anc_g.lb_nec, 1) }} cm** para cada lado.
+**Quebra superior, a {{ n(det.emendas_x[1]) }} cm do apoio A — barras
+cruzadas, sem traspasse.** Ali nenhuma barra tracionada pode dobrar. A N2
+atravessa o vértice em linha reta e vai ancorar na face **superior** do
+patamar; a N3 entra {{ n(det.penetracao_n3_cm) }} cm no lance e termina em
+gancho para cima. As duas se cruzam.
 
 ## 8.3 Quantidade de barras
 
@@ -574,24 +580,77 @@ Sobrepondo as duas mentalmente, você tem a malha completa. A armadura de
 distribuição fica sempre **por cima** da principal na face inferior — quem
 precisa ficar o mais longe possível da linha neutra é a principal.
 
-## 9.4 Ancoragem dos cantos reentrantes
+## 9.4 O canto reentrante e o empuxo ao vazio
 
-Canto reentrante é o vértice que "entra" para dentro da peça — no encontro do
-lance com o patamar. Quando a armadura principal dobra ali, as forças de tração
-das duas pernas da barra geram uma resultante que aponta **para fora**, na
-direção do cobrimento. Essa resultante tende a arrancar a camada de concreto e
-empurrar a barra para fora da peça.
+Quando uma barra tracionada muda de direção, as trações das duas pernas não se
+cancelam. Elas somam uma resultante:
+
+$$R = 2\,T \sin(\alpha/2) = 2 \times T \times \sin({{ n(geo.alpha_graus / 2, 2) }}°) = {{ n(2 * sen_meio_alpha, 3) }}\,T$$
+
+**Essa resultante aponta para o lado côncavo da dobra** — é para lá que a barra
+empurra o concreto, como uma corda empurra o pino em que se apoia. Se do lado
+côncavo houver massa de concreto, ela apenas comprime a peça e está tudo bem.
+Se do lado côncavo houver só o cobrimento, ela arranca a casca e joga a barra
+para fora. É o **empuxo ao vazio**.
+
+O detalhe do canto sai inteiro dessa única frase. Nas duas quebras do
+intradorso o lado côncavo é oposto:
+
+| Quebra | Lado côncavo da dobra | Para a armadura de face inferior |
+|---|---|---|
+| Inferior, patamar → lance | a massa de concreto, acima | **segura** — a barra comprime a laje e pode acompanhar a dobra |
+| Superior, lance → patamar | o cobrimento, abaixo | **empuxo ao vazio** — nenhuma barra tracionada pode dobrar ali |
 
 {{ figura("canto") }}
 
-A solução é atravessar barras nesse vértice, segurando a armadura principal
-contra essa força. São as barras **N6 — {{ det.por_codigo("N6").descricao }}**.
+Vale registrar o simétrico: para uma armadura de face **superior** tudo se
+inverte, e o problema passa a ser na quebra **inferior**. Este esquema é
+biapoiado e não tem armadura negativa, mas quem apoiar a escada com
+engastamento parcial precisa refazer esta tabela antes de detalhar.
 
-Existem **dois** cantos reentrantes na escada: um no encontro do patamar
-inferior com o lance, e outro no encontro do lance com o patamar superior.
-Os dois precisam das barras de ancoragem — daí a quantidade de
-{{ det.por_codigo("N6").quantidade }} barras
-({{ cfg.armaduras.ancoragem_canto.barras_por_canto }} por canto).
+### A solução adotada: barras cruzadas
+
+Na quebra superior nenhuma das duas barras muda de direção sobre a face
+tracionada:
+
+- A **N2 — {{ det.por_codigo("N2").descricao }}** segue reta na direção do
+  lance, atravessa o vértice, emerge junto à face **superior** do patamar e
+  ancora ali por {{ n(anc_g.lb_nec, 1) }} cm, terminando em gancho para baixo.
+  A única dobra que ela tem é essa última, e o lado côncavo dela é a massa de
+  concreto.
+- A **N3 — {{ det.por_codigo("N3").descricao }}** entra
+  {{ n(det.penetracao_n3_cm) }} cm no lance, sem mudar de nível, e termina em
+  gancho para **cima**.
+
+As duas se cruzam no vértice. A resultante deixa de existir, em vez de precisar
+ser resistida — e é essa a diferença entre este detalhe e o de barra contínua.
+
+{% if det.penetracao_n3_cm < anc_g.lb_nec %}
+> A N3 gostaria de entrar os {{ n(anc_g.lb_nec, 1) }} cm de ℓ~b,nec~ no lance,
+> mas só cabem {{ n(det.penetracao_n3_cm) }} cm: passando disso ela sai pelo
+> espelho do último degrau. O gancho e a N2, que atravessa o vértice, cobrem a
+> diferença. Um piso maior no último degrau resolveria de vez.
+{% endif %}
+
+### A costura no vértice
+
+Mesmo com as barras cruzadas, o vértice recebe armadura transversal:
+
+- **N6 — {{ det.por_codigo("N6").descricao }}**:
+  {{ det.por_codigo("N6").quantidade }} barras Ø{{ n(det.por_codigo("N6").bitola_mm, 1) }}
+  ({{ cfg.armaduras.ancoragem_canto.barras_por_canto }} por canto), que costuram
+  a região e distribuem o que sobra de força de desvio.
+{% if tem_n8 %}
+- **N8 — {{ det.por_codigo("N8").descricao }}**:
+  {{ det.por_codigo("N8").quantidade }} barras Ø{{ n(det.por_codigo("N8").bitola_mm, 1) }}
+  ({{ cfg.armaduras.ancoragem_canto.construtiva.por_canto }} por canto). Esta
+  **não entra no cálculo**: é construtiva, serve de apoio de montagem para a
+  malha e para amarrar o cruzamento das principais no lugar certo.
+{% endif %}
+
+Os dois cantos recebem a costura. No inferior ela não combate empuxo nenhum —
+está lá para distribuir a pressão da barra contra a laje e para segurar a malha
+na dobra.
 
 {{ figura("alt_canto") }}
 

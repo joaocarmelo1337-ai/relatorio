@@ -10,8 +10,9 @@ from __future__ import annotations
 from engine.api import Resultado
 from engine.barras import Posicao
 
-from .base import caminho_barra, contorno_peca, offset_intradorso, ponto_na_barra
-from .prancha import (COR_FAMILIA, COTA, EIXO, Escala, Prancha, TINTA, num)
+from .base import contorno_peca, offset_intradorso, poli_px, ponto_na_barra
+from .prancha import (ANCORAGEM, COR_FAMILIA, COTA, EIXO, Escala, Prancha,
+                      TINTA, num)
 
 
 BANDA_COTA = 116.0   # faixa reservada para a cota vertical, à direita da peça
@@ -105,36 +106,37 @@ def _montar(r: Resultado, largura: float, altura: float, rail: float) -> str:
     longitudinais = [b for b in det.posicoes if b.direcao == "longitudinal"]
     transversais = [b for b in det.posicoes if b.direcao == "transversal"]
 
+    # O traçado vem pronto do motor: o desenho só projeta os vértices. Assim o
+    # que aparece na prancha é literalmente a barra que foi calculada.
     for b in longitudinais:
-        cor = COR_FAMILIA[b.familia]
-        g_ini = det.gancho_cm if b.codigo == "N1" and b.ganchos_cm else 0.0
-        g_fim = det.gancho_cm if b.codigo == "N3" and b.ganchos_cm else 0.0
-        p.caminho(
-            caminho_barra(geo, e, b.x_ini, b.x_fim, b.offset_cm, g_ini, g_fim),
-            cor=cor, w=3.4,
-        )
+        p.caminho(poli_px(b.vertices, e), cor=COR_FAMILIA[b.familia], w=3.4)
 
     # traspasses destacados
     lb = r.anc_gancho.lb_nec
     n1, n2, n3 = (det.por_codigo(c) for c in ("N1", "N2", "N3"))
-    for xa, xb in ((n2.x_ini, n1.x_fim), (n3.x_ini, n2.x_fim)):
-        p.caminho(
-            caminho_barra(geo, e, xa, xb, n1.offset_cm),
-            cor="#1f8a70", w=13, opacidade=0.22, cap="round",
-        )
-    xm = (n3.x_ini + n2.x_fim) / 2
+    # Só há traspasse na quebra inferior; no canto superior as barras se cruzam.
+    p.caminho(
+        poli_px(geo.paralela_ao_intradorso(n2.x_ini, n1.x_fim, n1.offset_cm), e),
+        cor="#1f8a70", w=13, opacidade=0.22, cap="round",
+    )
+    xm = (n2.x_ini + n1.x_fim) / 2
     px, py = ponto_na_barra(geo, xm, n1.offset_cm)
     p.chamada(e.px(px), e.py(py), f"traspasse ≥ lb,nec = {num(lb, 1)} cm",
-              "emenda de N2 com N3, fora do momento máximo", "#1f8a70")
+              "emenda de N1 com N2, na quebra inferior", "#1f8a70")
+    if det.detalhe_canto == "cruzadas":
+        cx, cy = geo.xk2, geo.intradorso(geo.xk2) + geo.h / 2
+        p.chamada(e.px(cx), e.py(cy), "canto reentrante — barras cruzadas",
+                  "N2 e N3 não dobram sobre a face tracionada", ANCORAGEM)
 
     # transversais aparecem como seção: pontinhos
     for b in transversais:
         cor = COR_FAMILIA[b.familia]
         if b.codigo == "N4":
             xs = det.xs_distribuicao
-        elif b.codigo == "N6":
-            xs = [geo.xk1 + i * 14 - 7 for i in range(2)] + \
-                 [geo.xk2 + i * 14 - 7 for i in range(2)]
+        elif b.codigo in ("N6", "N8"):
+            n = max(1, b.quantidade // 2)
+            xs = [geo.xk1 + (i - (n - 1) / 2) * 13 for i in range(n)] + \
+                 [geo.xk2 + (i - (n - 1) / 2) * 13 for i in range(n)]
         else:
             xs = [b.x_ini]
         for x in xs:
@@ -155,6 +157,8 @@ def _montar(r: Resultado, largura: float, altura: float, rail: float) -> str:
         "N5": (geo.x1, det.por_codigo("N5").offset_cm) if any(
             b.codigo == "N5" for b in det.posicoes) else None,
         "N6": (geo.xk1, det.por_codigo("N6").offset_cm),
+        "N8": (geo.xk1, det.por_codigo("N8").offset_cm)
+        if any(b.codigo == "N8" for b in det.posicoes) else None,
     }
     for b in det.posicoes:
         alvo = ancoras.get(b.codigo)

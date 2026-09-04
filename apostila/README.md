@@ -36,7 +36,8 @@ engine/                 Motor de cálculo. Não desenha e não escreve texto.
   flexao.py             Linha neutra, Kx, domínios, As. λ e αc variáveis.
   ancoragem.py          fctd, fbd, lb, lb,nec, lb,min.
   formatos.py           Catálogo de formatos alternativos de barra.
-  barras.py             Posições N1..N7: extensão, corte, quantidade.
+  barras.py             Posições N1..N8: traçado, corte, quantidade. É aqui
+                        que mora a regra do canto reentrante (ver abaixo).
   api.py                calcular(config) -> Resultado com tudo.
 
 desenho/                Desenho técnico em SVG. Lê o Resultado, não recalcula.
@@ -125,6 +126,35 @@ Além de calcular, ele recusa ou avisa:
 | Espaçamento da secundária acima de 33 cm | aviso no documento |
 
 Os avisos aparecem na Seção 11 da apostila gerada.
+
+## O canto reentrante
+
+Quando uma barra tracionada dobra, as trações das duas pernas somam
+`R = 2·T·sen(α/2)`, e **essa resultante aponta para o lado côncavo da dobra** —
+é para lá que a barra empurra o concreto. Se do lado côncavo houver massa, ela
+comprime a peça; se houver só o cobrimento, arranca a casca. É o *empuxo ao
+vazio*.
+
+Nas duas quebras do intradorso o lado côncavo é oposto:
+
+| Quebra | Lado côncavo | Armadura de face inferior |
+|---|---|---|
+| Inferior, patamar → lance | massa de concreto | segura: N1 e N2 dobram e emendam por traspasse |
+| Superior, lance → patamar | o cobrimento | proibido dobrar: N2 e N3 se cruzam |
+
+No canto superior a **N2** segue reta, atravessa o vértice, emerge na face
+superior do patamar e ancora ali; a **N3** entra reta no lance e termina em
+gancho para cima. Nenhuma das duas muda de direção sobre a face tracionada, e a
+resultante deixa de existir em vez de precisar ser resistida.
+
+`tests/test_engine.py::TestCantoReentrante::test_nenhuma_dobra_empurra_o_cobrimento`
+verifica isso diretamente: em cada vértice de cada barra longitudinal ele anda
+2 cm na direção de R e exige que o ponto continue dentro do concreto. Se um dia
+alguém mudar o traçado e reintroduzir a dobra proibida, esse teste quebra.
+
+Quando o patamar superior é curto demais para caber a travessia mais o lb,nec,
+o motor cai no detalhe de barra contínua e avisa — aí a costura transversal
+passa a ser a única defesa.
 
 ## Espaçamento automático
 

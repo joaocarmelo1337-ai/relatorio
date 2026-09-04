@@ -115,6 +115,52 @@ class Geometria:
             (self.x3, self.subida - self.h),
         ]
 
+    # -- paralelas ao intradorso -----------------------------------------
+    # O cobrimento é medido PERPENDICULAR à face, não na vertical. Numa laje
+    # inclinada isso muda o traçado, e muda o comprimento de corte da barra -
+    # por isso mora aqui, no motor, e não no módulo de desenho.
+    def paralela_ao_intradorso(self, x_ini: float, x_fim: float, t: float):
+        """Poligonal paralela ao intradorso, à distância perpendicular t."""
+        xs = [x_ini] + [k for k in (self.xk1, self.xk2) if x_ini < k < x_fim] + [x_fim]
+        brutos = [(x, self.intradorso(x)) for x in xs]
+        segs = [_desloca(a, b, t) for a, b in zip(brutos, brutos[1:])]
+        pts = [segs[0][0]]
+        for s1, s2 in zip(segs, segs[1:]):
+            pts.append(_intersecao(s1[0], s1[1], s2[0], s2[1]))
+        pts.append(segs[-1][1])
+        return pts
+
+    def tangente(self, x: float) -> tuple[float, float]:
+        """Vetor unitário do intradorso em x, no sentido da subida."""
+        if self.xk1 < x < self.xk2:
+            return math.cos(self.alpha_rad), math.sin(self.alpha_rad)
+        return 1.0, 0.0
+
+    def topo_real(self, x: float) -> float:
+        """Cota da face superior REAL: degraus no lance, laje nos patamares.
+
+        É diferente de intradorso(x) + h. No lance a superfície é escalonada, e
+        é ela que limita até onde uma barra horizontal pode avançar sem sair do
+        concreto - o que decide o detalhe do canto reentrante.
+        """
+        if x <= self.x1:
+            return 0.0
+        if x >= self.x2:
+            return self.subida
+        i = int((x - self.x1) // self.s)
+        return min(i + 1, self.n) * self.e
+
+    def penetracao_horizontal(self, y: float, x_de: float, folga: float,
+                              passo: float = 0.5) -> float:
+        """Quanto uma barra horizontal na cota y avança a partir de x_de para a
+        esquerda antes de o topo real cair a menos de `folga` acima dela."""
+        x = x_de
+        while x - passo >= self.x0:
+            if self.topo_real(x - passo) - y < folga:
+                break
+            x -= passo
+        return x_de - x
+
     # -- verificações -----------------------------------------------------
     def blondel(self, normas: Normas) -> dict:
         b = normas["blondel"]
@@ -137,6 +183,30 @@ class Geometria:
             "atende": self.h >= m["laje_piso"],
             "estimativa_vao_40": self.vao_total / 40.0,
         }
+
+
+def _desloca(p, q, t):
+    """Segmento p->q deslocado t na normal que aponta para cima."""
+    dx, dy = q[0] - p[0], q[1] - p[1]
+    c = math.hypot(dx, dy) or 1.0
+    nx, ny = -dy / c, dx / c
+    if ny < 0:
+        nx, ny = -nx, -ny
+    return (p[0] + nx * t, p[1] + ny * t), (q[0] + nx * t, q[1] + ny * t)
+
+
+def _intersecao(a1, a2, b1, b2):
+    x1, y1 = a1; x2, y2 = a2; x3, y3 = b1; x4, y4 = b2
+    den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+    if abs(den) < 1e-12:
+        return a2
+    u = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / den
+    return (x1 + u * (x2 - x1), y1 + u * (y2 - y1))
+
+
+def comprimento(pts) -> float:
+    """Comprimento de uma poligonal (cm), medido no eixo da barra."""
+    return sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pts, pts[1:]))
 
 
 def construir(cfg: dict) -> Geometria:

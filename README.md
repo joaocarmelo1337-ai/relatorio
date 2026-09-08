@@ -124,14 +124,37 @@ de segurança.
 
 ---
 
-## Controle de Entrega de EPI (pasta `epi/`)
+## Controle de Entrega de EPI
 
-Além do registro de campo acima, este repositório traz um segundo aplicativo, em
-**Python + Flask + SQLite**, para o **controle de entrega de EPI e uniformes**:
-cadastro de funcionários, lista mestre de EPI com CA, registro de entregas com
-assinatura capturada na tela, controle de devolução e geração da
-**Ficha de Entrega de EPI em PDF**. O nome e a logo da empresa são configuráveis
-na própria interface, então qualquer empresa pode usar a mesma instalação.
+Além do registro de campo acima, este repositório traz o **controle de entrega de EPI e
+uniformes**: cadastro de funcionários, lista de EPI com CA, registro de entregas com a
+assinatura colhida na tela, controle de devolução e a **Ficha de Entrega de EPI em PDF**.
+
+Ele existe em duas versões, com o mesmo layout de ficha e a mesma lógica:
+
+### 1. `epi.html` — versão de campo (é a que se usa no dia a dia)
+
+Arquivo único, igual ao `index.html`: abre no celular, **funciona offline** e grava tudo
+no próprio aparelho. Sem servidor, sem senha, sem mensalidade.
+
+1. Baixe o `epi.html` para o celular (ou envie por e-mail/WhatsApp para você mesmo).
+2. Abra o arquivo no navegador e use "Adicionar à tela de início" para virar ícone.
+3. Em **Configurações**, informe o nome da empresa e envie a logo — eles vão para o
+   cabeçalho da ficha em PDF. Nada de nome fixo no código.
+4. Cadastre o funcionário, toque em **+ Nova entrega**, marque os itens, colha a
+   assinatura com o dedo e salve. Depois, **Gerar PDF** monta a ficha completa.
+
+**Os dados ficam só neste aparelho.** Não existe cópia em servidor: a única cópia fora do
+celular é o arquivo que sai em **Configurações → Exportar backup** (um `.json` com
+funcionários, entregas, assinaturas, lista de EPI e a logo). Guarde-o no Drive ou mande
+para você mesmo. Para trocar de aparelho, ou para voltar depois de um acidente, use
+**Importar backup**. O aplicativo avisa quando faz mais de 7 dias que você não exporta.
+
+### 2. `epi/` — versão com servidor (Flask + SQLite)
+
+Mesma ficha, mas com banco central: várias pessoas registram, os dados não somem se o
+celular sumir e o PDF pode ser gerado do escritório. Precisa de hospedagem e de internet.
+É o caminho para quando a empresa adotar o controle.
 
 ```bash
 cd epi
@@ -140,3 +163,26 @@ python app.py     # http://localhost:5000
 ```
 
 As instruções completas estão em [`epi/README.md`](epi/README.md).
+
+### O que as duas versões fazem
+
+- **Empresa configurável**: nome, CNPJ e logo definidos na interface, usados no cabeçalho
+  do aplicativo e do PDF.
+- **Funcionários**: nome, nº de registro, cargo, setor, data do “ciente” e assinatura de
+  admissão.
+- **Lista de EPI** já carregada com os itens da ficha em papel e os CAs padrão (calçado
+  28513, concha 14235, óculos 34653, vaqueta 16059, PU 48827, PFF1 38944, capacete 25883,
+  talabarte 46206); uniforme fica sem CA. Cada item marca se pede tamanho (P/M/G/GG/EXG ou
+  numeração, como 41 no calçado).
+- **Item fora da lista** pode ser criado na tela da lista ou na hora da entrega, com a
+  opção de guardá-lo para as próximas fichas.
+- **Entrega**: data de início da ficha, data de entrega, itens com CA/quantidade/tamanho,
+  assinatura no canvas e devolução (data + assinatura) que pode ficar em branco e ser
+  preenchida depois.
+- **PDF** reproduzindo a ficha tradicional: cabeçalho com logo e empresa, dados do
+  funcionário, declaração de responsabilidade (NR-6 item 6.7.1 e art. 158 da CLT), campo
+  “Ciente em ___/___/___” e a tabela Data de Entrega | EPI/Uniforme | CA | Qtde |
+  Assinatura | Data de Devolução | Ass. Devolução, com as assinaturas desenhadas dentro
+  das células e o cabeçalho repetido a cada página.
+- O nome do item é copiado para a entrega no momento do registro: mexer na lista de EPI
+  depois **não altera o histórico já assinado**.

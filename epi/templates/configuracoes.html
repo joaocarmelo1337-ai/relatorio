@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titulo %}Configurações{% endblock %}
+{% block conteudo %}
+<h1>Configurações da empresa</h1>
+<p class="pequeno suave">O nome e a logo abaixo são usados no cabeçalho do aplicativo e no PDF da ficha.</p>
+
+<form method="post" enctype="multipart/form-data" class="cartao">
+  <div class="campo">
+    <label for="nome">Nome da empresa</label>
+    <input type="text" id="nome" name="nome" value="{{ empresa.nome }}" placeholder="Ex.: MINHA EMPRESA LTDA">
+  </div>
+  <div class="campo">
+    <label for="cnpj">CNPJ (opcional)</label>
+    <input type="text" id="cnpj" name="cnpj" value="{{ empresa.cnpj }}" placeholder="00.000.000/0001-00">
+  </div>
+
+  <div class="campo">
+    <label>Logo</label>
+    {% if tem_logo %}
+      <div class="assinatura-atual">
+        <img src="{{ url_for('logo') }}" alt="Logo atual" style="height:70px">
+        <span class="pequeno suave">Logo atual</span>
+      </div>
+      <div class="linha-check">
+        <input type="checkbox" id="remover_logo" name="remover_logo" value="1">
+        <label for="remover_logo">Remover a logo atual</label>
+      </div>
+    {% endif %}
+    <input type="file" id="logo" name="logo" accept="image/*">
+    <div class="pequeno suave" style="margin-top:4px">PNG, JPG, GIF ou WEBP — até 12 MB.</div>
+  </div>
+
+  <div class="acoes"><button class="btn primario" type="submit">Salvar configurações</button></div>
+</form>
+{% endblock %}

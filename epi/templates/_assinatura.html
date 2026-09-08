@@ -1,0 +1,19 @@
+{% macro assinatura(campo, rotulo='Assinatura', atual_id=None, texto_atual='Assinatura registrada') %}
+<div class="campo">
+  <label>{{ rotulo }}</label>
+  {% if atual_id %}
+    <div class="assinatura-atual">
+      <img src="{{ url_for('assinatura', aid=atual_id) }}" alt="{{ texto_atual }}">
+      <span class="pequeno suave">{{ texto_atual }} — assine abaixo apenas se quiser substituí-la.</span>
+    </div>
+  {% endif %}
+  <div class="assinatura-campo assinatura-caixa" data-alvo="{{ campo }}">
+    <canvas class="assinatura"></canvas>
+    <div class="dica">Assine aqui com o dedo ou com o mouse</div>
+  </div>
+  <div class="acoes">
+    <button type="button" class="btn pequeno" data-limpar>Limpar assinatura</button>
+  </div>
+  <input type="hidden" id="{{ campo }}" name="{{ campo }}" value="">
+</div>
+{% endmacro %}

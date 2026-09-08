@@ -121,3 +121,22 @@ de segurança.
   automático pode ser bloqueado pelo navegador.
 - Todas as operações de salvar, carregar, importar e gerar PDF têm tratamento de erro
   com mensagem visível e específica na tela.
+
+---
+
+## Controle de Entrega de EPI (pasta `epi/`)
+
+Além do registro de campo acima, este repositório traz um segundo aplicativo, em
+**Python + Flask + SQLite**, para o **controle de entrega de EPI e uniformes**:
+cadastro de funcionários, lista mestre de EPI com CA, registro de entregas com
+assinatura capturada na tela, controle de devolução e geração da
+**Ficha de Entrega de EPI em PDF**. O nome e a logo da empresa são configuráveis
+na própria interface, então qualquer empresa pode usar a mesma instalação.
+
+```bash
+cd epi
+pip install -r requirements.txt
+python app.py     # http://localhost:5000
+```
+
+As instruções completas estão em [`epi/README.md`](epi/README.md).

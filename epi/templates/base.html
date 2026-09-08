@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f4858">
+<title>{% block titulo %}Controle de Entrega de EPI{% endblock %}{% if empresa and empresa.nome %} — {{ empresa.nome }}{% endif %}</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%BA%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<header class="topo">
+  <div class="topo-linha">
+    {% if tem_logo %}<img class="logo" src="{{ url_for('logo') }}" alt="Logo da empresa">{% endif %}
+    <div>
+      <div class="empresa">{{ empresa.nome or 'Configure o nome da empresa' }}</div>
+      <div class="sub">Controle de entrega de EPI</div>
+    </div>
+  </div>
+</header>
+<nav class="abas">
+  <div class="interno">
+    <a href="{{ url_for('funcionarios') }}" class="{{ 'ativo' if request.endpoint in ['funcionarios','funcionario_form','ficha','entrega_form','devolucao'] }}">Funcionários</a>
+    <a href="{{ url_for('epis') }}" class="{{ 'ativo' if request.endpoint == 'epis' }}">Lista de EPI</a>
+    <a href="{{ url_for('configuracoes') }}" class="{{ 'ativo' if request.endpoint == 'configuracoes' }}">Configurações</a>
+  </div>
+</nav>
+<main>
+  {% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% for categoria, texto in mensagens %}
+      <div class="flash {{ categoria }}">{{ texto }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block conteudo %}{% endblock %}
+</main>
+<datalist id="lista-tamanhos">
+  {% for t in TAMANHOS %}<option value="{{ t }}">{% endfor %}
+</datalist>
+{% block scripts %}{% endblock %}
+</body>
+</html>

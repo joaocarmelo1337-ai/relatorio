@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}Funcionários{% endblock %}
+{% block conteudo %}
+<h1>Funcionários</h1>
+
+<form class="barra-busca" method="get" action="{{ url_for('funcionarios') }}">
+  <input type="text" name="q" value="{{ busca }}" placeholder="Buscar por nome, registro, cargo ou setor">
+  <button class="btn" type="submit">Buscar</button>
+</form>
+
+<div class="acoes" style="margin-bottom:14px">
+  <a class="btn primario" href="{{ url_for('funcionario_form') }}">+ Novo funcionário</a>
+</div>
+
+{% if funcionarios %}
+<ul class="lista">
+  {% for f in funcionarios %}
+  <li>
+    <div class="info">
+      <div class="nome"><a href="{{ url_for('ficha', fid=f.id) }}">{{ f.nome }}</a></div>
+      <div class="meta">
+        {% if f.registro %}Registro {{ f.registro }} · {% endif %}
+        {{ f.cargo or 'Cargo não informado' }}{% if f.setor %} · {{ f.setor }}{% endif %}
+      </div>
+      <div class="meta">
+        {{ f.total_entregas }} entrega{{ '' if f.total_entregas == 1 else 's' }}
+        {% if f.ultima_entrega %} · última em {{ f.ultima_entrega | data_br }}{% endif %}
+      </div>
+    </div>
+    <a class="btn pequeno" href="{{ url_for('ficha', fid=f.id) }}">Ficha</a>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="cartao vazio">
+  {% if busca %}Nenhum funcionário encontrado para “{{ busca }}”.{% else %}Nenhum funcionário cadastrado ainda.{% endif %}
+</div>
+{% endif %}
+{% endblock %}

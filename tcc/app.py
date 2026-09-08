@@ -22,7 +22,10 @@ st.set_page_config(
     page_title="João Carmelo — TCC",
     page_icon="🏠",
     layout="wide",
-    initial_sidebar_state="expanded",
+    # "auto" abre a lateral no computador e a recolhe no celular. Fixada
+    # em "expanded" ela cobria a tela inteira do telefone, e a vistoria
+    # em campo começava com o engenheiro fechando menu.
+    initial_sidebar_state="auto",
 )
 
 
@@ -90,10 +93,10 @@ def pagina_inicio(con):
         "acompanhamento das garantias em um só lugar.",
     )
     estilo.indicadores([
-        ("🏘", residencias, "Residências cadastradas"),
-        ("🔎", vistorias_feitas, "Vistorias realizadas"),
-        ("⚠", manifestacoes, "Manifestações registradas"),
-        ("🛡", vigentes, "Ocorrências em garantia vigente"),
+        ("residencias", residencias, "Residências cadastradas"),
+        ("vistoria", vistorias_feitas, "Vistorias realizadas"),
+        ("alerta", manifestacoes, "Manifestações registradas"),
+        ("garantia", vigentes, "Ocorrências em garantia vigente"),
     ])
 
     prioridades = dict(con.execute(

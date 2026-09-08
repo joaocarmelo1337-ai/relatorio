@@ -145,9 +145,9 @@ h3{ font-size:1.1rem; font-weight:600; }
   box-shadow:var(--sombra);
 }
 .indicador-icone{
-  width:48px; height:48px; flex:0 0 48px; border-radius:12px;
-  background:var(--verde-claro); display:flex; align-items:center;
-  justify-content:center; font-size:1.35rem;
+  width:46px; height:46px; flex:0 0 46px; border-radius:12px;
+  background:var(--verde-claro); color:var(--verde-acao);
+  display:flex; align-items:center; justify-content:center;
 }
 .indicador-valor{ font-size:1.75rem; font-weight:700; line-height:1;
   letter-spacing:-.03em; }
@@ -238,6 +238,38 @@ def aplicar():
 
 
 # ------------------------------------------------------------- componentes
+# ------------------------------------------------------------------ ícones
+# Traçado igual ao dos ícones do menu (Bootstrap Icons): 24x24, sem
+# preenchimento, traço de 1.5. Ficam embutidos de propósito -- os do menu vêm
+# de um CDN, e ao menos os cartões continuam desenhados quando falta internet.
+_MOLDE = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+          'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" '
+          'width="22" height="22" aria-hidden="true">{}</svg>')
+
+TRACOS = {
+    "residencias": '<path d="M3 21h18"/><path d="M5 21V8l5-4 5 4v13"/>'
+                   '<path d="M15 21V11l4-2v12"/><path d="M8.5 12h3"/>'
+                   '<path d="M8.5 16h3"/>',
+    "vistoria":    '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/>',
+    "alerta":      '<path d="M12 4 2.6 20h18.8L12 4Z"/><path d="M12 10v4.2"/>'
+                   '<path d="M12 17.4h.01"/>',
+    "garantia":    '<path d="M12 3 4.5 6v5.6c0 4.3 3.1 7.8 7.5 9.4 4.4-1.6 '
+                   '7.5-5.1 7.5-9.4V6L12 3Z"/><path d="m8.8 12 2.2 2.2 4.2-4.4"/>',
+    "ambiente":    '<path d="M4 21h16"/><path d="M6 21V4.5A1.5 1.5 0 0 1 '
+                   '7.5 3h9A1.5 1.5 0 0 1 18 4.5V21"/><path d="M14.5 12h.01"/>',
+    "foto":        '<path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2l1.4-2h7.8l1.4 2h2.2A1.5 '
+                   '1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 '
+                   '17.5v-9Z"/><circle cx="12" cy="12.8" r="3.4"/>',
+    "relogio":     '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3.2 2"/>',
+}
+
+
+def icone(nome):
+    """Ícone de linha embutido. Nome desconhecido devolve vazio, não quebra."""
+    traco = TRACOS.get(nome)
+    return _MOLDE.format(traco) if traco else ""
+
+
 def marca(nome, subtitulo):
     """Identidade no topo da barra lateral."""
     casa = (
@@ -329,12 +361,12 @@ def capa(etiqueta, titulo, texto):
 
 
 def indicadores(itens):
-    """Fileira de cartões. `itens` = [(ícone, valor, rótulo), ...]"""
+    """Fileira de cartões. `itens` = [(nome do ícone, valor, rótulo), ...]"""
     cartoes = "".join(
-        f'<div class="indicador"><div class="indicador-icone">{icone}</div>'
+        f'<div class="indicador"><div class="indicador-icone">{icone(nome)}</div>'
         f'<div><div class="indicador-valor">{valor}</div>'
         f'<div class="indicador-rotulo">{rotulo}</div></div></div>'
-        for icone, valor, rotulo in itens
+        for nome, valor, rotulo in itens
     )
     st.markdown(f'<div class="indicadores">{cartoes}</div>', unsafe_allow_html=True)
 

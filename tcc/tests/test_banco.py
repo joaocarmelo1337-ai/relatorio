@@ -125,3 +125,62 @@ class TestBanco(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestConexaoEntreThreads(unittest.TestCase):
+    """Regressao: o Streamlit roda o script numa thread diferente a cada
+    interacao, e a conexao fica em cache entre elas. Sem
+    check_same_thread=False o SQLite levanta ProgrammingError."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.con = db.criar_banco(Path(self.tmp.name) / "teste.db")
+        seed.semear_tudo(self.con)
+
+    def tearDown(self):
+        self.con.close()
+        self.tmp.cleanup()
+
+    def _em_outra_thread(self, funcao):
+        import threading
+        resultado = {}
+
+        def alvo():
+            try:
+                resultado["valor"] = funcao()
+            except Exception as erro:            # noqa: BLE001 - o teste quer o erro
+                resultado["erro"] = erro
+
+        thread = threading.Thread(target=alvo)
+        thread.start()
+        thread.join()
+        if "erro" in resultado:
+            raise resultado["erro"]
+        return resultado["valor"]
+
+    def test_leitura_de_outra_thread(self):
+        n = self._em_outra_thread(
+            lambda: self.con.execute("SELECT COUNT(*) n FROM itens_catalogo").fetchone()["n"]
+        )
+        self.assertEqual(n, 82)
+
+    def test_login_de_outra_thread(self):
+        """Reproduz exatamente o que quebrou na tela de login."""
+        linha = self._em_outra_thread(
+            lambda: self.con.execute(
+                "SELECT * FROM usuarios WHERE usuario = ?", ("admin",)
+            ).fetchone()
+        )
+        self.assertIsNotNone(linha)
+        self.assertTrue(seed.conferir_senha("admin", linha["senha_hash"], linha["salt"]))
+
+    def test_escrita_de_outra_thread(self):
+        def inserir():
+            self.con.execute(
+                "INSERT INTO residencias (nome, criado_em) VALUES (?,?)",
+                ("Casa Silva", "2026-09-08"),
+            )
+            self.con.commit()
+            return self.con.execute("SELECT COUNT(*) n FROM residencias").fetchone()["n"]
+
+        self.assertEqual(self._em_outra_thread(inserir), 1)

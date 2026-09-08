@@ -17,14 +17,8 @@ UPLOADS = RAIZ / "uploads"
 FOTOS = UPLOADS / "fotos"
 DOCUMENTOS = UPLOADS / "documentos"
 
-# Paleta
-AZUL_MARINHO = "#1b3a5c"
-AZUL_CLARO = "#2f7fb5"
-VERDE = "#2e7d32"
-AMARELO = "#e6a700"
-LARANJA = "#e67e22"
-VERMELHO = "#c0392b"
-CINZA_FUNDO = "#f4f6f8"
+# A paleta e os componentes de tela ficam em tcc/estilo.py.
+LEMA_RODAPE = ("Planejamento", "Qualidade", "Segurança", "Durabilidade")
 
 MENU = [
     ("🏠", "Início"),

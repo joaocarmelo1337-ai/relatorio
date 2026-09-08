@@ -119,7 +119,7 @@ def semear_regras_garantia(con):
         )
 
 
-def criar_usuario_admin(con, usuario="admin", senha="admin", nome="Joao Carmelo"):
+def criar_usuario_admin(con, usuario="admin", senha="admin", nome="João Carmelo"):
     if con.execute("SELECT 1 FROM usuarios WHERE usuario = ?", (usuario,)).fetchone():
         return False
     senha_hash, salt = gerar_hash(senha)

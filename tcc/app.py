@@ -10,7 +10,7 @@ from datetime import date, datetime
 
 import streamlit as st
 
-from tcc import config
+from tcc import config, estilo
 from tcc.database import db, seed
 from tcc.services import importacao_excel
 from tcc.services import ambientes as servico_ambientes
@@ -40,15 +40,21 @@ def agora():
 
 # ---------------------------------------------------------------------- login
 def tela_login(con):
-    _, meio, _ = st.columns([1, 2, 1])
+    _, meio, _ = st.columns([1, 1.5, 1])
     with meio:
-        st.markdown(f"## {config.TITULO}")
-        st.caption(config.SUBTITULO)
+        st.markdown(
+            f'<div style="text-align:center;padding:2.4rem 0 1.6rem">'
+            f'<div style="font-size:.72rem;font-weight:600;letter-spacing:.18em;'
+            f'text-transform:uppercase;color:{estilo.SUAVE}">{config.SUBTITULO}</div>'
+            f'<h1 style="margin:.5rem 0 0;font-size:2rem">{config.TITULO}</h1></div>',
+            unsafe_allow_html=True,
+        )
         with st.form("login"):
             usuario = st.text_input("Usuário", value="admin")
             senha = st.text_input("Senha", type="password")
             st.checkbox("Lembrar acesso", key="lembrar")
-            entrou = st.form_submit_button("ENTRAR", width="stretch")
+            entrou = st.form_submit_button("ENTRAR", type="primary",
+                                           width="stretch")
         if entrou:
             linha = con.execute(
                 "SELECT * FROM usuarios WHERE usuario = ?", (usuario,)
@@ -58,34 +64,95 @@ def tela_login(con):
                 st.rerun()
             else:
                 st.error("Usuário ou senha inválidos.")
-        st.caption(f"_{config.LEMA}_")
+        st.markdown(
+            f'<p style="text-align:center;margin-top:1.4rem;font-family:Georgia,serif;'
+            f'font-style:italic;color:{estilo.SUAVE};font-size:.92rem">'
+            f'{config.LEMA}</p>',
+            unsafe_allow_html=True,
+        )
 
 
 # ------------------------------------------------------------------- paginas
 def pagina_inicio(con):
-    st.subheader("Visão geral")
-    total_residencias = con.execute("SELECT COUNT(*) n FROM residencias").fetchone()["n"]
-    total_vistorias = con.execute("SELECT COUNT(*) n FROM vistorias").fetchone()["n"]
-    total_ocorrencias = con.execute(
-        "SELECT COUNT(*) n FROM ocorrencias WHERE resultado = 'Nao Conforme'"
-    ).fetchone()["n"]
+    contar = lambda sql, *p: con.execute(sql, p).fetchone()["n"]
+    residencias = contar("SELECT COUNT(*) n FROM residencias")
+    vistorias_feitas = contar("SELECT COUNT(*) n FROM vistorias")
+    manifestacoes = contar(
+        "SELECT COUNT(*) n FROM ocorrencias WHERE resultado = 'Nao Conforme'")
+    vigentes = contar(
+        "SELECT COUNT(*) n FROM ocorrencias WHERE situacao_garantia = ?",
+        garantias.VIGENTE)
 
-    a, b, c = st.columns(3)
-    a.metric("Residências cadastradas", total_residencias)
-    b.metric("Vistorias realizadas", total_vistorias)
-    c.metric("Manifestações encontradas", total_ocorrencias)
+    estilo.capa(
+        "Vistoriar antes<br>para não descobrir depois",
+        "Mais segurança para o seu patrimônio",
+        "Vistoria técnica, registro de manifestações patológicas e "
+        "acompanhamento das garantias em um só lugar.",
+    )
+    estilo.indicadores([
+        ("🏘", residencias, "Residências cadastradas"),
+        ("🔎", vistorias_feitas, "Vistorias realizadas"),
+        ("⚠", manifestacoes, "Manifestações registradas"),
+        ("🛡", vigentes, "Ocorrências em garantia vigente"),
+    ])
 
-    if total_residencias == 0:
+    prioridades = dict(con.execute(
+        "SELECT prioridade, COUNT(*) n FROM classificacoes_gut GROUP BY prioridade"
+    ).fetchall() or [])
+    situacoes = dict(con.execute(
+        "SELECT situacao_garantia, COUNT(*) n FROM ocorrencias "
+        "WHERE resultado = 'Nao Conforme' AND situacao_garantia IS NOT NULL "
+        "GROUP BY situacao_garantia"
+    ).fetchall() or [])
+
+    if manifestacoes:
+        esquerda, direita = st.columns(2)
+        with esquerda:
+            selos = " ".join(
+                estilo.selo(f"{gut.PRIORIDADE_ROTULO[p][0]} · {prioridades.get(p, 0)}",
+                            gut.PRIORIDADE_ROTULO[p][2])
+                for p in (1, 2, 3)
+            )
+            st.markdown(
+                f'<div class="painel"><h3>Prioridade das manifestações</h3>'
+                f'<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.9rem">'
+                f'{selos}</div></div>', unsafe_allow_html=True)
+        with direita:
+            selos = " ".join(
+                estilo.selo(f"{nome} · {quantidade}",
+                            garantias.SITUACAO_VISUAL[nome][1])
+                for nome, quantidade in sorted(situacoes.items())
+            ) or '<span style="color:#6B7A70;font-size:.88rem">Sem dados ainda.</span>'
+            st.markdown(
+                f'<div class="painel"><h3>Situação das garantias</h3>'
+                f'<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.9rem">'
+                f'{selos}</div></div>', unsafe_allow_html=True)
+
+    estilo.painel(
+        f"Bem-vindo, {st.session_state.get('usuario', '')}",
+        "Plataforma de apoio à pesquisa sobre vistoria técnica, manifestações "
+        "patológicas, garantias e manutenção de residências com até três anos "
+        "contados do Habite-se.",
+        citacao="Prevenir é sempre mais simples, seguro e econômico do que corrigir.",
+    )
+
+    if not residencias:
         st.info(
-            "Nenhuma residência cadastrada ainda. Comece em **🏘 Residências**. "
-            "Os cartões de prioridade, os gráficos e o relógio de garantias "
-            "aparecem assim que houver dados."
+            "Nenhuma residência cadastrada ainda. Comece em **🏘 Residências**, "
+            "ou importe a planilha do TCC em **📊 Excel / Banco de Dados**."
         )
+
+    alertas = servico_vistorias.manifestacoes_em_alerta(con)
+    if alertas:
+        st.warning(
+            f"⚠ **{len(alertas)} manifestações em sistemas com garantia próxima "
+            "do vencimento ou já vencida.** Veja em **⚠ Patologias**."
+        )
+
     st.caption(config.AVISO_RESPONSABILIDADE)
 
 
 def pagina_residencias(con):
-    st.subheader("Residências")
 
     with st.expander("➕ Cadastrar residência", expanded=False):
         with st.form("nova_residencia", clear_on_submit=True):
@@ -146,13 +213,17 @@ def pagina_residencias(con):
     for linha in linhas:
         idade = edificacao.idade_extenso(linha["data_habite_se"])
         no_recorte = edificacao.dentro_do_recorte(linha["data_habite_se"])
-        marca = "" if no_recorte else "  ·  fora do recorte de 3 anos"
         with st.container(border=True):
             st.markdown(f"**{linha['nome']}**")
+            cor = estilo.VERDE if no_recorte else estilo.CINZA
+            texto = "Dentro do recorte de 3 anos" if no_recorte else "Fora do recorte"
+            st.markdown(
+                f"<div style='display:flex;gap:.5rem;flex-wrap:wrap;margin:.5rem 0'>"
+                f"{estilo.selo(texto, cor)}"
+                f"{estilo.selo(linha['regime_normativo'] or 'Regime indefinido')}"
+                f"</div>", unsafe_allow_html=True)
             st.caption(
-                f"Habite-se: {formatar_data(linha['data_habite_se'])}  ·  "
-                f"Idade: {idade}{marca}  ·  "
-                f"Regime: {linha['regime_normativo'] or '—'}"
+                f"Habite-se: {formatar_data(linha['data_habite_se'])}  ·  Idade: {idade}"
             )
 
 
@@ -168,7 +239,6 @@ def _escolher_residencia(con, chave):
 
 
 def pagina_ambientes(con):
-    st.subheader("Ambientes")
     residencia_id = _escolher_residencia(con, "ambientes_residencia")
     if residencia_id is None:
         return
@@ -268,7 +338,6 @@ def _quadro_gut(chave, atual=None):
 
 
 def pagina_vistorias(con):
-    st.subheader("Vistorias")
     residencia_id = _escolher_residencia(con, "vistoria_residencia")
     if residencia_id is None:
         return
@@ -393,7 +462,6 @@ def _registrar_item(con, residencia_id, vistoria_id):
 
 
 def pagina_patologias(con):
-    st.subheader("Manifestações / Patologias")
     residencia_id = _escolher_residencia(con, "patologias_residencia")
     if residencia_id is None:
         return
@@ -414,6 +482,16 @@ def pagina_patologias(con):
         titulo = (f"{emoji} **{linha['codigo']}** · {linha['item_catalogo']} "
                   f"· {linha['ambiente'] or 'sem ambiente'} · {marca_garantia} {situacao}")
         with st.expander(titulo):
+            cor_prioridade = (gut.PRIORIDADE_ROTULO[linha["prioridade"]][2]
+                              if linha["prioridade"] else estilo.CINZA)
+            rotulo_prioridade = (gut.PRIORIDADE_ROTULO[linha["prioridade"]][0]
+                                 if linha["prioridade"] else "Sem classificação")
+            st.markdown(
+                f"<div style='display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem'>"
+                f"{estilo.selo(rotulo_prioridade, cor_prioridade)}"
+                f"{estilo.selo(situacao, garantias.SITUACAO_VISUAL.get(situacao, ('', estilo.CINZA))[1])}"
+                f"{estilo.selo(linha['sistema'] or '—')}"
+                f"</div>", unsafe_allow_html=True)
             st.write(linha["descricao"] or "_sem descrição_")
             st.caption(
                 f"Sistema: {linha['sistema']}  ·  Item: {linha['id_item']}  ·  "
@@ -450,7 +528,6 @@ def pagina_patologias(con):
 
 
 def pagina_excel(con):
-    st.subheader("Excel / Banco de Dados")
     st.write(
         "A planilha do TCC é a fonte inicial dos dados. Importar de novo uma "
         "versão atualizada **atualiza** os registros pelo `ID_Obra`, `ID_Item` "
@@ -495,7 +572,6 @@ def pagina_excel(con):
 
 
 def pagina_configuracoes(con):
-    st.subheader("Configurações")
 
     sem_prazo = seed.itens_sem_prazo(con)
     st.info(
@@ -537,10 +613,10 @@ def pagina_configuracoes(con):
 
 
 def pagina_em_construcao(nome):
-    st.subheader(nome)
-    st.info(
-        "Módulo previsto e ainda não implementado. A ordem de construção está "
-        "no README, em “Ordem de trabalho”."
+    estilo.painel(
+        "Módulo em construção",
+        f"“{nome}” está previsto e ainda não foi implementado. A ordem de "
+        "construção está no README, em “Ordem de trabalho”.",
     )
 
 
@@ -563,6 +639,7 @@ PAGINAS = {
 
 
 def main():
+    estilo.aplicar()
     con = conexao()
 
     if "usuario" not in st.session_state:
@@ -570,20 +647,22 @@ def main():
         return
 
     with st.sidebar:
-        st.markdown(f"### {config.TITULO}")
-        st.caption(config.SUBTITULO)
-        rotulos = [f"{icone} {nome}" for icone, nome in config.MENU]
+        estilo.marca(config.TITULO, config.SUBTITULO)
+        rotulos = [f"{icone}  {nome}" for icone, nome in config.MENU]
         escolha = st.radio("Navegação", rotulos, label_visibility="collapsed",
                            key="navegacao")
-        st.divider()
-        st.caption(f"Sessão: {st.session_state['usuario']}")
+        st.markdown(
+            f'<div class="rodape-lateral">Construindo segurança<br>'
+            f'para o seu patrimônio</div>', unsafe_allow_html=True)
         if st.button("Sair", width="stretch"):
             del st.session_state["usuario"]
             st.rerun()
 
-    nome_pagina = escolha.split(" ", 1)[1]
-    st.markdown(f"# {nome_pagina}")
+    nome_pagina = escolha.split("  ", 1)[1]
+    estilo.cabecalho(nome_pagina, st.session_state["usuario"])
     PAGINAS.get(nome_pagina, lambda _: pagina_em_construcao(nome_pagina))(con)
+
+    estilo.rodape(config.TITULO, config.SUBTITULO, config.LEMA_RODAPE)
 
 
 if __name__ == "__main__":

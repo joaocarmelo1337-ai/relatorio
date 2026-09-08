@@ -84,7 +84,8 @@ python3 -m unittest discover -s tcc/tests -t .
 ```
 tcc/
 ├── app.py                      casca Streamlit: login, navegação, páginas
-├── config.py                   identidade, paleta, menu, aviso de responsabilidade
+├── estilo.py                   sistema visual: paleta, CSS e componentes de tela
+├── config.py                   identidade, menu, aviso de responsabilidade
 ├── database/
 │   ├── schema.sql              15 tabelas, SQL portável (SQLite → PostgreSQL)
 │   ├── db.py                   conexão e criação idempotente
@@ -103,7 +104,7 @@ tcc/
 │   ├── catalogo_itens.csv      os 82 itens de verificação, com prazo
 │   ├── prazos_nbr17170.csv     síntese de prazos da NBR 17170
 │   └── sistemas.csv            os 9 sistemas do recorte
-├── tests/                      109 testes
+├── tests/                      115 testes
 └── uploads/{fotos,documentos}/
 ```
 
@@ -172,6 +173,12 @@ o produto e a prioridade são recalculados pelo sistema. Se a fórmula da planil
 e a do sistema divergirem em algum ponto, a divergência aparece em vez de passar
 batido.
 
+**O selo cinza é o padrão de quem não achou a cor.** Se uma cor de garantia ou
+de prioridade deixar de casar com a tabela do estilo, a tela não quebra — fica
+cinza, e ninguém percebe. Há testes que exigem que cada uma das cinco situações
+de garantia e das três prioridades caia numa cor própria, e que só
+`SEM PRAZO TIPIFICADO` seja cinza.
+
 **Dados pessoais.** O banco guarda nome, endereço e telefone de proprietários
 reais. O sistema roda apenas no notebook do autor. Para a monografia, use a
 identificação anônima (`RESIDÊNCIA 001`, `Casa A`). A planilha versionada aqui
@@ -196,6 +203,7 @@ Pronto e testado:
       idempotente e com GUT recalculado
 - [x] Teste de fumaça da interface: as 17 páginas renderizam sem exceção
 - [x] Ambientes por residência, com sugestões e contagem de manifestações
+- [x] Identidade visual: barra lateral, capa, cartões de indicador e selos
 - [x] Vistoria: ambiente → sistema → item → resultado → manifestação
 - [x] Registro de patologias com origem múltipla e classificação GUT
 - [x] Alerta preventivo de garantia

@@ -150,7 +150,9 @@ class TestInterfaceComDados(unittest.TestCase):
         at.text_input[0].set_value("admin")
         at.text_input[1].set_value("admin")
         at.button[0].click().run()
-        at.radio(key="navegacao").set_value("⚠ Patologias").run()
+        navegacao = at.radio(key="navegacao")
+        patologias = next(o for o in navegacao.options if o.endswith("Patologias"))
+        navegacao.set_value(patologias).run()
 
         self.assertEqual([], [e.value for e in at.exception])
         texto = " ".join(str(elemento.value) for elemento in at.error)

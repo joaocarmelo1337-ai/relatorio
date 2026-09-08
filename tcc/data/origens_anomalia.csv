@@ -1,0 +1,9 @@
+codigo,nome
+endogena,Anomalia endogena
+exogena,Anomalia exogena
+funcional,Anomalia funcional
+natural,Anomalia natural
+falha_uso,Falha de uso
+falha_operacao,Falha de operacao
+falha_manutencao,Falha de manutencao
+indeterminada,Indeterminada

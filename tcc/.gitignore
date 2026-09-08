@@ -1,0 +1,8 @@
+dados/
+uploads/fotos/*
+uploads/documentos/*
+!uploads/fotos/.gitkeep
+!uploads/documentos/.gitkeep
+__pycache__/
+*.pyc
+*.db

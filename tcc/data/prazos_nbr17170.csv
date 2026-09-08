@@ -1,0 +1,31 @@
+prazo,sistema_componente,tipo_falha_coberta
+5 anos,"Contenções, fundações, estrutura, estrutura de pisos e coberturas","Tabela 1 — solidez e segurança (garantia legal, Código Civil art. 618). Fissuras e deformações além dos limites normativos."
+5 anos,Impermeabilização (qualquer elemento),Perda de estanqueidade.
+5 anos,Vedações verticais internas e externas,Perda de integridade; dessolidarização.
+5 anos,Revestimento de fachada (argamassado e cerâmico aderido),Dessolidarização.
+5 anos,Prumadas/colunas hidráulicas e reservatórios,"Ruptura, perda de integridade, perda de estanqueidade."
+5 anos,Prumadas de distribuição elétrica,Falhas de instalação.
+5 anos,Esquadrias e portas — perfis principais,"Ruptura, deformação, flexão, trincas."
+5 anos,Muros externos,Ruptura / tombamento.
+3 anos,Camada de regularização (contrapiso),Dessolidarização; desagregação/pulverulência.
+3 anos,Revestimento argamassado de vedação,"Desgaste, empolamento, descascamento, esfarelamento, perda de estanqueidade."
+3 anos,Revestimento cerâmico interno,Desgaste; dessolidarização.
+3 anos,Tinta látex premium/super premium e textura,"Perda de integridade da película, eflorescência, bolor, fungo, mofo, algas."
+3 anos,Selantes e juntas de dilatação em fachada,Perda de estanqueidade / de aderência.
+3 anos,Muros externos,Fissuração.
+3 anos,Forros e telhamento,Dessolidarização ou ruptura.
+3 anos,"Ramais/sub-ramais hidráulicos, circuitos elétricos, SPDA",Falhas de instalação.
+3 anos,Esquadrias — guarnições e elementos de vedação,Perda de vedação.
+3 anos,Pavimentação externa de acesso de pedestres,Desgaste; dessolidarização.
+1 ano,"Rejuntamento (piso e parede, interno e externo)",Desgaste; dessolidarização; perda de aderência.
+1 ano,Revestimento/acabamento de piso e sua fixação,Perda de aderência; desgaste.
+1 ano,"Tinta látex standard, esmalte sintético, tinta a óleo, verniz","Perda de integridade da película, eflorescência, bolhas, bolor, fungo, mofo, algas."
+1 ano,Rufos e calhas,Falha de fixação e perda de estanqueidade.
+1 ano,Telhamento,Perda de estanqueidade; deformações e permeabilidade.
+1 ano,Forros,"Deformações, empenamento, fissuras."
+1 ano,Muros externos,Deterioração por umidade.
+1 ano,Esquadrias e portas,Desencaixe; deslocamento; vedação da interface com a parede.
+1 ano,"Louças, metais, ralos, sifões, tomadas, disjuntores, luminárias",Falhas dos produtos.
+1 ano,Rodapés; pavimento de acesso de veículos; portões,Desgaste; dessolidarização; falhas de produto e instalação.
+Na entrega,Acabamentos em geral (Tabela 3),"Manchas, lascamento, riscos, diferença de tonalidade, dificuldade de abertura. Identificação devida no ato do recebimento; art. 26, II, do CDC: 90 dias para vício aparente."
+180 dias,Itens não previstos na Tabela 2,"Prazo do fabricante; se não especificado, 180 dias."

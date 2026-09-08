@@ -107,3 +107,14 @@ def em_alerta(quadro):
     vencer -- nos dois casos o engenheiro precisa ser avisado.
     """
     return quadro["situacao"] in (VENCE_6, VENCE_12, VENCIDA)
+
+
+def situacao_do_item(data_habite_se, prazo_anos, data_vistoria=None):
+    """Situacao da garantia de um item do catalogo, na data da vistoria.
+
+    Espelha a coluna 'Situacao da garantia' da aba 'Lancamentos': compara a
+    idade da edificacao na vistoria com o prazo do item. Itens sem prazo em
+    anos (Tabela 3 da NBR 17170 e itens de manutencao do usuario) devolvem
+    SEM_PRAZO -- a norma nao lhes atribui prazo em anos.
+    """
+    return avaliar(data_habite_se, prazo_anos, referencia=data_vistoria)

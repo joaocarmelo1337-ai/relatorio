@@ -93,9 +93,15 @@ tcc/
 │   ├── gut.py                  matriz GUT e faixas de prioridade
 │   ├── garantias.py            relógio de garantias
 │   ├── edificacao.py           idade da edificação e faixas etárias
-│   └── pacote_campo.py         leitura e validação do pacote de vistoria
-├── data/                       CSV de partida (sistemas, ambientes, prazos)
-├── tests/                      46 testes
+│   ├── regime.py               regime normativo aplicável à unidade
+│   ├── pacote_campo.py         leitura e validação do pacote de vistoria
+│   └── importacao_excel.py     importação da planilha do TCC
+├── data/
+│   ├── Checklist_…_TCC.xlsx    a planilha do TCC (fonte inicial)
+│   ├── catalogo_itens.csv      os 82 itens de verificação, com prazo
+│   ├── prazos_nbr17170.csv     síntese de prazos da NBR 17170
+│   └── sistemas.csv            os 9 sistemas do recorte
+├── tests/                      71 testes
 └── uploads/{fotos,documentos}/
 ```
 
@@ -107,21 +113,43 @@ e continuam válidos se um dia a interface mudar.
 
 ## Decisões que valem registrar na monografia
 
-**Prazos de garantia — nada foi presumido.** A tabela `regras_garantia` foi
-criada com as linhas (sistema, componente, tipo de falha) mas com **prazo em
-branco** e `conferido = 0`. Enquanto um prazo não for preenchido por você com a
-NBR 17170:2022 na mão, aquela garantia aparece como **⚪ SEM PRAZO TIPIFICADO** —
-o sistema não inventa prazo. Em caso de divergência entre a planilha do TCC e a
-norma, **prevalece a NBR 17170**.
+**Prazos de garantia — a planilha é a fonte.** O prazo mora no **item do
+catálogo**, não numa tabela genérica de componentes: é assim que a planilha
+organiza, e é o que a aba `Lancamentos` consulta para decidir a situação da
+garantia de cada ocorrência. São 82 itens — `IT-001` a `IT-066` (recorte de
+patologias em residências de até 3 anos) e `T3-01` a `T3-16` (Tabela 3, falhas
+aparentes na entrega). Distribuição conferida por teste contra a planilha:
+**23 itens de 5 anos, 21 de 3 anos, 18 de 1 ano e 20 sem prazo em anos**.
+
+Os 20 sem prazo não são lacuna: 16 são os itens da Tabela 3, cuja identificação
+é devida no ato da entrega e que a norma não associa a prazo em anos, e os
+demais decorrem de manutenção do usuário (NBR 5674). Aparecem como
+**⚪ SEM PRAZO TIPIFICADO**.
+
+A síntese de prazos por patamar (aba `Síntese prazos NBR 17170`, 30 linhas)
+entra como material documental, com a ressalva da própria planilha: **não
+substitui a norma** — a Tabela 2 da NBR 17170 tem 182 itens e deve ser
+consultada no texto oficial da ABNT antes de qualquer citação.
+
+**Regime normativo.** Quem define o regime é a **data de protocolo do projeto**,
+não a do Habite-se: protocolo posterior a **10/06/2023** → NBR 17170:2022;
+até essa data → regime anterior (Anexo D da NBR 15575), que previa prazos de
+2 anos, extintos pela NBR 17170. O limite é a publicação da norma (12/12/2022)
+somada aos 180 dias de vacância — o teste confere essa aritmética em vez de
+confiar na data escrita à mão. O Habite-se continua sendo o que **inicia a
+contagem** da garantia; as duas datas têm funções distintas.
 
 **GUT.** `GUT = G × U × T`, com G, U e T restritos a {1, 3, 6, 8, 10}. Faixas:
 P1 ≥ 512 · P2 de 108 a 511 · P3 de 1 a 107. A classificação é sempre uma
 proposta: `classificacoes_gut.confirmada_por` registra o engenheiro que
 confirmou ou alterou.
 
-**Idade da edificação.** O mês só conta quando o dia chega (15/03/2024 →
-14/04/2024 é 0 mês; 15/04/2024 é 1 mês). Confere com o exemplo do TCC:
-Habite-se 15/03/2024, vistoria em 20/08/2026 → *2 anos e 5 meses*.
+**Idade da edificação.** Dois cálculos, de propósito. Para **exibir**, anos e
+meses, com o mês contando só quando o dia chega (15/03/2024 → 14/04/2024 é
+0 mês; 15/04/2024 é 1 mês) — confere com o exemplo do TCC: Habite-se
+15/03/2024, vistoria em 20/08/2026 → *2 anos e 5 meses*. Para **calcular**,
+anos decimais pela fórmula da planilha, `(vistoria − habite-se) / 365,25`, de
+modo que os números do sistema reconciliem com os da planilha na monografia.
 
 **Datas de vencimento.** Somadas em meses com ajuste de fim de mês
 (31/01 + 1 mês → 28 ou 29/02, conforme o ano). Sem isso, garantias com
@@ -132,9 +160,15 @@ da construtora. Ele apresenta *situação técnica indicativa de garantia* e rem
 ao Termo de Garantia, Manual da Edificação, histórico de manutenção, reformas,
 contrato e legislação. Nenhuma automação substitui a avaliação profissional.
 
+**GUT recalculado, não copiado.** Na importação, G, U e T vêm da planilha mas
+o produto e a prioridade são recalculados pelo sistema. Se a fórmula da planilha
+e a do sistema divergirem em algum ponto, a divergência aparece em vez de passar
+batido.
+
 **Dados pessoais.** O banco guarda nome, endereço e telefone de proprietários
 reais. O sistema roda apenas no notebook do autor. Para a monografia, use a
-identificação anônima (`RESIDÊNCIA 001`, `Casa A`).
+identificação anônima (`RESIDÊNCIA 001`, `Casa A`). A planilha versionada aqui
+está com a aba `Obras` em branco — nenhum dado de proprietário no repositório.
 
 ---
 
@@ -148,11 +182,15 @@ Pronto e testado:
 - [x] Idade da edificação e faixas etárias dos gráficos
 - [x] Formato do pacote de vistoria (validação, extração, idempotência)
 - [x] Login com senha em hash e navegação lateral
-- [x] Cadastro e listagem de residências
+- [x] Cadastro e listagem de residências, com regime normativo
+- [x] Regime normativo (NBR 17170 × regime anterior) pela data de protocolo
+- [x] Catálogo de 82 itens carregado da planilha
+- [x] Importação da planilha do TCC (Obras, Catálogo, Síntese, Lançamentos),
+      idempotente e com GUT recalculado
+- [x] Teste de fumaça da interface: as 17 páginas renderizam sem exceção
 
 A fazer, nesta ordem:
 
-- [ ] Importação do Excel do TCC (aguardando o arquivo)
 - [ ] Ambientes por residência
 - [ ] Nova vistoria e registro de patologias
 - [ ] Catálogo fotográfico e comparação temporal

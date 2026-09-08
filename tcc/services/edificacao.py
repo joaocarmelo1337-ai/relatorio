@@ -69,3 +69,16 @@ def dentro_do_recorte(data_habite_se, referencia=None):
     """O recorte do TCC e ate 3 anos contados do Habite-se."""
     resultado = idade(data_habite_se, referencia)
     return resultado is not None and resultado[0] < 3
+
+
+def idade_decimal(data_habite_se, referencia=None):
+    """Idade em anos decimais, como a planilha do TCC calcula.
+
+    Formula da aba 'Obras': (data da vistoria - data do habite-se) / 365,25.
+    Usada para comparar com o prazo de garantia de cada item e para as
+    tabelas da monografia. Para exibir ao usuario prefira idade_extenso().
+    """
+    inicio, fim = _para_data(data_habite_se), _para_data(referencia) or date.today()
+    if inicio is None:
+        return None
+    return max((fim - inicio).days / 365.25, 0.0)

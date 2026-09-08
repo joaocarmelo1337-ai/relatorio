@@ -1,11 +1,10 @@
 codigo,nome,ordem
-estrutura,Estrutura,1
-fundacao,Fundacao,2
-vedacao,Vedacao,3
-revestimentos,Revestimentos,4
-impermeabilizacao,Impermeabilizacao,5
-hidraulica,Instalacoes hidrossanitarias,6
-eletrica,Instalacoes eletricas,7
+areas_externas,Áreas externas,1
+estrutura,Estrutura,2
+fundacao,Fundação,3
+vedacao,Vedação,4
+revestimento,Revestimento,5
+eletrica,Instalações elétricas,6
+hidrossanitaria,Instalações hidrossanitárias,7
 cobertura,Cobertura,8
 esquadrias,Esquadrias,9
-areas_externas,Areas externas,10

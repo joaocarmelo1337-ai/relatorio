@@ -12,7 +12,8 @@ import streamlit as st
 
 from tcc import config
 from tcc.database import db, seed
-from tcc.services import edificacao, garantias
+from tcc.services import importacao_excel
+from tcc.services import edificacao, garantias, regime
 
 st.set_page_config(
     page_title="João Carmelo — TCC",
@@ -44,7 +45,7 @@ def tela_login(con):
             usuario = st.text_input("Usuário", value="admin")
             senha = st.text_input("Senha", type="password")
             st.checkbox("Lembrar acesso", key="lembrar")
-            entrou = st.form_submit_button("ENTRAR", use_container_width=True)
+            entrou = st.form_submit_button("ENTRAR", width="stretch")
         if entrou:
             linha = con.execute(
                 "SELECT * FROM usuarios WHERE usuario = ?", (usuario,)
@@ -97,8 +98,15 @@ def pagina_residencias(con):
             construtora = col1.text_input("Construtora")
             responsavel = col2.text_input("Responsável técnico")
             habite_se = col1.date_input(
-                "Data do Habite-se", value=None, format="DD/MM/YYYY"
+                "Data do Habite-se", value=None, format="DD/MM/YYYY",
+                help="Inicia a contagem dos prazos de garantia (NBR 17170, item 5).",
             )
+            protocolo = col2.date_input(
+                "Data de protocolo do projeto", value=None, format="DD/MM/YYYY",
+                help="Define o regime normativo aplicável. Não confundir com o Habite-se.",
+            )
+            if protocolo:
+                st.caption(f"Regime normativo: **{regime.regime_normativo(protocolo)}**")
             observacoes = st.text_area("Observações")
             salvou = st.form_submit_button("Salvar residência")
 
@@ -106,15 +114,18 @@ def pagina_residencias(con):
             if not nome.strip():
                 st.error("A identificação da residência é obrigatória.")
             else:
+                protocolo_iso = protocolo.isoformat() if protocolo else None
                 con.execute(
                     "INSERT INTO residencias (nome, proprietario, endereco, bairro, "
                     "cidade, uf, area_construida, pavimentos, construtora, "
-                    "responsavel_tecnico, data_habite_se, observacoes, criado_em) "
-                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    "responsavel_tecnico, data_habite_se, data_protocolo, "
+                    "regime_normativo, observacoes, criado_em) "
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     (
                         nome.strip(), proprietario, endereco, bairro, cidade, uf,
                         area or None, pavimentos or None, construtora, responsavel,
                         habite_se.isoformat() if habite_se else None,
+                        protocolo_iso, regime.regime_normativo(protocolo_iso),
                         observacoes, agora(),
                     ),
                 )
@@ -137,31 +148,87 @@ def pagina_residencias(con):
             st.markdown(f"**{linha['nome']}**")
             st.caption(
                 f"Habite-se: {formatar_data(linha['data_habite_se'])}  ·  "
-                f"Idade: {idade}{marca}"
+                f"Idade: {idade}{marca}  ·  "
+                f"Regime: {linha['regime_normativo'] or '—'}"
             )
+
+
+def pagina_excel(con):
+    st.subheader("Excel / Banco de Dados")
+    st.write(
+        "A planilha do TCC é a fonte inicial dos dados. Importar de novo uma "
+        "versão atualizada **atualiza** os registros pelo `ID_Obra`, `ID_Item` "
+        "e `ID_Lancamento` — não duplica."
+    )
+
+    arquivo = st.file_uploader(
+        "Planilha do TCC (.xlsx)", type=["xlsx"],
+        help="Checklist_Vistoria_Garantias_TCC.xlsx",
+    )
+    if arquivo and st.button("IMPORTAR EXCEL", type="primary"):
+        destino = config.UPLOADS / "planilha"
+        destino.mkdir(parents=True, exist_ok=True)
+        caminho = destino / arquivo.name
+        caminho.write_bytes(arquivo.getbuffer())
+        try:
+            resumo = importacao_excel.importar(con, caminho)
+        except importacao_excel.PlanilhaInvalida as erro:
+            st.error(f"Planilha não reconhecida: {erro}")
+        else:
+            st.success(
+                f"{resumo['itens_catalogo']} itens de catálogo · "
+                f"{resumo['residencias']} residências · "
+                f"{resumo['ocorrencias']} ocorrências."
+            )
+            if resumo["lancamentos_ignorados"]:
+                st.warning(
+                    "Lançamentos ignorados por apontarem para obra ou item "
+                    f"inexistente: {', '.join(resumo['lancamentos_ignorados'])}"
+                )
+
+    st.divider()
+    st.markdown("#### Catálogo de itens de verificação")
+    itens = con.execute(
+        "SELECT i.id_item, COALESCE(s.nome, i.sistema_texto) AS sistema, i.item, "
+        "i.prazo_anos, i.tipo_falha_nbr, i.procedencia "
+        "FROM itens_catalogo i LEFT JOIN sistemas s ON s.id = i.sistema_id "
+        "ORDER BY i.id_item"
+    ).fetchall()
+    st.caption(f"{len(itens)} itens carregados.")
+    st.dataframe([dict(linha) for linha in itens], width="stretch")
 
 
 def pagina_configuracoes(con):
     st.subheader("Configurações")
 
-    pendentes = seed.regras_pendentes_de_conferencia(con)
-    if pendentes:
-        st.warning(
-            f"**{pendentes} prazos de garantia ainda não foram conferidos.** "
-            "A tabela foi criada com as linhas da NBR 17170:2022 sem os valores "
-            "preenchidos — nenhum prazo foi presumido. Preencha cada prazo com "
-            "a norma na mão e marque como conferido; até lá, essas garantias "
-            "aparecem como **⚪ SEM PRAZO TIPIFICADO**."
-        )
+    sem_prazo = seed.itens_sem_prazo(con)
+    st.info(
+        f"**{sem_prazo} itens do catálogo não têm prazo de garantia em anos.** "
+        "Isso não é lacuna: são os 16 itens da Tabela 3 da NBR 17170 — cuja "
+        "identificação é devida no ato da entrega, sem prazo em anos — e os "
+        "itens que decorrem de manutenção do usuário. Aparecem como "
+        "**⚪ SEM PRAZO TIPIFICADO** no relógio de garantias."
+    )
 
-    st.markdown("#### Prazos de garantia")
+    st.markdown("#### Síntese dos prazos — ABNT NBR 17170:2022")
+    st.caption(
+        "Síntese de apoio, por patamar de prazo. **Não substitui a norma**: a "
+        "Tabela 2 da NBR 17170 contém 182 itens e deve ser consultada no texto "
+        "oficial da ABNT antes de qualquer citação."
+    )
     regras = con.execute(
-        "SELECT r.id, s.nome AS sistema, r.componente, r.tipo_falha, "
-        "r.prazo_anos, r.fonte, r.conferido "
-        "FROM regras_garantia r LEFT JOIN sistemas s ON s.id = r.sistema_id "
-        "ORDER BY s.ordem, r.componente"
+        "SELECT prazo_texto AS prazo, componente, tipo_falha "
+        "FROM regras_garantia ORDER BY prazo_anos DESC, componente"
     ).fetchall()
-    st.dataframe([dict(linha) for linha in regras], use_container_width=True)
+    st.dataframe([dict(linha) for linha in regras], width="stretch")
+
+    st.markdown("#### Regime normativo")
+    st.caption(
+        f"Projeto protocolado **depois de {regime.LIMITE.strftime('%d/%m/%Y')}** "
+        f"→ {regime.NBR_17170}. Até essa data → {regime.ANTERIOR}, que previa "
+        "prazos de 2 anos, extintos pela NBR 17170. O limite é a publicação da "
+        "norma (12/12/2022) somada aos 180 dias de vacância."
+    )
 
     st.markdown("#### Sobre o TCC")
     st.write(
@@ -191,6 +258,7 @@ def formatar_data(iso):
 PAGINAS = {
     "Início": pagina_inicio,
     "Residências": pagina_residencias,
+    "Excel / Banco de Dados": pagina_excel,
     "Configurações": pagina_configuracoes,
 }
 
@@ -209,7 +277,7 @@ def main():
         escolha = st.radio("Navegação", rotulos, label_visibility="collapsed")
         st.divider()
         st.caption(f"Sessão: {st.session_state['usuario']}")
-        if st.button("Sair", use_container_width=True):
+        if st.button("Sair", width="stretch"):
             del st.session_state["usuario"]
             st.rerun()
 

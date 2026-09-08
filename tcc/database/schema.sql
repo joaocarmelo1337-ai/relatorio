@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS residencias (
     construtora           TEXT,
     responsavel_tecnico   TEXT,
     data_habite_se        TEXT,                   -- ISO 'YYYY-MM-DD'
-    data_protocolo        TEXT,
+    data_protocolo        TEXT,                   -- define o regime normativo aplicavel
+    regime_normativo      TEXT,                   -- calculado a partir da data_protocolo
     data_entrega          TEXT,
     manual_proprietario   INTEGER DEFAULT 0,      -- 0/1
     plano_manutencao      INTEGER DEFAULT 0,
@@ -90,14 +91,20 @@ CREATE INDEX IF NOT EXISTS ix_vistorias_residencia ON vistorias (residencia_id);
 -- ---------------------------------------------------------- itens_catalogo
 -- Catalogo de itens verificaveis (vem do Excel): sistema > elemento > item.
 CREATE TABLE IF NOT EXISTS itens_catalogo (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    sistema_id   INTEGER REFERENCES sistemas (id),
-    elemento     TEXT,
-    item         TEXT NOT NULL,
-    descricao    TEXT,
-    fonte        TEXT,                            -- de onde veio (aba do Excel/NBR)
-    ativo        INTEGER DEFAULT 1
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_item            TEXT NOT NULL UNIQUE,      -- IT-001..IT-066, T3-01..T3-16
+    sistema_id         INTEGER REFERENCES sistemas (id),
+    sistema_texto      TEXT,                      -- como vem do Excel (itens T3 tem sistemas proprios)
+    item               TEXT NOT NULL,
+    origem_esperada    TEXT,
+    causas_provaveis   TEXT,
+    procedencia        TEXT,                      -- 'Apendice B', 'Acrescentado', 'NBR 17170 - Tabela 3'
+    tipo_falha_nbr     TEXT,                      -- enquadramento na NBR 17170:2022
+    prazo_anos         REAL,                      -- NULL = sem prazo tipificado em anos
+    nota_enquadramento TEXT,
+    ativo              INTEGER DEFAULT 1
 );
+CREATE INDEX IF NOT EXISTS ix_itens_sistema ON itens_catalogo (sistema_id);
 
 -- ------------------------------------------------------------- ocorrencias
 -- Manifestacoes patologicas.
@@ -118,6 +125,8 @@ CREATE TABLE IF NOT EXISTS ocorrencias (
     localizacao       TEXT,
     possiveis_causas  TEXT,                       -- texto livre do engenheiro
     origem_anomalia   TEXT,                       -- JSON: lista de origens (multipla)
+    prazo_anos_aplicado REAL,                     -- prazo do item, ou o que o engenheiro ajustou
+    situacao_garantia TEXT,                       -- calculada na data da vistoria
     extensao          TEXT,
     intensidade       TEXT,
     medicao           TEXT,
@@ -172,13 +181,11 @@ CREATE INDEX IF NOT EXISTS ix_fotos_ocorrencia ON fotos (ocorrencia_id);
 -- e a REGRA a partir da qual a garantia de cada casa e calculada.
 CREATE TABLE IF NOT EXISTS regras_garantia (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    sistema_id    INTEGER REFERENCES sistemas (id),
+    prazo_texto   TEXT NOT NULL,                  -- '5 anos', '1 ano', 'Na entrega', '180 dias'
+    prazo_anos    REAL,                           -- NULL quando nao ha prazo em anos
     componente    TEXT NOT NULL,
     tipo_falha    TEXT,
-    prazo_anos    REAL,                           -- NULL = sem prazo tipificado
-    fonte         TEXT,                           -- 'NBR 17170:2022', 'Excel', 'Contrato'
-    conferido     INTEGER NOT NULL DEFAULT 0,     -- 0 ate o engenheiro conferir na norma
-    observacao    TEXT
+    fonte         TEXT DEFAULT 'ABNT NBR 17170:2022'
 );
 
 -- --------------------------------------------------------------- garantias

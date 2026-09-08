@@ -29,20 +29,51 @@ class TestBanco(unittest.TestCase):
         db.criar_banco(self.caminho).close()
         self.assertIn("residencias", db.tabelas(self.con))
 
-    def test_semeadura(self):
+    def test_semeadura_traz_o_catalogo_da_planilha(self):
         seed.semear_tudo(self.con)
-        n_sistemas = self.con.execute("SELECT COUNT(*) n FROM sistemas").fetchone()["n"]
-        n_regras = self.con.execute("SELECT COUNT(*) n FROM regras_garantia").fetchone()["n"]
-        self.assertEqual(n_sistemas, 10)
-        self.assertEqual(n_regras, 14)
-        # nenhuma regra entra conferida: os prazos ainda vem da norma
-        self.assertEqual(seed.regras_pendentes_de_conferencia(self.con), 14)
+        conta = lambda t: self.con.execute(f"SELECT COUNT(*) n FROM {t}").fetchone()["n"]
+        self.assertEqual(conta("sistemas"), 9)
+        self.assertEqual(conta("itens_catalogo"), 82)   # IT-001..IT-066 + T3-01..T3-16
+        self.assertEqual(conta("regras_garantia"), 30)  # sintese de prazos da NBR 17170
+
+    def test_distribuicao_de_prazos_do_catalogo(self):
+        """Confere contra a planilha: 23 itens de 5 anos, 21 de 3, 18 de 1, 20 sem prazo."""
+        seed.semear_tudo(self.con)
+        contagem = {
+            linha["prazo_anos"]: linha["n"]
+            for linha in self.con.execute(
+                "SELECT prazo_anos, COUNT(*) n FROM itens_catalogo GROUP BY prazo_anos"
+            )
+        }
+        self.assertEqual(contagem[5.0], 23)
+        self.assertEqual(contagem[3.0], 21)
+        self.assertEqual(contagem[1.0], 18)
+        self.assertEqual(contagem[None], 20)
+        self.assertEqual(seed.itens_sem_prazo(self.con), 20)
+
+    def test_itens_t3_nao_tem_prazo_em_anos(self):
+        """A Tabela 3 nao estabelece prazo em anos -- identificacao na entrega."""
+        seed.semear_tudo(self.con)
+        com_prazo = self.con.execute(
+            "SELECT COUNT(*) n FROM itens_catalogo "
+            "WHERE id_item LIKE 'T3-%' AND prazo_anos IS NOT NULL"
+        ).fetchone()["n"]
+        self.assertEqual(com_prazo, 0)
+
+    def test_todo_item_it_esta_ligado_a_um_sistema(self):
+        seed.semear_tudo(self.con)
+        orfaos = self.con.execute(
+            "SELECT id_item FROM itens_catalogo "
+            "WHERE id_item LIKE 'IT-%' AND sistema_id IS NULL"
+        ).fetchall()
+        self.assertEqual([l["id_item"] for l in orfaos], [])
 
     def test_semear_duas_vezes_nao_duplica(self):
         seed.semear_tudo(self.con)
         seed.semear_tudo(self.con)
-        n = self.con.execute("SELECT COUNT(*) n FROM regras_garantia").fetchone()["n"]
-        self.assertEqual(n, 14)
+        conta = lambda t: self.con.execute(f"SELECT COUNT(*) n FROM {t}").fetchone()["n"]
+        self.assertEqual(conta("itens_catalogo"), 82)
+        self.assertEqual(conta("regras_garantia"), 30)
 
     def test_senha_nunca_em_texto_puro(self):
         seed.semear_tudo(self.con, senha_admin="segredo")

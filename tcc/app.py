@@ -13,6 +13,8 @@ import streamlit as st
 from tcc import config
 from tcc.database import db, seed
 from tcc.services import importacao_excel
+from tcc.services import ambientes as servico_ambientes
+from tcc.services import gut
 from tcc.services import edificacao, garantias, regime
 
 st.set_page_config(
@@ -153,6 +155,94 @@ def pagina_residencias(con):
             )
 
 
+def _escolher_residencia(con, chave):
+    """Seletor de residencia reaproveitado pelas paginas que dependem de uma."""
+    linhas = con.execute("SELECT id, nome FROM residencias ORDER BY nome").fetchall()
+    if not linhas:
+        st.info("Cadastre uma residência primeiro, em **🏘 Residências**.")
+        return None
+    mapa = {linha["nome"]: linha["id"] for linha in linhas}
+    nome = st.selectbox("Residência", list(mapa), key=chave)
+    return mapa[nome]
+
+
+def pagina_ambientes(con):
+    st.subheader("Ambientes")
+    residencia_id = _escolher_residencia(con, "ambientes_residencia")
+    if residencia_id is None:
+        return
+
+    lista = servico_ambientes.listar(con, residencia_id)
+    sugestoes = servico_ambientes.sugestoes(con, residencia_id)
+
+    with st.expander("➕ Adicionar ambientes", expanded=not lista):
+        if sugestoes:
+            escolhidos = st.multiselect(
+                "Da lista padrão", sugestoes,
+                help="Sugestão apenas — cada casa tem os ambientes que tem.",
+            )
+            if escolhidos and st.button("Adicionar selecionados"):
+                criados = servico_ambientes.criar_varios(con, residencia_id, escolhidos)
+                con.commit()
+                st.success(f"{criados} ambientes adicionados.")
+                st.rerun()
+        else:
+            st.caption("Todos os ambientes da lista padrão já foram criados.")
+
+        with st.form("ambiente_personalizado", clear_on_submit=True):
+            nome = st.text_input("Ambiente personalizado")
+            if st.form_submit_button("Criar ambiente") and nome:
+                try:
+                    servico_ambientes.criar(con, residencia_id, nome)
+                    con.commit()
+                except ValueError as erro:
+                    st.error(str(erro))
+                else:
+                    st.rerun()
+
+    if not lista:
+        st.info("Nenhum ambiente cadastrado nesta residência.")
+        return
+
+    total = sum(linha["manifestacoes"] for linha in lista)
+    st.caption(f"{len(lista)} ambientes · {total} manifestações registradas")
+
+    for linha in lista:
+        quantidade = linha["manifestacoes"]
+        marca = f"  ·  ⚠ {quantidade} manifestação" + ("ões" if quantidade > 1 else "") \
+            if quantidade else ""
+        with st.expander(f"**{linha['nome']}**{marca}"):
+            if quantidade:
+                for ocorrencia in servico_ambientes.manifestacoes_do_ambiente(con, linha["id"]):
+                    rotulo = ocorrencia["item_catalogo"] or ocorrencia["tipo_manifestacao"] or "—"
+                    prioridade = ocorrencia["prioridade"]
+                    emoji = gut.PRIORIDADE_ROTULO[prioridade][1] if prioridade else "·"
+                    st.write(f"{emoji} **{rotulo}** — {ocorrencia['descricao'] or ''}")
+            else:
+                st.caption("Nenhuma manifestação registrada neste ambiente.")
+
+            with st.form(f"renomear_{linha['id']}"):
+                novo = st.text_input("Renomear", value=linha["nome"])
+                col1, col2 = st.columns(2)
+                if col1.form_submit_button("Salvar") and novo != linha["nome"]:
+                    try:
+                        servico_ambientes.renomear(con, residencia_id, linha["id"], novo)
+                        con.commit()
+                    except ValueError as erro:
+                        st.error(str(erro))
+                    else:
+                        st.rerun()
+                if col2.form_submit_button("Excluir ambiente"):
+                    soltas = servico_ambientes.excluir(con, linha["id"])
+                    con.commit()
+                    if soltas:
+                        st.warning(
+                            f"Ambiente excluído. {soltas} manifestação(ões) foram "
+                            "preservadas, sem ambiente associado."
+                        )
+                    st.rerun()
+
+
 def pagina_excel(con):
     st.subheader("Excel / Banco de Dados")
     st.write(
@@ -258,6 +348,7 @@ def formatar_data(iso):
 PAGINAS = {
     "Início": pagina_inicio,
     "Residências": pagina_residencias,
+    "Ambientes": pagina_ambientes,
     "Excel / Banco de Dados": pagina_excel,
     "Configurações": pagina_configuracoes,
 }

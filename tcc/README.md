@@ -94,6 +94,7 @@ tcc/
 │   ├── garantias.py            relógio de garantias
 │   ├── edificacao.py           idade da edificação e faixas etárias
 │   ├── regime.py               regime normativo aplicável à unidade
+│   ├── ambientes.py            ambientes por residência
 │   ├── pacote_campo.py         leitura e validação do pacote de vistoria
 │   └── importacao_excel.py     importação da planilha do TCC
 ├── data/
@@ -101,7 +102,7 @@ tcc/
 │   ├── catalogo_itens.csv      os 82 itens de verificação, com prazo
 │   ├── prazos_nbr17170.csv     síntese de prazos da NBR 17170
 │   └── sistemas.csv            os 9 sistemas do recorte
-├── tests/                      71 testes
+├── tests/                      82 testes
 └── uploads/{fotos,documentos}/
 ```
 
@@ -188,10 +189,11 @@ Pronto e testado:
 - [x] Importação da planilha do TCC (Obras, Catálogo, Síntese, Lançamentos),
       idempotente e com GUT recalculado
 - [x] Teste de fumaça da interface: as 17 páginas renderizam sem exceção
+- [x] Ambientes por residência, com sugestões e contagem de manifestações
 
 A fazer, nesta ordem:
 
-- [ ] Ambientes por residência
+
 - [ ] Nova vistoria e registro de patologias
 - [ ] Catálogo fotográfico e comparação temporal
 - [ ] Tela de classificação GUT

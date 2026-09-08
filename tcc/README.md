@@ -104,7 +104,7 @@ tcc/
 │   ├── catalogo_itens.csv      os 82 itens de verificação, com prazo
 │   ├── prazos_nbr17170.csv     síntese de prazos da NBR 17170
 │   └── sistemas.csv            os 9 sistemas do recorte
-├── tests/                      115 testes
+├── tests/                      116 testes
 └── uploads/{fotos,documentos}/
 ```
 
@@ -173,6 +173,17 @@ o produto e a prioridade são recalculados pelo sistema. Se a fórmula da planil
 e a do sistema divergirem em algum ponto, a divergência aparece em vez de passar
 batido.
 
+**O menu depende de internet para os ícones.** O `streamlit-option-menu`
+carrega os Bootstrap Icons de um CDN. Sem rede, os rótulos continuam legíveis e
+a navegação funciona, mas os ícones não aparecem. Como a plataforma roda no
+notebook e a coleta em campo é feita pelo aplicativo offline, isso não atrapalha
+a vistoria.
+
+**A navegação é conduzida pelo estado, não pelo componente.** A página escolhida
+vive em `st.session_state["pagina"]` e o menu apenas acompanha. Sem isso os
+testes não conseguiriam trocar de página — o `AppTest` não clica em componente
+de terceiros.
+
 **O selo cinza é o padrão de quem não achou a cor.** Se uma cor de garantia ou
 de prioridade deixar de casar com a tabela do estilo, a tela não quebra — fica
 cinza, e ninguém percebe. Há testes que exigem que cada uma das cinco situações
@@ -204,6 +215,7 @@ Pronto e testado:
 - [x] Teste de fumaça da interface: as 17 páginas renderizam sem exceção
 - [x] Ambientes por residência, com sugestões e contagem de manifestações
 - [x] Identidade visual: barra lateral, capa, cartões de indicador e selos
+- [x] Menu com ícones de linha (streamlit-option-menu)
 - [x] Vistoria: ambiente → sistema → item → resultado → manifestação
 - [x] Registro de patologias com origem múltipla e classificação GUT
 - [x] Alerta preventivo de garantia

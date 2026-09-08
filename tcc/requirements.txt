@@ -1,5 +1,6 @@
 # Interface e dados
 streamlit>=1.36
+streamlit-option-menu>=0.3.6
 pandas>=2.2
 plotly>=5.22
 openpyxl>=3.1

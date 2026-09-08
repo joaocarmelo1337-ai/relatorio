@@ -10,6 +10,7 @@ import base64
 from pathlib import Path
 
 import streamlit as st
+from streamlit_option_menu import option_menu
 
 # --------------------------------------------------------------------- paleta
 VERDE_FUNDO = "#163A28"      # barra lateral
@@ -80,35 +81,11 @@ h3{ font-size:1.1rem; font-weight:600; }
 .marca-sub{ font-size:.72rem; color:rgba(220,230,223,.72); line-height:1.35;
   margin-top:.25rem; }
 
-/* O menu é um st.radio repaginado como lista de navegação.
-   A árvore do widget é: label > div > div > [marcador circular] + [texto].
-   O primeiro div dessa terceira camada é o círculo, e é ele que sai. */
-[data-testid="stSidebar"] [role="radiogroup"]{ gap:.12rem; }
-[data-testid="stSidebar"] [data-testid="stRadioOption"]{
-  width:100%; margin:0; padding:.6rem .8rem; border-radius:9px;
-  cursor:pointer; transition:background .14s ease;
-  border-left:3px solid transparent;
-}
-[data-testid="stSidebar"] [data-testid="stRadioOption"]:hover{ background:var(--verde-hover); }
-[data-testid="stSidebar"] [data-testid="stRadioOption"] > div > div > div:first-child{
-  display:none !important;
-}
-[data-testid="stSidebar"] [data-testid="stRadioOption"] p{
-  font-size:.9rem !important; font-weight:500; color:#C2D3C8 !important; margin:0;
-  white-space:nowrap;
-  /* os emojis do menu entram coloridos e destoam do tom sóbrio; o filtro os
-     deixa monocromáticos sem precisar de biblioteca de ícones */
-  filter:grayscale(1) opacity(.92);
-}
-[data-testid="stSidebar"] [data-testid="stRadioOption"][data-selected="true"] p{
-  filter:grayscale(1) brightness(1.35);
-}
-[data-testid="stSidebar"] [data-testid="stRadioOption"][data-selected="true"]{
-  background:var(--verde-ativo); border-left-color:#8FCFA8;
-}
-[data-testid="stSidebar"] [data-testid="stRadioOption"][data-selected="true"] p{
-  color:#FFFFFF !important; font-weight:600;
-}
+/* O menu é um componente próprio (streamlit-option-menu); aqui ficam só
+   os ajustes que o dicionário de estilos dele não alcança. */
+[data-testid="stSidebar"] .nav-link-selected .icon{ color:#FFFFFF !important; }
+[data-testid="stSidebar"] iframe{ border:none; background:transparent; }
+
 .rodape-lateral{
   margin-top:1.4rem; padding:1.1rem .5rem 0; border-top:1px solid rgba(220,230,223,.16);
   font-size:.78rem; color:rgba(220,230,223,.6); line-height:1.6;
@@ -276,6 +253,48 @@ def marca(nome, subtitulo):
         f'<div class="marca-sub">{subtitulo}</div></div></div>',
         unsafe_allow_html=True,
     )
+
+
+def menu_lateral(itens, chave="pagina"):
+    """Navegação da barra lateral, com ícones de linha do Bootstrap Icons.
+
+    A página escolhida fica em st.session_state[chave]. Quem decide é o
+    estado, não o componente: assim a navegação pode ser conduzida de fora
+    (por um botão de atalho, ou por um teste) e o menu acompanha.
+    """
+    nomes = [nome for _, nome in itens]
+    icones = [icone for icone, _ in itens]
+    atual = st.session_state.get(chave, nomes[0])
+    indice = nomes.index(atual) if atual in nomes else 0
+
+    escolhido = option_menu(
+        menu_title=None,
+        options=nomes,
+        icons=icones,
+        default_index=indice,
+        key=f"menu_{chave}",
+        styles={
+            # O componente roda em iframe próprio, cujo documento tem fundo
+            # claro por padrão. "transparent" deixaria o branco do iframe
+            # aparecer; pintar do mesmo verde da lateral é o que funde os dois.
+            "container": {"padding": "0", "background-color": VERDE_FUNDO,
+                          "border-radius": "0"},
+            "icon": {"color": "#9DB6A6", "font-size": "1rem"},
+            "nav-link": {
+                "font-family": "Inter, sans-serif", "font-size": "0.89rem",
+                "font-weight": "500", "color": "#C2D3C8",
+                "padding": "0.6rem 0.8rem", "margin": "0.08rem 0",
+                "border-radius": "9px", "--hover-color": VERDE_HOVER,
+                "text-align": "left",
+            },
+            "nav-link-selected": {
+                "background-color": VERDE_ATIVO, "color": "#FFFFFF",
+                "font-weight": "600",
+            },
+        },
+    )
+    st.session_state[chave] = escolhido
+    return escolhido
 
 
 def cabecalho(pagina, usuario):

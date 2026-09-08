@@ -20,24 +20,26 @@ DOCUMENTOS = UPLOADS / "documentos"
 # A paleta e os componentes de tela ficam em tcc/estilo.py.
 LEMA_RODAPE = ("Planejamento", "Qualidade", "Segurança", "Durabilidade")
 
+# (ícone do Bootstrap Icons, nome da página). Os nomes vêm de
+# https://icons.getbootstrap.com -- o componente do menu os resolve.
 MENU = [
-    ("🏠", "Início"),
-    ("🏘", "Residências"),
-    ("🔎", "Vistorias"),
-    ("🚪", "Ambientes"),
-    ("⚠", "Patologias"),
-    ("📷", "Catálogo Fotográfico"),
-    ("📊", "Classificação GUT"),
-    ("🛡", "Garantias"),
-    ("⏱", "Relógio de Garantias"),
-    ("🛠", "Manutenção"),
-    ("📅", "Gantt 10 anos"),
-    ("📑", "Protocolos"),
-    ("📂", "Documentos"),
-    ("📈", "Dados do TCC"),
-    ("📄", "Relatórios"),
-    ("📊", "Excel / Banco de Dados"),
-    ("⚙", "Configurações"),
+    ("house-door", "Início"),
+    ("buildings", "Residências"),
+    ("clipboard-check", "Vistorias"),
+    ("door-open", "Ambientes"),
+    ("exclamation-triangle", "Patologias"),
+    ("camera", "Catálogo Fotográfico"),
+    ("bar-chart", "Classificação GUT"),
+    ("shield-check", "Garantias"),
+    ("clock-history", "Relógio de Garantias"),
+    ("tools", "Manutenção"),
+    ("calendar3", "Gantt 10 anos"),
+    ("file-earmark-text", "Protocolos"),
+    ("folder2-open", "Documentos"),
+    ("graph-up", "Dados do TCC"),
+    ("journal-text", "Relatórios"),
+    ("database", "Excel / Banco de Dados"),
+    ("gear", "Configurações"),
 ]
 
 AVISO_RESPONSABILIDADE = (

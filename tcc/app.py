@@ -648,9 +648,7 @@ def main():
 
     with st.sidebar:
         estilo.marca(config.TITULO, config.SUBTITULO)
-        rotulos = [f"{icone}  {nome}" for icone, nome in config.MENU]
-        escolha = st.radio("Navegação", rotulos, label_visibility="collapsed",
-                           key="navegacao")
+        nome_pagina = estilo.menu_lateral(config.MENU)
         st.markdown(
             f'<div class="rodape-lateral">Construindo segurança<br>'
             f'para o seu patrimônio</div>', unsafe_allow_html=True)
@@ -658,7 +656,6 @@ def main():
             del st.session_state["usuario"]
             st.rerun()
 
-    nome_pagina = escolha.split("  ", 1)[1]
     estilo.cabecalho(nome_pagina, st.session_state["usuario"])
     PAGINAS.get(nome_pagina, lambda _: pagina_em_construcao(nome_pagina))(con)
 

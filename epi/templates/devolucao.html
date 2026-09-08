@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_assinatura.html" import assinatura %}
+{% block titulo %}Registrar devolução{% endblock %}
+{% block conteudo %}
+<p class="pequeno"><a href="{{ url_for('ficha', fid=funcionario.id) }}">← Ficha de {{ funcionario.nome }}</a></p>
+<h1>Registrar devolução</h1>
+
+<div class="cartao">
+  <h2>Entrega de {{ entrega.data_entrega | data_br }}</h2>
+  <div class="rolagem">
+    <table>
+      <thead><tr><th>EPI/Uniforme</th><th>CA</th><th>Qtde</th><th>Tamanho</th></tr></thead>
+      <tbody>
+        {% for i in itens %}
+        <tr><td>{{ i.nome }}</td><td>{{ i.ca or '—' }}</td><td>{{ i.quantidade | qtd }}</td><td>{{ i.tamanho or '—' }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<form method="post" class="cartao">
+  <div class="campo" style="max-width:260px">
+    <label for="data_devolucao">Data de devolução</label>
+    <input type="date" id="data_devolucao" name="data_devolucao"
+           value="{{ entrega.data_devolucao or hoje }}">
+  </div>
+  {{ assinatura('assinatura_devolucao', 'Assinatura de devolução', entrega.assinatura_devolucao_id) }}
+  <div class="acoes">
+    <button class="btn primario" type="submit">Salvar devolução</button>
+    <a class="btn" href="{{ url_for('ficha', fid=funcionario.id) }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/signature_pad.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/assinatura.js') }}"></script>
+{% endblock %}

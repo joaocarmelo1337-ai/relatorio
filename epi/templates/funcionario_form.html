@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_assinatura.html" import assinatura %}
+{% block titulo %}{{ 'Editar funcionário' if funcionario and funcionario.id else 'Novo funcionário' }}{% endblock %}
+{% block conteudo %}
+<h1>{{ 'Editar funcionário' if funcionario and funcionario.id else 'Novo funcionário' }}</h1>
+
+<form method="post" class="cartao">
+  <div class="campo">
+    <label for="nome">Nome completo *</label>
+    <input type="text" id="nome" name="nome" required value="{{ funcionario.nome if funcionario else '' }}">
+  </div>
+  <div class="grade">
+    <div class="campo">
+      <label for="registro">Nº de registro</label>
+      <input type="text" id="registro" name="registro" value="{{ funcionario.registro if funcionario else '' }}">
+    </div>
+    <div class="campo">
+      <label for="cargo">Cargo</label>
+      <input type="text" id="cargo" name="cargo" value="{{ funcionario.cargo if funcionario else '' }}">
+    </div>
+    <div class="campo">
+      <label for="setor">Setor</label>
+      <input type="text" id="setor" name="setor" value="{{ funcionario.setor if funcionario else '' }}">
+    </div>
+  </div>
+
+  <h3 style="margin-top:14px">Ciente da ficha (admissão)</h3>
+  <p class="pequeno suave">Preenche o campo “Ciente em ___/___/___” e a assinatura do funcionário no topo do PDF.</p>
+  <div class="campo" style="max-width:260px">
+    <label for="ciente_data">Data do ciente</label>
+    <input type="date" id="ciente_data" name="ciente_data"
+           value="{{ funcionario.ciente_data if funcionario and funcionario.ciente_data else '' }}">
+  </div>
+  {{ assinatura('assinatura', 'Assinatura do funcionário (admissão)',
+                funcionario.assinatura_admissao_id if funcionario and funcionario.id else None) }}
+
+  <div class="acoes">
+    <button class="btn primario" type="submit">Salvar</button>
+    <a class="btn" href="{{ url_for('ficha', fid=funcionario.id) if funcionario and funcionario.id else url_for('funcionarios') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/signature_pad.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/assinatura.js') }}"></script>
+{% endblock %}

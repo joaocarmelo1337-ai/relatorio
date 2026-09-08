@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "_assinatura.html" import assinatura %}
+{% block titulo %}{{ 'Editar entrega' if entrega else 'Nova entrega' }}{% endblock %}
+{% block conteudo %}
+<p class="pequeno"><a href="{{ url_for('ficha', fid=funcionario.id) }}">← Ficha de {{ funcionario.nome }}</a></p>
+<h1>{{ 'Editar entrega' if entrega else 'Nova entrega de EPI' }}</h1>
+
+<form method="post" id="form-entrega">
+  <div class="cartao">
+    <h2>{{ funcionario.nome }}</h2>
+    <div class="pequeno suave">
+      {% if funcionario.registro %}Registro {{ funcionario.registro }} · {% endif %}
+      {{ funcionario.cargo or '—' }}{% if funcionario.setor %} · {{ funcionario.setor }}{% endif %}
+    </div>
+    <div class="grade" style="margin-top:12px">
+      <div class="campo">
+        <label for="data_inicio">Início do preenchimento da ficha</label>
+        <input type="date" id="data_inicio" name="data_inicio"
+               value="{{ entrega.data_inicio if entrega and entrega.data_inicio else hoje }}">
+      </div>
+      <div class="campo">
+        <label for="data_entrega">Data de entrega *</label>
+        <input type="date" id="data_entrega" name="data_entrega" required
+               value="{{ entrega.data_entrega if entrega else hoje }}">
+      </div>
+    </div>
+  </div>
+
+  <div class="cartao">
+    <h2>Itens entregues</h2>
+    <p class="pequeno suave">Escolha os itens da lista mestre ou use “+ Outro item” para incluir um EPI que ainda não está cadastrado.</p>
+    <div id="itens"></div>
+    <div class="acoes">
+      <button type="button" class="btn" id="add-item">+ Adicionar item</button>
+    </div>
+  </div>
+
+  <div class="cartao">
+    <h2>Assinatura do funcionário</h2>
+    {{ assinatura('assinatura', 'Assinatura de recebimento',
+                  entrega.assinatura_id if entrega else None) }}
+  </div>
+
+  <div class="cartao">
+    <h2>Devolução <span class="pequeno suave">(opcional — pode ficar em branco)</span></h2>
+    <div class="campo" style="max-width:260px">
+      <label for="data_devolucao">Data de devolução</label>
+      <input type="date" id="data_devolucao" name="data_devolucao"
+             value="{{ entrega.data_devolucao if entrega and entrega.data_devolucao else '' }}">
+    </div>
+    {{ assinatura('assinatura_devolucao', 'Assinatura de devolução',
+                  entrega.assinatura_devolucao_id if entrega else None) }}
+  </div>
+
+  <div class="cartao">
+    <div class="campo">
+      <label for="observacoes">Observações</label>
+      <textarea id="observacoes" name="observacoes" rows="2">{{ entrega.observacoes if entrega else '' }}</textarea>
+    </div>
+    <div class="acoes">
+      <button class="btn primario" type="submit">Salvar entrega</button>
+      <a class="btn" href="{{ url_for('ficha', fid=funcionario.id) }}">Cancelar</a>
+    </div>
+  </div>
+</form>
+
+<script type="application/json" id="dados-epis">
+[
+  {%- for e in epis -%}
+    {"id": {{ e.id }}, "nome": {{ e.nome | tojson }}, "ca": {{ e.ca | tojson }}, "tem_tamanho": {{ e.tem_tamanho }}}{{ "," if not loop.last }}
+  {%- endfor -%}]
+</script>
+<script type="application/json" id="dados-tamanhos">{{ TAMANHOS | tojson }}</script>
+<script type="application/json" id="dados-itens">[
+  {%- for i in (itens or []) -%}
+    {"epi_id": {{ i.epi_id if i.epi_id else 'null' }}, "nome": {{ i.nome | tojson }}, "ca": {{ i.ca | tojson }},
+     "quantidade": {{ i.quantidade | qtd | tojson }}, "tamanho": {{ i.tamanho | tojson }}}{{ "," if not loop.last }}
+  {%- endfor -%}]
+</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/signature_pad.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/assinatura.js') }}"></script>
+<script src="{{ url_for('static', filename='js/entrega.js') }}"></script>
+{% endblock %}

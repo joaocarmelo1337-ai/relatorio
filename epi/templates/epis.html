@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block titulo %}Lista de EPI{% endblock %}
+{% block conteudo %}
+<h1>Lista mestre de EPI / uniformes</h1>
+
+<details class="cartao" {{ 'open' if not epis }}>
+  <summary style="font-weight:700;cursor:pointer">+ Adicionar item à lista</summary>
+  <form method="post" action="{{ url_for('epi_novo') }}" style="margin-top:12px">
+    <div class="grade">
+      <div class="campo">
+        <label for="nome">Nome do EPI / uniforme *</label>
+        <input type="text" id="nome" name="nome" required placeholder="Ex.: LUVA NITRÍLICA">
+      </div>
+      <div class="campo">
+        <label for="ca">CA (opcional)</label>
+        <input type="text" id="ca" name="ca" inputmode="numeric" placeholder="Ex.: 28513">
+      </div>
+    </div>
+    <div class="linha-check">
+      <input type="checkbox" id="tem_tamanho" name="tem_tamanho" value="1">
+      <label for="tem_tamanho">Este item pede tamanho (P/M/G/GG/EXG ou numeração)</label>
+    </div>
+    <div class="acoes"><button class="btn primario" type="submit">Adicionar à lista</button></div>
+  </form>
+</details>
+
+<p class="pequeno suave">{{ epis | length }} itens cadastrados. Toque em um item para editar.</p>
+
+<ul class="lista">
+  {% for e in epis %}
+  <li style="display:block;padding:0">
+    <details>
+      <summary style="display:flex;gap:10px;align-items:center;padding:12px;cursor:pointer;list-style:none">
+        <span class="info">
+          <span class="nome" style="{{ 'text-decoration:line-through;opacity:.6' if not e.ativo }}">{{ e.nome }}</span>
+          <span class="meta">
+            {% if e.ca %}CA {{ e.ca }}{% else %}sem CA{% endif %}
+            {% if e.tem_tamanho %} · pede tamanho{% endif %}
+            {% if not e.ativo %} · inativo{% endif %}
+          </span>
+        </span>
+        <span class="btn pequeno">Editar</span>
+      </summary>
+      <form method="post" action="{{ url_for('epi_editar', pid=e.id) }}" style="padding:0 12px 12px">
+        <div class="grade">
+          <div class="campo">
+            <label for="n{{ e.id }}">Nome</label>
+            <input type="text" id="n{{ e.id }}" name="nome" value="{{ e.nome }}" required>
+          </div>
+          <div class="campo">
+            <label for="c{{ e.id }}">CA</label>
+            <input type="text" id="c{{ e.id }}" name="ca" value="{{ e.ca }}" inputmode="numeric" placeholder="sem CA">
+          </div>
+        </div>
+        <div class="linha-check">
+          <input type="checkbox" id="tam{{ e.id }}" name="tem_tamanho" value="1" {{ 'checked' if e.tem_tamanho }}>
+          <label for="tam{{ e.id }}">Pede tamanho</label>
+        </div>
+        <div class="linha-check">
+          <input type="checkbox" id="ativo{{ e.id }}" name="ativo" value="1" {{ 'checked' if e.ativo }}>
+          <label for="ativo{{ e.id }}">Ativo (aparece na hora de registrar a entrega)</label>
+        </div>
+        <div class="acoes">
+          <button class="btn pequeno primario" type="submit">Salvar</button>
+          <button class="btn perigo pequeno" type="submit" formaction="{{ url_for('epi_excluir', pid=e.id) }}"
+                  formnovalidate onclick="return confirm('Remover {{ e.nome }} da lista mestre? As entregas já registradas não mudam.')">Excluir</button>
+        </div>
+      </form>
+    </details>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

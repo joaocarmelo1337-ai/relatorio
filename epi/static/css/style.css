@@ -1,0 +1,125 @@
+:root{
+  --azul:#2f4858;
+  --azul-esc:#22343f;
+  --acento:#0f766e;
+  --fundo:#f4f6f7;
+  --cartao:#fff;
+  --borda:#dde3e6;
+  --texto:#22303a;
+  --suave:#657783;
+  --ok:#2e7d32;
+  --erro:#c0392b;
+  --raio:10px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:var(--fundo);color:var(--texto);font-size:16px;line-height:1.45;
+  padding-bottom:40px;
+}
+a{color:var(--acento)}
+
+/* ---------------------------------------------------------------- cabeçalho */
+header.topo{background:var(--azul);color:#fff;padding:10px 14px}
+.topo-linha{display:flex;align-items:center;gap:12px;max-width:1100px;margin:0 auto}
+.topo-linha img.logo{height:42px;max-width:130px;object-fit:contain;background:#fff;border-radius:6px;padding:3px}
+.topo-linha .empresa{font-weight:700;font-size:1.05rem;line-height:1.2}
+.topo-linha .sub{font-size:.75rem;opacity:.8;text-transform:uppercase;letter-spacing:.06em}
+nav.abas{background:var(--azul-esc);padding:0 14px;overflow-x:auto;white-space:nowrap}
+nav.abas .interno{max-width:1100px;margin:0 auto;display:flex;gap:4px}
+nav.abas a{
+  color:#cfe0e8;text-decoration:none;padding:11px 14px;font-size:.9rem;font-weight:600;
+  border-bottom:3px solid transparent;display:inline-block;
+}
+nav.abas a.ativo{color:#fff;border-bottom-color:var(--acento);background:rgba(255,255,255,.06)}
+
+main{max-width:1100px;margin:0 auto;padding:14px}
+
+/* ---------------------------------------------------------------- blocos */
+.cartao{background:var(--cartao);border:1px solid var(--borda);border-radius:var(--raio);padding:14px;margin-bottom:14px}
+.cartao h2{margin:0 0 10px;font-size:1.05rem}
+.cartao h3{margin:0 0 8px;font-size:.95rem}
+h1{font-size:1.3rem;margin:4px 0 14px}
+.flash{padding:11px 14px;border-radius:var(--raio);margin-bottom:12px;font-size:.92rem}
+.flash.ok{background:#e7f5ea;border:1px solid #b6dfc0;color:#1e5b28}
+.flash.erro{background:#fdecea;border:1px solid #f5c2bd;color:#8e2a20}
+.vazio{color:var(--suave);text-align:center;padding:26px 10px}
+.suave{color:var(--suave)}
+.pequeno{font-size:.82rem}
+
+/* ---------------------------------------------------------------- formulário */
+label{display:block;font-size:.78rem;font-weight:600;color:var(--suave);
+  text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+input[type=text],input[type=date],input[type=number],input[type=file],select,textarea{
+  width:100%;padding:10px;border:1px solid var(--borda);border-radius:8px;
+  font-size:16px;font-family:inherit;background:#fff;color:var(--texto)
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acento);outline-offset:-1px}
+.campo{margin-bottom:12px}
+.grade{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.linha-check{display:flex;align-items:center;gap:8px;margin:6px 0}
+.linha-check label{margin:0;text-transform:none;font-size:.9rem;font-weight:500;color:var(--texto)}
+input[type=checkbox]{width:20px;height:20px}
+
+/* ---------------------------------------------------------------- botões */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 16px;border-radius:8px;border:1px solid var(--borda);background:#fff;
+  color:var(--texto);font-size:.92rem;font-weight:600;text-decoration:none;cursor:pointer;
+}
+.btn:hover{background:#f0f3f4}
+.btn.primario{background:var(--acento);border-color:var(--acento);color:#fff}
+.btn.primario:hover{filter:brightness(1.08)}
+.btn.escuro{background:var(--azul);border-color:var(--azul);color:#fff}
+.btn.perigo{color:var(--erro);border-color:#f0c4bf}
+.btn.perigo:hover{background:#fdecea}
+.btn.pequeno{padding:7px 11px;font-size:.82rem}
+.acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.barra-busca{display:flex;gap:8px;margin-bottom:14px}
+
+/* ---------------------------------------------------------------- listas */
+.lista{list-style:none;margin:0;padding:0}
+.lista li{
+  display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--borda);
+  border-radius:var(--raio);background:#fff;margin-bottom:8px;
+}
+.lista li .info{flex:1;min-width:0}
+.lista li .nome{font-weight:700;display:block}
+.lista li .meta{font-size:.82rem;color:var(--suave);display:block}
+.selo{display:inline-block;background:#e8eef1;color:var(--azul);border-radius:999px;
+  padding:2px 9px;font-size:.75rem;font-weight:700}
+
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:8px;border-bottom:1px solid var(--borda);text-align:left;vertical-align:middle}
+th{font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--suave)}
+.rolagem{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.rolagem table{min-width:430px}
+img.assin-mini{height:40px;max-width:150px;object-fit:contain;background:#fff}
+
+/* ---------------------------------------------------------------- itens da entrega */
+.item{border:1px solid var(--borda);border-radius:var(--raio);padding:10px;margin-bottom:10px;background:#fbfcfc}
+.item .grade{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.item-topo{display:flex;gap:8px;align-items:flex-end}
+.item-topo .campo{flex:1;margin-bottom:0}
+.novo-epi{margin-top:10px;padding-top:10px;border-top:1px dashed var(--borda)}
+
+/* ---------------------------------------------------------------- assinatura */
+.assinatura-caixa{border:1px dashed #9fb2bc;border-radius:var(--raio);background:#fff;position:relative}
+canvas.assinatura{width:100%;height:170px;display:block;touch-action:none;border-radius:var(--raio)}
+.assinatura-caixa .dica{position:absolute;left:0;right:0;bottom:8px;text-align:center;
+  font-size:.78rem;color:#9fb2bc;pointer-events:none}
+.assinatura-atual{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.assinatura-atual img{height:56px;max-width:100%;object-fit:contain;border:1px solid var(--borda);
+  border-radius:8px;background:#fff;padding:4px}
+
+@media (max-width:560px){
+  main{padding:10px}
+  .acoes .btn{flex:1 1 auto}
+  .topo-linha img.logo{height:34px}
+}
+
+/* ---------------------------------------------------------------- detalhes */
+details > summary::-webkit-details-marker{display:none}
+details > summary{outline:none}
+.lista li details[open] > summary{border-bottom:1px solid var(--borda)}

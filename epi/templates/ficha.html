@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block titulo %}{{ funcionario.nome }}{% endblock %}
+{% block conteudo %}
+<p class="pequeno"><a href="{{ url_for('funcionarios') }}">← Todos os funcionários</a></p>
+<h1>{{ funcionario.nome }}</h1>
+
+<div class="cartao">
+  <div class="grade">
+    <div><label>Nº de registro</label><div>{{ funcionario.registro or '—' }}</div></div>
+    <div><label>Cargo</label><div>{{ funcionario.cargo or '—' }}</div></div>
+    <div><label>Setor</label><div>{{ funcionario.setor or '—' }}</div></div>
+    <div><label>Ciente em</label><div>{{ funcionario.ciente_data | data_br or '—' }}</div></div>
+  </div>
+  {% if funcionario.assinatura_admissao_id %}
+  <div class="assinatura-atual" style="margin-top:12px">
+    <img src="{{ url_for('assinatura', aid=funcionario.assinatura_admissao_id) }}" alt="Assinatura de admissão">
+    <span class="pequeno suave">Assinatura do funcionário (admissão)</span>
+  </div>
+  {% endif %}
+  <div class="acoes">
+    <a class="btn primario" href="{{ url_for('entrega_form', fid=funcionario.id) }}">+ Nova entrega</a>
+    <a class="btn escuro" href="{{ url_for('ficha_pdf', fid=funcionario.id) }}" target="_blank" rel="noopener">Gerar PDF</a>
+    <a class="btn" href="{{ url_for('funcionario_form', fid=funcionario.id) }}">Editar cadastro</a>
+    <form method="post" action="{{ url_for('funcionario_excluir', fid=funcionario.id) }}"
+          onsubmit="return confirm('Excluir {{ funcionario.nome }} e todo o histórico de entregas?')">
+      <button class="btn perigo" type="submit">Excluir funcionário</button>
+    </form>
+  </div>
+</div>
+
+<h2>Histórico de entregas</h2>
+{% if historico %}
+  {% for bloco in historico %}
+  {% set e = bloco.entrega %}
+  <div class="cartao">
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between">
+      <h3 style="margin:0">Entrega de {{ e.data_entrega | data_br }}</h3>
+      <span class="selo">{{ bloco.itens | length }} ite{{ 'm' if bloco.itens|length == 1 else 'ns' }}</span>
+    </div>
+    <div class="meta pequeno suave">
+      {% if e.data_inicio %}Ficha iniciada em {{ e.data_inicio | data_br }} · {% endif %}
+      {% if e.data_devolucao %}Devolvido em {{ e.data_devolucao | data_br }}{% else %}Sem devolução registrada{% endif %}
+    </div>
+
+    <div class="rolagem" style="margin-top:10px">
+      <table>
+        <thead><tr><th>EPI/Uniforme</th><th>CA</th><th>Qtde</th><th>Tamanho</th></tr></thead>
+        <tbody>
+          {% for i in bloco.itens %}
+          <tr>
+            <td>{{ i.nome }}</td>
+            <td>{{ i.ca or '—' }}</td>
+            <td>{{ i.quantidade | qtd }}</td>
+            <td>{{ i.tamanho or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grade" style="margin-top:12px">
+      <div>
+        <label>Assinatura de recebimento</label>
+        {% if e.assinatura_id %}
+          <img class="assin-mini" src="{{ url_for('assinatura', aid=e.assinatura_id) }}" alt="Assinatura de recebimento">
+        {% else %}<div class="pequeno suave">Não assinada</div>{% endif %}
+      </div>
+      <div>
+        <label>Assinatura de devolução</label>
+        {% if e.assinatura_devolucao_id %}
+          <img class="assin-mini" src="{{ url_for('assinatura', aid=e.assinatura_devolucao_id) }}" alt="Assinatura de devolução">
+        {% else %}<div class="pequeno suave">Não assinada</div>{% endif %}
+      </div>
+    </div>
+
+    {% if e.observacoes %}<p class="pequeno" style="margin-top:10px"><strong>Observações:</strong> {{ e.observacoes }}</p>{% endif %}
+
+    <div class="acoes">
+      <a class="btn pequeno" href="{{ url_for('devolucao', eid=e.id) }}">Registrar devolução</a>
+      <a class="btn pequeno" href="{{ url_for('entrega_form', eid=e.id) }}">Editar</a>
+      <form method="post" action="{{ url_for('entrega_excluir', eid=e.id) }}"
+            onsubmit="return confirm('Excluir esta entrega?')">
+        <button class="btn perigo pequeno" type="submit">Excluir</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+<div class="cartao vazio">Nenhuma entrega registrada para este funcionário.</div>
+{% endif %}
+{% endblock %}

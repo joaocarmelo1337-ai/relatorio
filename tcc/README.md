@@ -95,6 +95,7 @@ tcc/
 │   ├── edificacao.py           idade da edificação e faixas etárias
 │   ├── regime.py               regime normativo aplicável à unidade
 │   ├── ambientes.py            ambientes por residência
+│   ├── vistorias.py            vistoria, manifestações, GUT e alerta de garantia
 │   ├── pacote_campo.py         leitura e validação do pacote de vistoria
 │   └── importacao_excel.py     importação da planilha do TCC
 ├── data/
@@ -102,7 +103,7 @@ tcc/
 │   ├── catalogo_itens.csv      os 82 itens de verificação, com prazo
 │   ├── prazos_nbr17170.csv     síntese de prazos da NBR 17170
 │   └── sistemas.csv            os 9 sistemas do recorte
-├── tests/                      82 testes
+├── tests/                      109 testes
 └── uploads/{fotos,documentos}/
 ```
 
@@ -161,6 +162,11 @@ da construtora. Ele apresenta *situação técnica indicativa de garantia* e rem
 ao Termo de Garantia, Manual da Edificação, histórico de manutenção, reformas,
 contrato e legislação. Nenhuma automação substitui a avaliação profissional.
 
+**A garantia é congelada na data da vistoria.** A situação de garantia de uma
+manifestação é calculada com a data em que ela foi constatada, não com a data
+de hoje. Uma vistoria de 2024 mostra a garantia como ela estava em 2024 — que é
+o que o laudo daquela vistoria afirmou, e o que precisa continuar afirmando.
+
 **GUT recalculado, não copiado.** Na importação, G, U e T vêm da planilha mas
 o produto e a prioridade são recalculados pelo sistema. Se a fórmula da planilha
 e a do sistema divergirem em algum ponto, a divergência aparece em vez de passar
@@ -190,13 +196,15 @@ Pronto e testado:
       idempotente e com GUT recalculado
 - [x] Teste de fumaça da interface: as 17 páginas renderizam sem exceção
 - [x] Ambientes por residência, com sugestões e contagem de manifestações
+- [x] Vistoria: ambiente → sistema → item → resultado → manifestação
+- [x] Registro de patologias com origem múltipla e classificação GUT
+- [x] Alerta preventivo de garantia
+- [x] Histórico (prontuário digital) alimentado por vistorias e ocorrências
 
 A fazer, nesta ordem:
 
 
-- [ ] Nova vistoria e registro de patologias
 - [ ] Catálogo fotográfico e comparação temporal
-- [ ] Tela de classificação GUT
 - [ ] Garantias por residência e relógio de garantias
 - [ ] Dashboard com os 5 gráficos
 - [ ] App de campo (HTML offline) e a tela de importação do pacote

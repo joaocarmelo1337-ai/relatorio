@@ -141,8 +141,9 @@ no próprio aparelho. Sem servidor, sem senha, sem mensalidade.
 2. Abra o arquivo no navegador e use "Adicionar à tela de início" para virar ícone.
 3. Em **Configurações**, informe o nome da empresa e envie a logo — eles vão para o
    cabeçalho da ficha em PDF. Nada de nome fixo no código.
-4. Cadastre o funcionário, toque em **+ Nova entrega**, marque os itens, colha a
-   assinatura com o dedo e salve. Depois, **Gerar PDF** monta a ficha completa.
+4. Cadastre o funcionário, toque em **+ Nova entrega**, marque os itens e toque em
+   **Assinar em tela cheia**: a assinatura ocupa o aparelho inteiro (vire na horizontal
+   para ter ainda mais espaço). Depois, **Gerar PDF** monta a ficha completa.
 
 **Os dados ficam só neste aparelho.** Não existe cópia em servidor: a única cópia fora do
 celular é o arquivo que sai em **Configurações → Exportar backup** (um `.json` com
@@ -179,10 +180,15 @@ As instruções completas estão em [`epi/README.md`](epi/README.md).
 - **Entrega**: data de início da ficha, data de entrega, itens com CA/quantidade/tamanho,
   assinatura no canvas e devolução (data + assinatura) que pode ficar em branco e ser
   preenchida depois.
-- **PDF** reproduzindo a ficha tradicional: cabeçalho com logo e empresa, dados do
-  funcionário, declaração de responsabilidade (NR-6 item 6.7.1 e art. 158 da CLT), campo
-  “Ciente em ___/___/___” e a tabela Data de Entrega | EPI/Uniforme | CA | Qtde |
-  Assinatura | Data de Devolução | Ass. Devolução, com as assinaturas desenhadas dentro
-  das células e o cabeçalho repetido a cada página.
+- **Assinatura em tela cheia**: o funcionário assina usando a tela inteira do aparelho,
+  sobre uma linha de apoio; o traço é recortado automaticamente antes de ser guardado.
+- **PDF em A4 paisagem**, no mesmo desenho da ficha em papel: faixa do título com a logo,
+  linha de EMPRESA / NOME DO FUNCIONÁRIO / Nº REGISTRO, linha de CNPJ / CARGO / SETOR,
+  declaração de responsabilidade (NR-6 item 6.7.1 e art. 158 da CLT), campo
+  “Ciente em ___/___/___” com a assinatura de admissão e a tabela Data de Entrega |
+  EPI/Uniforme | CA | Qtde | Assinatura | Data de Devolução | Ass. Devolução. Os uniformes
+  saem com os tamanhos marcados entre parênteses — `CAMISA: P ( ) M ( ) G ( ) GG ( X ) EXG ( )` —
+  e o calçado com a numeração, como na ficha em papel. O cabeçalho da tabela se repete a
+  cada página. Empresa e logo são a única parte que muda de uma empresa para outra.
 - O nome do item é copiado para a entrega no momento do registro: mexer na lista de EPI
   depois **não altera o histórico já assinado**.

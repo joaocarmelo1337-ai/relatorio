@@ -49,7 +49,8 @@
              value="{{ entrega.data_devolucao if entrega and entrega.data_devolucao else '' }}">
     </div>
     {{ assinatura('assinatura_devolucao', 'Assinatura de devolução',
-                  entrega.assinatura_devolucao_id if entrega else None) }}
+                  entrega.assinatura_devolucao_id if entrega else None,
+                  botao='Assinar devolução em tela cheia') }}
   </div>
 
   <div class="cartao">

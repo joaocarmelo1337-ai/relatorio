@@ -33,6 +33,25 @@
   {% endwith %}
   {% block conteudo %}{% endblock %}
 </main>
+<div id="modalAssin" hidden>
+  <div class="cab">
+    <div class="quem">
+      <div class="titulo" id="modalAssinTitulo">Assinatura</div>
+      <div class="sub">Vire o aparelho na horizontal para assinar com mais espaço</div>
+    </div>
+    <button type="button" class="btn pequeno" id="btCancelarAssin">Cancelar</button>
+  </div>
+  <div class="area">
+    <canvas id="canvasAssin"></canvas>
+    <div class="base"></div>
+    <div class="dicaGrande" id="dicaAssin">Assine acima da linha</div>
+  </div>
+  <div class="pes">
+    <button type="button" class="btn" id="btLimparAssin">Limpar</button>
+    <button type="button" class="btn primario" id="btConfirmarAssin">Confirmar assinatura</button>
+  </div>
+</div>
+
 <datalist id="lista-tamanhos">
   {% for t in TAMANHOS %}<option value="{{ t }}">{% endfor %}
 </datalist>

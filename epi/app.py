@@ -160,6 +160,7 @@ def create_app(test_config=None):
                 (request.form.get("ciente_data") or "").strip() or None,
             )
             assinatura_id = database.salvar_assinatura(request.form.get("assinatura"))
+            apagar_assinatura = request.form.get("assinatura_apagar") == "1"
             con = db()
             if f is None:
                 cur = con.execute(
@@ -170,7 +171,7 @@ def create_app(test_config=None):
                 fid = cur.lastrowid
                 msg = "Funcionário cadastrado."
             else:
-                if assinatura_id:
+                if assinatura_id or apagar_assinatura:
                     database.apagar_assinatura(f["assinatura_admissao_id"])
                     con.execute(
                         "UPDATE funcionarios SET assinatura_admissao_id = ? WHERE id = ?", (assinatura_id, fid)
@@ -231,6 +232,8 @@ def create_app(test_config=None):
                                        entrega=entrega, itens=itens)
             assinatura_id = database.salvar_assinatura(request.form.get("assinatura"))
             assinatura_dev_id = database.salvar_assinatura(request.form.get("assinatura_devolucao"))
+            apagar_assin = request.form.get("assinatura_apagar") == "1"
+            apagar_assin_dev = request.form.get("assinatura_devolucao_apagar") == "1"
 
             if entrega is None:
                 eid = con.execute(
@@ -241,10 +244,10 @@ def create_app(test_config=None):
                 ).lastrowid
                 msg = "Entrega registrada."
             else:
-                if assinatura_id:
+                if assinatura_id or apagar_assin:
                     database.apagar_assinatura(entrega["assinatura_id"])
                     con.execute("UPDATE entregas SET assinatura_id = ? WHERE id = ?", (assinatura_id, eid))
-                if assinatura_dev_id:
+                if assinatura_dev_id or apagar_assin_dev:
                     database.apagar_assinatura(entrega["assinatura_devolucao_id"])
                     con.execute("UPDATE entregas SET assinatura_devolucao_id = ? WHERE id = ?",
                                 (assinatura_dev_id, eid))
@@ -274,7 +277,7 @@ def create_app(test_config=None):
         if request.method == "POST":
             data_devolucao = (request.form.get("data_devolucao") or "").strip() or None
             assinatura_id = database.salvar_assinatura(request.form.get("assinatura_devolucao"))
-            if assinatura_id:
+            if assinatura_id or request.form.get("assinatura_devolucao_apagar") == "1":
                 database.apagar_assinatura(entrega["assinatura_devolucao_id"])
                 con.execute("UPDATE entregas SET assinatura_devolucao_id = ? WHERE id = ?", (assinatura_id, eid))
             con.execute("UPDATE entregas SET data_devolucao = ? WHERE id = ?", (data_devolucao, eid))
@@ -400,8 +403,11 @@ def create_app(test_config=None):
             "SELECT * FROM entregas WHERE funcionario_id = ? ORDER BY date(data_entrega), id", (fid,)
         ).fetchall()
         for e in entregas:
+            # tem_tamanho vem da lista mestre: é o que faz o PDF imprimir P/M/G/GG/EXG
             itens = con.execute(
-                "SELECT * FROM entrega_itens WHERE entrega_id = ? ORDER BY ordem, id", (e["id"],)
+                "SELECT i.*, COALESCE(p.tem_tamanho, 0) AS tem_tamanho"
+                " FROM entrega_itens i LEFT JOIN epi_master p ON p.id = i.epi_id"
+                " WHERE i.entrega_id = ? ORDER BY i.ordem, i.id", (e["id"],)
             ).fetchall()
             blocos.append({
                 "entrega": e,

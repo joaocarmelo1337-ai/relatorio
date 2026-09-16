@@ -1,19 +1,18 @@
-{% macro assinatura(campo, rotulo='Assinatura', atual_id=None, texto_atual='Assinatura registrada') %}
-<div class="campo">
+{% macro assinatura(campo, rotulo='Assinatura', atual_id=None, botao='Assinar em tela cheia') %}
+<div class="campo campo-assinatura">
   <label>{{ rotulo }}</label>
-  {% if atual_id %}
-    <div class="assinatura-atual">
-      <img src="{{ url_for('assinatura', aid=atual_id) }}" alt="{{ texto_atual }}">
-      <span class="pequeno suave">{{ texto_atual }} — assine abaixo apenas se quiser substituí-la.</span>
-    </div>
-  {% endif %}
-  <div class="assinatura-campo assinatura-caixa" data-alvo="{{ campo }}">
-    <canvas class="assinatura"></canvas>
-    <div class="dica">Assine aqui com o dedo ou com o mouse</div>
+  <div class="previa-assin" data-previa="{{ campo }}" data-rotulo="{{ rotulo }}">
+    {% if atual_id %}
+      <img src="{{ url_for('assinatura', aid=atual_id) }}" alt="Assinatura já registrada">
+    {% else %}
+      <span class="sem">Nenhuma assinatura ainda — toque para assinar</span>
+    {% endif %}
   </div>
   <div class="acoes">
-    <button type="button" class="btn pequeno" data-limpar>Limpar assinatura</button>
+    <button type="button" class="btn primario" data-assinar="{{ campo }}">{{ botao }}</button>
+    <button type="button" class="btn pequeno" data-apagar="{{ campo }}">Apagar</button>
   </div>
   <input type="hidden" id="{{ campo }}" name="{{ campo }}" value="">
+  <input type="hidden" id="{{ campo }}_apagar" name="{{ campo }}_apagar" value="">
 </div>
 {% endmacro %}

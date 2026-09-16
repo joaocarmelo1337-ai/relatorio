@@ -25,7 +25,8 @@
     <input type="date" id="data_devolucao" name="data_devolucao"
            value="{{ entrega.data_devolucao or hoje }}">
   </div>
-  {{ assinatura('assinatura_devolucao', 'Assinatura de devolução', entrega.assinatura_devolucao_id) }}
+  {{ assinatura('assinatura_devolucao', 'Assinatura de devolução', entrega.assinatura_devolucao_id,
+                botao='Assinar devolução em tela cheia') }}
   <div class="acoes">
     <button class="btn primario" type="submit">Salvar devolução</button>
     <a class="btn" href="{{ url_for('ficha', fid=funcionario.id) }}">Cancelar</a>

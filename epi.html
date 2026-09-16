@@ -120,15 +120,37 @@ img.assin-mini{height:40px;max-width:150px;object-fit:contain}
 .item{border:1px solid var(--borda);border-radius:var(--raio);padding:10px;margin-bottom:10px;background:#fbfcfc}
 .item-topo{display:flex;gap:8px;align-items:flex-end}
 .item-topo .campo{flex:1;margin-bottom:0}
+.item .assin-item{margin-top:10px;padding-top:10px;border-top:1px dashed var(--borda)}
+.item .previa-assin{min-height:70px}
+.item .previa-assin img{max-height:64px}
+.item .acoes{margin-top:8px}
+.item.sem-assinatura{border-color:#f0c4bf;background:#fffaf9}
+.aviso-assin{font-size:.78rem;color:var(--vermelho);font-weight:600;margin-top:6px}
 
 /* ---------------------------------------------------------- assinatura */
-.assinatura-caixa{border:1px dashed #9fb2bc;border-radius:var(--raio);background:#fff;position:relative}
-canvas.assinatura{width:100%;height:170px;display:block;touch-action:none;border-radius:var(--raio)}
-.assinatura-caixa .dica{position:absolute;left:0;right:0;bottom:8px;text-align:center;
-  font-size:.78rem;color:#9fb2bc;pointer-events:none}
+.previa-assin{border:1px dashed #9fb2bc;border-radius:var(--raio);background:#fff;min-height:96px;
+  display:flex;align-items:center;justify-content:center;padding:8px;text-align:center}
+.previa-assin img{max-height:110px;max-width:100%;object-fit:contain}
+.previa-assin .sem{color:#9fb2bc;font-size:.85rem}
 .assinatura-atual{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .assinatura-atual img{height:56px;max-width:100%;object-fit:contain;border:1px solid var(--borda);
   border-radius:8px;background:#fff;padding:4px}
+
+/* assinatura em tela cheia: o espaço todo do aparelho para o funcionário assinar */
+#modalAssin{position:fixed;inset:0;z-index:80;background:#eef1f3;display:flex;flex-direction:column}
+#modalAssin[hidden]{display:none}
+#modalAssin .cab{background:var(--azul);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px}
+#modalAssin .cab .quem{flex:1;min-width:0}
+#modalAssin .cab .titulo{font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#modalAssin .cab .sub{font-size:.72rem;opacity:.85}
+#modalAssin .area{flex:1;position:relative;margin:10px;background:#fff;border:1px solid var(--borda);
+  border-radius:var(--raio);overflow:hidden}
+#modalAssin canvas{width:100%;height:100%;display:block;touch-action:none}
+#modalAssin .base{position:absolute;left:6%;right:6%;bottom:22%;border-bottom:1.5px dashed #b8c6ce;pointer-events:none}
+#modalAssin .dicaGrande{position:absolute;left:0;right:0;bottom:calc(22% - 26px);text-align:center;
+  color:#a9b8c0;font-size:.9rem;pointer-events:none}
+#modalAssin .pes{display:flex;gap:8px;padding:0 10px 12px}
+#modalAssin .pes button{flex:1}
 
 /* ------------------------------------------------------------ downloads */
 .blocoArq{border:1px solid var(--borda);border-radius:var(--raio);padding:12px;background:#fff;margin-top:12px}
@@ -222,15 +244,13 @@ canvas.assinatura{width:100%;height:170px;display:block;touch-action:none;border
       </div>
       <div class="campo">
         <label>Assinatura do funcionário (admissão)</label>
-        <div class="assinatura-atual" id="fAssinAtual" hidden>
-          <img id="fAssinImg" alt="Assinatura registrada">
-          <span class="pequeno suave">Assinatura registrada — assine abaixo apenas se quiser substituí-la.</span>
+        <div class="previa-assin" data-previa="fAssin">
+          <span class="sem">Nenhuma assinatura ainda</span>
         </div>
-        <div class="assinatura-caixa" data-assinatura="fAssin">
-          <canvas class="assinatura"></canvas>
-          <div class="dica">Assine aqui com o dedo ou com o mouse</div>
+        <div class="acoes">
+          <button type="button" class="btn primario" data-assinar="fAssin">Assinar em tela cheia</button>
+          <button type="button" class="btn pequeno" data-apagar="fAssin">Apagar</button>
         </div>
-        <div class="acoes"><button type="button" class="btn pequeno" data-limpar="fAssin">Limpar assinatura</button></div>
       </div>
       <div class="acoes">
         <button type="button" class="btn primario" id="btSalvarFunc">Salvar</button>
@@ -267,42 +287,33 @@ canvas.assinatura{width:100%;height:170px;display:block;touch-action:none;border
     </div>
 
     <div class="cartao">
-      <h2>Assinatura do funcionário</h2>
-      <div class="assinatura-atual" id="eAssinAtual" hidden>
-        <img id="eAssinImg" alt="Assinatura registrada">
-        <span class="pequeno suave">Assinatura registrada — assine abaixo apenas se quiser substituí-la.</span>
-      </div>
-      <div class="assinatura-caixa" data-assinatura="eAssin">
-        <canvas class="assinatura"></canvas>
-        <div class="dica">Assine aqui com o dedo ou com o mouse</div>
-      </div>
-      <div class="acoes"><button type="button" class="btn pequeno" data-limpar="eAssin">Limpar assinatura</button></div>
-    </div>
-
-    <div class="cartao">
-      <h2>Devolução <span class="pequeno suave">(opcional — pode ficar em branco)</span></h2>
-      <div class="campo" style="max-width:260px">
-        <label for="eDevolucao">Data de devolução</label>
-        <input type="date" id="eDevolucao">
-      </div>
-      <div class="assinatura-atual" id="eAssinDevAtual" hidden>
-        <img id="eAssinDevImg" alt="Assinatura de devolução registrada">
-        <span class="pequeno suave">Assinatura registrada — assine abaixo apenas se quiser substituí-la.</span>
-      </div>
-      <div class="assinatura-caixa" data-assinatura="eAssinDev">
-        <canvas class="assinatura"></canvas>
-        <div class="dica">Assine aqui com o dedo ou com o mouse</div>
-      </div>
-      <div class="acoes"><button type="button" class="btn pequeno" data-limpar="eAssinDev">Limpar assinatura</button></div>
-    </div>
-
-    <div class="cartao">
       <div class="campo">
         <label for="eObs">Observações</label>
         <textarea id="eObs" rows="2"></textarea>
       </div>
       <div class="acoes">
         <button type="button" class="btn primario" id="btSalvarEntrega">Salvar entrega</button>
+        <button type="button" class="btn" data-voltar="ficha">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------- devolução por item -->
+  <section id="telaDevolucao" hidden>
+    <a href="#" class="voltar" data-voltar="ficha">← Voltar para a ficha</a>
+    <h1>Registrar devolução</h1>
+    <div class="cartao">
+      <h2 id="devEntregaTitulo"></h2>
+      <p class="pequeno suave">Marque o que está sendo devolvido e colha a assinatura de cada material.</p>
+      <div class="campo" style="max-width:260px">
+        <label for="dDataDevolucao">Data da devolução</label>
+        <input type="date" id="dDataDevolucao">
+      </div>
+    </div>
+    <div id="devItens"></div>
+    <div class="cartao">
+      <div class="acoes">
+        <button type="button" class="btn primario" id="btSalvarDevolucao">Salvar devolução</button>
         <button type="button" class="btn" data-voltar="ficha">Cancelar</button>
       </div>
     </div>
@@ -381,6 +392,25 @@ canvas.assinatura{width:100%;height:170px;display:block;touch-action:none;border
   </section>
 
 </main>
+
+<div id="modalAssin" hidden>
+  <div class="cab">
+    <div class="quem">
+      <div class="titulo" id="modalAssinTitulo">Assinatura</div>
+      <div class="sub" id="modalAssinSub">Vire o aparelho na horizontal para assinar com mais espaço</div>
+    </div>
+    <button type="button" class="btn pequeno" id="btCancelarAssin">Cancelar</button>
+  </div>
+  <div class="area">
+    <canvas id="canvasAssin"></canvas>
+    <div class="base"></div>
+    <div class="dicaGrande" id="dicaAssin">Assine acima da linha</div>
+  </div>
+  <div class="pes">
+    <button type="button" class="btn" id="btLimparAssin">Limpar</button>
+    <button type="button" class="btn primario" id="btConfirmarAssin">Confirmar assinatura</button>
+  </div>
+</div>
 
 <div id="overlayProc"><div class="giro"></div><div id="txtProc"></div><div class="pequeno" id="subProc"></div></div>
 
@@ -806,7 +836,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 (function(){
 'use strict';
 
-var VERSAO_APP = '08/09/2026';
+var VERSAO_APP = '16/09/2026';
 var AVISO_BACKUP_DIAS = 7;          // lembra de exportar backup a cada 7 dias
 
 var CHAVE_LS = {
@@ -1169,65 +1199,151 @@ function episAtivos(){
 }
 
 /* ============================= ASSINATURAS ===========================
-   Um SignaturePad por caixa .assinatura-caixa, identificado pelo
-   atributo data-assinatura. O desenho vira PNG só na hora de salvar.
+   A assinatura é colhida em tela cheia: o funcionário assina usando o
+   aparelho inteiro, e o traço é recortado e guardado como PNG. Cada
+   campo da tela guarda o que foi colhido até o formulário ser salvo.
    ==================================================================== */
-var Assinaturas = {};
+var Assinaturas = {
+  valores: {},          // chave -> PNG colhido agora (ainda não salvo)
+  atuais: {},           // chave -> PNG que já estava gravado no registro
+  rotulos: {},          // chave -> nome do material, para o título da tela
+  pad: null,
+  campoAberto: null
+};
+
+var ROTULO_ASSINATURA = {
+  fAssin: 'Assinatura do funcionário (admissão)'
+};
+
+/* Rótulos das assinaturas de item são montados na hora (um por material). */
+function rotuloAssinatura(chave){
+  return ROTULO_ASSINATURA[chave] || Assinaturas.rotulos[chave] || 'Assinatura';
+}
 
 function iniciarAssinaturas(){
-  document.querySelectorAll('.assinatura-caixa').forEach(function(caixa){
-    var chave = caixa.dataset.assinatura;
-    var canvas = caixa.querySelector('canvas');
-    var pad = new SignaturePad(canvas, {
-      backgroundColor: 'rgba(255,255,255,1)',
-      penColor: '#111827',
-      minWidth: 0.9,
-      maxWidth: 2.4
-    });
-    var dica = caixa.querySelector('.dica');
-    pad.addEventListener('beginStroke', function(){ if(dica) dica.style.display = 'none'; });
-    Assinaturas[chave] = { pad: pad, canvas: canvas, dica: dica };
+  var canvas = $('canvasAssin');
+  Assinaturas.pad = new SignaturePad(canvas, {
+    backgroundColor: 'rgba(255,255,255,1)',
+    penColor: '#111827',
+    minWidth: 1.1,
+    maxWidth: 3.2
   });
+  Assinaturas.pad.addEventListener('beginStroke', function(){ $('dicaAssin').style.display = 'none'; });
 
-  document.querySelectorAll('[data-limpar]').forEach(function(bt){
-    bt.addEventListener('click', function(){ limparAssinatura(bt.dataset.limpar); });
+  ligarBotoesAssinatura(document);
+
+  $('btCancelarAssin').addEventListener('click', fecharAssinatura);
+  $('btLimparAssin').addEventListener('click', function(){
+    Assinaturas.pad.clear();
+    $('dicaAssin').style.display = '';
   });
+  $('btConfirmarAssin').addEventListener('click', confirmarAssinatura);
 
-  window.addEventListener('resize', ajustarAssinaturas);
-  window.addEventListener('orientationchange', function(){ setTimeout(ajustarAssinaturas, 300); });
+  window.addEventListener('resize', ajustarCanvasAssinatura);
+  window.addEventListener('orientationchange', function(){ setTimeout(ajustarCanvasAssinatura, 350); });
 }
 
-function ajustarAssinaturas(){
-  Object.keys(Assinaturas).forEach(function(chave){
-    var a = Assinaturas[chave];
-    if(!a.canvas.offsetWidth) return;                 // caixa escondida: não mexe
-    var ratio = Math.max(window.devicePixelRatio || 1, 1);
-    var dados = a.pad.toData();
-    a.canvas.width = a.canvas.offsetWidth * ratio;
-    a.canvas.height = a.canvas.offsetHeight * ratio;
-    a.canvas.getContext('2d').scale(ratio, ratio);
-    a.pad.clear();
-    if(dados && dados.length){ try{ a.pad.fromData(dados); }catch(e){} }
+/* Liga os botões de assinar/apagar de um pedaço da tela (usado também nas
+   linhas de item, que são criadas depois que a página carrega). */
+function ligarBotoesAssinatura(raiz){
+  raiz.querySelectorAll('[data-assinar]').forEach(function(bt){
+    if(bt.dataset.ligado) return;
+    bt.dataset.ligado = '1';
+    bt.addEventListener('click', function(){ abrirAssinatura(bt.dataset.assinar); });
+  });
+  raiz.querySelectorAll('[data-apagar]').forEach(function(bt){
+    if(bt.dataset.ligado) return;
+    bt.dataset.ligado = '1';
+    bt.addEventListener('click', function(){ apagarAssinatura(bt.dataset.apagar); });
+  });
+  raiz.querySelectorAll('[data-previa]').forEach(function(el){
+    if(el.dataset.ligado) return;
+    el.dataset.ligado = '1';
+    el.addEventListener('click', function(){ abrirAssinatura(el.dataset.previa); });
   });
 }
 
-function limparAssinatura(chave){
-  var a = Assinaturas[chave];
-  if(!a) return;
-  a.pad.clear();
-  if(a.dica) a.dica.style.display = '';
+function ajustarCanvasAssinatura(){
+  var canvas = $('canvasAssin');
+  if(!canvas || $('modalAssin').hidden || !canvas.offsetWidth) return;
+  var ratio = Math.max(window.devicePixelRatio || 1, 1);
+  var dados = Assinaturas.pad.toData();
+  canvas.width = canvas.offsetWidth * ratio;
+  canvas.height = canvas.offsetHeight * ratio;
+  canvas.getContext('2d').scale(ratio, ratio);
+  Assinaturas.pad.clear();
+  if(dados && dados.length){ try{ Assinaturas.pad.fromData(dados); }catch(e){} }
 }
 
-function assinaturaVazia(chave){
-  var a = Assinaturas[chave];
-  return !a || a.pad.isEmpty();
+function abrirAssinatura(chave){
+  Assinaturas.campoAberto = chave;
+  $('modalAssinTitulo').textContent = rotuloAssinatura(chave);
+  var f = funcionarioPorId(estado.funcId);
+  $('modalAssinSub').textContent = (f && chave !== 'fAssin' ? f.nome + ' — ' : '') +
+    'vire o aparelho na horizontal para assinar com mais espaço';
+  $('modalAssin').hidden = false;
+  $('dicaAssin').style.display = '';
+  setTimeout(function(){
+    ajustarCanvasAssinatura();
+    Assinaturas.pad.clear();
+  }, 60);
+}
+
+function fecharAssinatura(){
+  $('modalAssin').hidden = true;
+  Assinaturas.campoAberto = null;
+}
+
+function confirmarAssinatura(){
+  var chave = Assinaturas.campoAberto;
+  if(!chave) return fecharAssinatura();
+  if(Assinaturas.pad.isEmpty()){
+    mostrarMsg('Nada foi desenhado. Assine na área branca ou toque em Cancelar.', 'erro', true);
+    return;
+  }
+  Assinaturas.valores[chave] = recortarAssinatura($('canvasAssin'));
+  fecharAssinatura();
+  mostrarPrevia(chave);
+  marcarItensSemAssinatura();
+}
+
+function apagarAssinatura(chave){
+  if(!Assinaturas.valores[chave] && !Assinaturas.atuais[chave]) return;
+  if(!confirm('Apagar esta assinatura?')) return;
+  Assinaturas.valores[chave] = '';
+  Assinaturas.atuais[chave] = '';
+  mostrarPrevia(chave);
+  marcarItensSemAssinatura();
+}
+
+/* Prepara um campo ao abrir o formulário: mostra o que já estava gravado. */
+function prepararAssinatura(chave, valorGravado, rotulo){
+  Assinaturas.valores[chave] = '';
+  Assinaturas.atuais[chave] = valorGravado || '';
+  if(rotulo) Assinaturas.rotulos[chave] = rotulo;
+  mostrarPrevia(chave);
+}
+
+function mostrarPrevia(chave){
+  var cx = document.querySelector('[data-previa="' + chave + '"]');
+  if(!cx) return;
+  var img = Assinaturas.valores[chave] || Assinaturas.atuais[chave];
+  if(img){
+    var nova = Assinaturas.valores[chave] ? ' (colhida agora)' : ' (já registrada)';
+    cx.innerHTML = '<img src="' + img + '" alt="Assinatura' + nova + '">';
+  }else{
+    cx.innerHTML = '<span class="sem">Nenhuma assinatura ainda — toque para assinar</span>';
+  }
+}
+
+/* O que deve ser gravado: o que foi colhido agora ou, se nada, o que já existia. */
+function assinaturaParaSalvar(chave){
+  if(Assinaturas.valores[chave]) return Assinaturas.valores[chave];
+  return Assinaturas.atuais[chave] || '';
 }
 
 /* Recorta o espaço em branco em volta do traço e devolve um PNG enxuto. */
-function assinaturaPNG(chave){
-  var a = Assinaturas[chave];
-  if(!a || a.pad.isEmpty()) return '';
-  var origem = a.canvas;
+function recortarAssinatura(origem){
   var ctx = origem.getContext('2d');
   var dados;
   try{ dados = ctx.getImageData(0, 0, origem.width, origem.height); }
@@ -1246,11 +1362,11 @@ function assinaturaPNG(chave){
     }
   }
   if(!achou) return '';
-  var folga = 8;
+  var folga = Math.round(origem.width * 0.015) + 6;
   minX = Math.max(0, minX - folga); minY = Math.max(0, minY - folga);
   maxX = Math.min(origem.width - 1, maxX + folga); maxY = Math.min(origem.height - 1, maxY + folga);
   var largura = maxX - minX + 1, altura = maxY - minY + 1;
-  var escala = Math.min(1, 700 / largura);            // no PDF ela nunca passa de ~700 px
+  var escala = Math.min(1, 900 / largura, 400 / altura);
   var saida = document.createElement('canvas');
   saida.width = Math.max(1, Math.round(largura * escala));
   saida.height = Math.max(1, Math.round(altura * escala));
@@ -1267,6 +1383,7 @@ var TELAS = {
   ficha:       'telaFicha',
   formFunc:    'telaFormFunc',
   formEntrega: 'telaFormEntrega',
+  devolucao:   'telaDevolucao',
   epis:        'telaEpis',
   cfg:         'telaCfg'
 };
@@ -1280,7 +1397,6 @@ function mostrarTela(nome){
     $('aba' + a.charAt(0).toUpperCase() + a.slice(1)).classList.toggle('ativo', a === aba);
   });
   try{ window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0,0); }
-  setTimeout(ajustarAssinaturas, 60);
 }
 
 /* ---------------------- lista de funcionários ----------------------- */
@@ -1366,7 +1482,7 @@ function renderFicha(){
     bt.addEventListener('click', function(){
       var id = bt.dataset.entrega, a = bt.dataset.acao;
       if(a === 'editar') abrirFormEntrega(id);
-      if(a === 'devolucao') abrirFormEntrega(id, true);
+      if(a === 'devolucao') abrirDevolucao(id);
       if(a === 'excluir') excluirEntrega(id);
     });
   });
@@ -1374,6 +1490,26 @@ function renderFicha(){
 
 function cartaoEntrega(e){
   var itens = e.itens || [];
+  var assinados = itens.filter(function(i){ return i.assinatura; }).length;
+  var devolvidos = itens.filter(function(i){ return i.dataDevolucao; }).length;
+
+  var linhas = itens.map(function(i){
+    return '<tr>' +
+      '<td>' + esc(i.nome) + (i.tamanho ? ' — <strong>' + esc(i.tamanho) + '</strong>' : '') +
+        '<div class="pequeno suave">' + (i.ca ? 'CA ' + esc(i.ca) + ' · ' : '') +
+        'Qtde ' + esc(numeroBonito(i.qtde)) + '</div></td>' +
+      '<td>' + (i.assinatura
+        ? '<img class="assin-mini" src="' + i.assinatura + '" alt="Assinatura de recebimento">'
+        : '<span class="pequeno" style="color:var(--vermelho)">sem assinatura</span>') + '</td>' +
+      '<td>' + (i.dataDevolucao
+        ? esc(dataBR(i.dataDevolucao)) +
+          (i.assinaturaDevolucao
+            ? '<br><img class="assin-mini" src="' + i.assinaturaDevolucao + '" alt="Assinatura de devolução">'
+            : '<div class="pequeno suave">sem assinatura</div>')
+        : '<span class="pequeno suave">—</span>') + '</td>' +
+    '</tr>';
+  }).join('');
+
   return '<div class="cartao">' +
     '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between">' +
       '<h3 style="margin:0">Entrega de ' + esc(dataBR(e.dataEntrega)) + '</h3>' +
@@ -1381,24 +1517,13 @@ function cartaoEntrega(e){
     '</div>' +
     '<div class="pequeno suave">' +
       (e.dataInicio ? 'Ficha iniciada em ' + esc(dataBR(e.dataInicio)) + ' · ' : '') +
-      (e.dataDevolucao ? 'Devolvido em ' + esc(dataBR(e.dataDevolucao)) : 'Sem devolução registrada') +
+      assinados + ' de ' + itens.length + ' assinado(s)' +
+      (devolvidos ? ' · ' + devolvidos + ' devolvido(s)' : '') +
     '</div>' +
     '<div class="rolagem" style="margin-top:10px"><table>' +
-      '<thead><tr><th>EPI/Uniforme</th><th>CA</th><th>Qtde</th></tr></thead><tbody>' +
-      itens.map(function(i){
-        // o tamanho vai junto do nome, como sai no PDF, para a tabela caber na tela do celular
-        return '<tr><td>' + esc(i.nome) + (i.tamanho ? ' — <strong>' + esc(i.tamanho) + '</strong>' : '') +
-               '</td><td>' + esc(i.ca || '—') + '</td><td>' + esc(numeroBonito(i.qtde)) + '</td></tr>';
-      }).join('') +
-    '</tbody></table></div>' +
-    '<div class="grade" style="margin-top:12px">' +
-      '<div><label>Assinatura de recebimento</label>' +
-        (e.assinatura ? '<img class="assin-mini" src="' + e.assinatura + '" alt="Assinatura de recebimento">'
-                      : '<div class="pequeno suave">Não assinada</div>') + '</div>' +
-      '<div><label>Assinatura de devolução</label>' +
-        (e.assinaturaDevolucao ? '<img class="assin-mini" src="' + e.assinaturaDevolucao + '" alt="Assinatura de devolução">'
-                               : '<div class="pequeno suave">Não assinada</div>') + '</div>' +
-    '</div>' +
+      '<thead><tr><th>EPI/Uniforme</th><th>Assinatura</th><th>Devolução</th></tr></thead>' +
+      '<tbody>' + linhas + '</tbody>' +
+    '</table></div>' +
     (e.obs ? '<p class="pequeno" style="margin-top:10px"><strong>Observações:</strong> ' + esc(e.obs) + '</p>' : '') +
     '<div class="acoes">' +
       '<button type="button" class="btn pequeno" data-entrega="' + esc(e.id) + '" data-acao="devolucao">Registrar devolução</button>' +
@@ -1418,9 +1543,7 @@ function abrirFormFuncionario(id){
   $('fCargo').value = f ? f.cargo : '';
   $('fSetor').value = f ? f.setor : '';
   $('fCiente').value = f ? (f.cienteData || '') : '';
-  limparAssinatura('fAssin');
-  $('fAssinAtual').hidden = !(f && f.assinAdmissao);
-  if(f && f.assinAdmissao) $('fAssinImg').src = f.assinAdmissao;
+  prepararAssinatura('fAssin', f ? f.assinAdmissao : '');
   mostrarTela('formFunc');
   setTimeout(function(){ $('fNome').focus(); }, 120);
 }
@@ -1436,7 +1559,7 @@ function salvarFuncionario(){
   f.cargo = ($('fCargo').value || '').trim();
   f.setor = ($('fSetor').value || '').trim();
   f.cienteData = $('fCiente').value || '';
-  if(!assinaturaVazia('fAssin')) f.assinAdmissao = assinaturaPNG('fAssin');
+  f.assinAdmissao = assinaturaParaSalvar('fAssin');
   if(novo) estado.funcionarios.push(f);
 
   Armaz.salvar('funcionarios', f, estado.funcionarios).then(function(){
@@ -1482,10 +1605,15 @@ function opcoesEpi(selecionado){
   return html;
 }
 
+/* Devolução já registrada de cada linha, preservada quando a entrega é editada. */
+var devolucaoDaLinha = {};
+
 function criarLinhaItem(dados){
   dados = dados || {};
   var no = document.createElement('div');
   no.className = 'item';
+  var chave = novoId('it');           // cada material tem a sua própria assinatura
+  no.dataset.chave = chave;
   var idck = novoId('ck');
   no.innerHTML =
     '<div class="item-topo">' +
@@ -1505,6 +1633,15 @@ function criarLinhaItem(dados){
         '<input type="text" class="inQtde" inputmode="decimal" value="1"></div>' +
       '<div class="campo campoTamanho"><label>Tamanho</label>' +
         '<input type="text" class="inTamanho" list="listaTamanhos" placeholder="P, M, G, GG, EXG ou nº"></div>' +
+    '</div>' +
+    '<div class="assin-item">' +
+      '<label>Assinatura de quem recebeu este material</label>' +
+      '<div class="previa-assin" data-previa="' + chave + '">' +
+        '<span class="sem">Nenhuma assinatura ainda — toque para assinar</span></div>' +
+      '<div class="acoes">' +
+        '<button type="button" class="btn primario pequeno" data-assinar="' + chave + '">Assinar em tela cheia</button>' +
+        '<button type="button" class="btn pequeno" data-apagar="' + chave + '">Apagar</button>' +
+      '</div>' +
     '</div>';
 
   var sel = no.querySelector('.selEpi');
@@ -1514,6 +1651,15 @@ function criarLinhaItem(dados){
   var inQtde = no.querySelector('.inQtde');
   var inTam = no.querySelector('.inTamanho');
   var campoTam = no.querySelector('.campoTamanho');
+
+  function nomeDaLinha(){
+    if(sel.value === '__novo__') return maiuscula(inNome.value) || 'Item novo';
+    var epi = epiPorId(sel.value);
+    return epi ? epi.nome : 'Material';
+  }
+  function atualizarRotulo(){
+    Assinaturas.rotulos[chave] = 'Assinatura — ' + nomeDaLinha();
+  }
 
   function aplicar(preservar){
     var novo = sel.value === '__novo__';
@@ -1526,15 +1672,18 @@ function criarLinhaItem(dados){
       campoTam.hidden = !(epi && epi.temTamanho);
       if(campoTam.hidden && !preservar) inTam.value = '';
     }
+    atualizarRotulo();
   }
 
   sel.addEventListener('change', function(){ aplicar(false); });
+  inNome.addEventListener('input', atualizarRotulo);
   no.querySelector('.remover').addEventListener('click', function(){
+    delete devolucaoDaLinha[chave];
     no.remove();
     if(!$('itens').querySelector('.item')) $('itens').appendChild(criarLinhaItem());
+    marcarItensSemAssinatura();
   });
 
-  // preenche com o que veio (edição de entrega já gravada)
   if(dados.epiId && epiPorId(dados.epiId)){
     sel.value = dados.epiId;
   }else if(dados.nome){
@@ -1546,12 +1695,33 @@ function criarLinhaItem(dados){
   inQtde.value = (dados.qtde != null && dados.qtde !== '') ? numeroBonito(dados.qtde) : '1';
   inTam.value = dados.tamanho || '';
   aplicar(true);
+
+  prepararAssinatura(chave, dados.assinatura || '', Assinaturas.rotulos[chave]);
+  devolucaoDaLinha[chave] = {
+    dataDevolucao: dados.dataDevolucao || '',
+    assinaturaDevolucao: dados.assinaturaDevolucao || ''
+  };
+  ligarBotoesAssinatura(no);
   return no;
+}
+
+/* Deixa em destaque as linhas que ainda estão sem assinatura. */
+function marcarItensSemAssinatura(){
+  var faltando = 0;
+  $('itens').querySelectorAll('.item').forEach(function(no){
+    var chave = no.dataset.chave;
+    var temNome = no.querySelector('.selEpi').value || maiuscula(no.querySelector('.inNome').value);
+    var vazia = !assinaturaParaSalvar(chave);
+    no.classList.toggle('sem-assinatura', !!temNome && vazia);
+    if(temNome && vazia) faltando++;
+  });
+  return faltando;
 }
 
 function lerItensDoFormulario(){
   var itens = [], novosParaLista = [];
   $('itens').querySelectorAll('.item').forEach(function(no){
+    var chave = no.dataset.chave;
     var sel = no.querySelector('.selEpi');
     var novo = sel.value === '__novo__';
     var nome = novo ? maiuscula(no.querySelector('.inNome').value)
@@ -1561,7 +1731,17 @@ function lerItensDoFormulario(){
     var tamanho = maiuscula(no.querySelector('.inTamanho').value);
     var qtde = parseFloat(String(no.querySelector('.inQtde').value || '1').replace(',','.'));
     if(!isFinite(qtde) || qtde <= 0) qtde = 1;
-    itens.push({ epiId: novo ? '' : sel.value, nome: nome, ca: ca, qtde: qtde, tamanho: tamanho });
+    var dev = devolucaoDaLinha[chave] || {};
+    itens.push({
+      epiId: novo ? '' : sel.value,
+      nome: nome,
+      ca: ca,
+      qtde: qtde,
+      tamanho: tamanho,
+      assinatura: assinaturaParaSalvar(chave),
+      dataDevolucao: dev.dataDevolucao || '',
+      assinaturaDevolucao: dev.assinaturaDevolucao || ''
+    });
     if(novo && no.querySelector('.ckSalvar').checked){
       novosParaLista.push({ nome: nome, ca: ca, temTamanho: tamanho ? 1 : 0 });
     }
@@ -1570,7 +1750,7 @@ function lerItensDoFormulario(){
 }
 
 /* -------------------------- formulário de entrega ------------------- */
-function abrirFormEntrega(id, focoDevolucao){
+function abrirFormEntrega(id){
   var f = funcionarioPorId(estado.funcId);
   if(!f) return;
   estado.entregaId = id || null;
@@ -1582,28 +1762,16 @@ function abrirFormEntrega(id, focoDevolucao){
     (f.registro ? 'Registro ' + f.registro + ' · ' : '') + (f.cargo || '—') + (f.setor ? ' · ' + f.setor : '');
   $('eInicio').value = e ? (e.dataInicio || '') : hojeISO();
   $('eEntrega').value = e ? e.dataEntrega : hojeISO();
-  $('eDevolucao').value = e ? (e.dataDevolucao || '') : '';
   $('eObs').value = e ? (e.obs || '') : '';
 
-  limparAssinatura('eAssin');
-  limparAssinatura('eAssinDev');
-  $('eAssinAtual').hidden = !(e && e.assinatura);
-  if(e && e.assinatura) $('eAssinImg').src = e.assinatura;
-  $('eAssinDevAtual').hidden = !(e && e.assinaturaDevolucao);
-  if(e && e.assinaturaDevolucao) $('eAssinDevImg').src = e.assinaturaDevolucao;
-
+  devolucaoDaLinha = {};
   var cx = $('itens');
   cx.innerHTML = '';
   var itens = (e && e.itens && e.itens.length) ? e.itens : [null];
   itens.forEach(function(i){ cx.appendChild(criarLinhaItem(i)); });
+  marcarItensSemAssinatura();
 
   mostrarTela('formEntrega');
-  if(focoDevolucao){
-    setTimeout(function(){
-      try{ $('eDevolucao').scrollIntoView({ block:'center', behavior:'smooth' }); }catch(err){}
-      if(!$('eDevolucao').value) $('eDevolucao').value = hojeISO();
-    }, 200);
-  }
 }
 
 function salvarEntrega(){
@@ -1615,19 +1783,23 @@ function salvarEntrega(){
   var lidos = lerItensDoFormulario();
   if(!lidos.itens.length){ mostrarMsg('Inclua ao menos um item na entrega.', 'erro', true); return; }
 
+  var semAssinatura = lidos.itens.filter(function(i){ return !i.assinatura; });
+  if(semAssinatura.length){
+    marcarItensSemAssinatura();
+    var lista = semAssinatura.map(function(i){ return i.nome; }).join(', ');
+    if(!confirm('Cada material precisa da assinatura de quem recebeu.\n\nEstá sem assinatura: ' + lista +
+                '\n\nSalvar assim mesmo e colher depois em “Editar”?')) return;
+  }
+
   var e = estado.entregaId ? entregaPorId(estado.entregaId) : null;
   var nova = !e;
-  if(nova){ e = { id: novoId('e'), funcId: f.id, criadoEm: new Date().toISOString(), assinatura:'', assinaturaDevolucao:'' }; }
+  if(nova){ e = { id: novoId('e'), funcId: f.id, criadoEm: new Date().toISOString() }; }
   e.dataInicio = $('eInicio').value || '';
   e.dataEntrega = dataEntrega;
-  e.dataDevolucao = $('eDevolucao').value || '';
   e.obs = ($('eObs').value || '').trim();
   e.itens = lidos.itens;
-  if(!assinaturaVazia('eAssin')) e.assinatura = assinaturaPNG('eAssin');
-  if(!assinaturaVazia('eAssinDev')) e.assinaturaDevolucao = assinaturaPNG('eAssinDev');
   if(nova) estado.entregas.push(e);
 
-  // itens novos que o usuário mandou guardar na lista mestre
   var promessaEpis = lidos.novosParaLista.reduce(function(p, item){
     return p.then(function(){
       var existe = estado.epis.some(function(x){ return semAcento(x.nome) === semAcento(item.nome); });
@@ -1641,11 +1813,10 @@ function salvarEntrega(){
   promessaEpis
     .then(function(){ return Armaz.salvar('entregas', e, estado.entregas); })
     .then(function(){
-      if(!e.assinatura){
-        mostrarMsg('Entrega salva, mas sem assinatura. Você pode abrir em “Editar” e colher a assinatura depois.', 'alerta', true);
-      }else{
-        mostrarMsg('Entrega registrada.', 'sucesso');
-      }
+      mostrarMsg(semAssinatura.length
+        ? 'Entrega salva. Faltam ' + semAssinatura.length + ' assinatura(s) — abra em “Editar” para colher.'
+        : 'Entrega registrada com a assinatura de cada material.',
+        semAssinatura.length ? 'alerta' : 'sucesso', !!semAssinatura.length);
       renderListaFuncionarios();
       renderListaEpis();
       renderFicha();
@@ -1660,13 +1831,98 @@ function salvarEntrega(){
 function excluirEntrega(id){
   var e = entregaPorId(id);
   if(!e) return;
-  if(!confirm('Excluir a entrega de ' + dataBR(e.dataEntrega) + '?\n\nIsso apaga também a assinatura colhida.')) return;
+  if(!confirm('Excluir a entrega de ' + dataBR(e.dataEntrega) + '?\n\nIsso apaga também as assinaturas colhidas.')) return;
   estado.entregas = estado.entregas.filter(function(x){ return x.id !== id; });
   Armaz.remover('entregas', id, estado.entregas).then(function(){
     mostrarMsg('Entrega excluída.', 'sucesso');
     renderListaFuncionarios();
     renderFicha();
   }).catch(function(err){ mostrarMsg('Falha ao excluir: ' + msgErro(err), 'erro', true); });
+}
+
+/* ------------------------- devolução, material a material ------------ */
+function abrirDevolucao(entregaId){
+  var e = entregaPorId(entregaId);
+  if(!e) return;
+  estado.entregaId = entregaId;
+  $('devEntregaTitulo').textContent = 'Entrega de ' + dataBR(e.dataEntrega);
+  $('dDataDevolucao').value = hojeISO();
+
+  var cx = $('devItens');
+  cx.innerHTML = '';
+  (e.itens || []).forEach(function(item, indice){
+    var chave = 'dev_' + indice;
+    var devolvido = !!item.dataDevolucao;
+    var no = document.createElement('div');
+    no.className = 'cartao';
+    no.dataset.indice = String(indice);
+    no.innerHTML =
+      '<h3>' + esc(item.nome) + (item.tamanho ? ' — ' + esc(item.tamanho) : '') +
+        ' <span class="pequeno suave">(' + esc(numeroBonito(item.qtde)) + ')</span></h3>' +
+      (devolvido
+        ? '<div class="pequeno suave">Já devolvido em ' + esc(dataBR(item.dataDevolucao)) + '</div>'
+        : '') +
+      '<div class="linha-check">' +
+        '<input type="checkbox" class="ckDev" id="ck_' + chave + '"' + (devolvido ? ' checked' : '') + '>' +
+        '<label for="ck_' + chave + '">Este material está sendo devolvido</label>' +
+      '</div>' +
+      '<div class="assin-item">' +
+        '<label>Assinatura da devolução</label>' +
+        '<div class="previa-assin" data-previa="' + chave + '">' +
+          '<span class="sem">Nenhuma assinatura ainda — toque para assinar</span></div>' +
+        '<div class="acoes">' +
+          '<button type="button" class="btn pequeno" data-assinar="' + chave + '">Assinar em tela cheia</button>' +
+          '<button type="button" class="btn pequeno" data-apagar="' + chave + '">Apagar</button>' +
+        '</div>' +
+      '</div>';
+    cx.appendChild(no);
+    prepararAssinatura(chave, item.assinaturaDevolucao || '',
+                       'Devolução — ' + item.nome + (item.tamanho ? ' ' + item.tamanho : ''));
+    ligarBotoesAssinatura(no);
+  });
+
+  mostrarTela('devolucao');
+}
+
+function salvarDevolucao(){
+  var e = entregaPorId(estado.entregaId);
+  if(!e) return;
+  var data = $('dDataDevolucao').value;
+  var marcados = 0, semAssin = [];
+
+  $('devItens').querySelectorAll('[data-indice]').forEach(function(no){
+    var indice = parseInt(no.dataset.indice, 10);
+    var item = e.itens[indice];
+    if(!item) return;
+    var chave = 'dev_' + indice;
+    if(no.querySelector('.ckDev').checked){
+      if(!data){ return; }
+      marcados++;
+      item.dataDevolucao = data;
+      item.assinaturaDevolucao = assinaturaParaSalvar(chave);
+      if(!item.assinaturaDevolucao) semAssin.push(item.nome);
+    }else{
+      item.dataDevolucao = '';
+      item.assinaturaDevolucao = '';
+    }
+  });
+
+  if(!data && marcados === 0 && !$('devItens').querySelector('.ckDev:checked')){
+    // nada marcado: só limpa devoluções anteriores
+  }else if(!data){
+    mostrarMsg('Informe a data da devolução.', 'erro', true);
+    return;
+  }
+  if(semAssin.length){
+    if(!confirm('Sem assinatura de devolução em: ' + semAssin.join(', ') +
+                '\n\nSalvar assim mesmo?')) return;
+  }
+
+  Armaz.salvar('entregas', e, estado.entregas).then(function(){
+    mostrarMsg(marcados ? 'Devolução registrada em ' + marcados + ' material(is).' : 'Devoluções atualizadas.', 'sucesso');
+    renderFicha();
+    mostrarTela('ficha');
+  }).catch(function(err){ mostrarMsg('Não foi possível salvar: ' + msgErro(err), 'erro', true); });
 }
 
 /* -------------------------- lista mestre de EPI --------------------- */
@@ -1768,23 +2024,24 @@ function excluirEpi(id){
 }
 
 /* ============================ GERAÇÃO DO PDF =========================
-   Reproduz a ficha de entrega de EPI em papel: cabeçalho com a logo e o
-   nome da empresa, dados do funcionário, declaração de responsabilidade,
-   campo "Ciente em" e a tabela do histórico com as assinaturas.
+   Ficha de entrega de EPI em A4 paisagem, no mesmo desenho da planilha
+   que serve de modelo: título, empresa e dados do funcionário no topo,
+   declaração de responsabilidade, campo "Ciente em" e a tabela do
+   histórico com as assinaturas. Empresa e logo vêm das configurações —
+   é a única parte que muda de uma empresa para outra.
    ==================================================================== */
-var PAG_L = 210, PAG_A = 297, MARGEM = 12;
+var PAG_L = 297, PAG_A = 210, MARGEM = 10;
 var UTIL = PAG_L - 2 * MARGEM;
 var C_ESCURO = [34,48,58], C_CINZA = [100,112,122], C_LINHA = [90,90,90], C_CAB = [47,72,88];
 
-/* Largura e altura de um PNG/JPEG lidas do próprio arquivo, sem carregar imagem. */
+/* Largura e altura de um PNG lidas do próprio arquivo, sem carregar imagem. */
 function dimensoesImagem(dataUrl){
   try{
     var virgula = dataUrl.indexOf(',');
     var bin = atob(dataUrl.slice(virgula + 1, virgula + 1 + 64));
     var b = [];
     for(var i = 0; i < bin.length; i++) b.push(bin.charCodeAt(i));
-    // PNG: assinatura de 8 bytes, IHDR com largura e altura em big-endian
-    if(b[0] === 0x89 && b[1] === 0x50){
+    if(b[0] === 0x89 && b[1] === 0x50){          // PNG: largura e altura no IHDR
       return {
         largura: (b[16] << 24) | (b[17] << 16) | (b[18] << 8) | b[19],
         altura:  (b[20] << 24) | (b[21] << 16) | (b[22] << 8) | b[23]
@@ -1821,102 +2078,101 @@ function caixa(doc, x, y, l, a){
   doc.rect(x, y, l, a);
 }
 
+/* Descrição do item como na ficha em papel: uniforme com os tamanhos
+   marcados entre parênteses, calçado com a numeração, resto só o nome. */
+function descricaoItem(item){
+  var pedeTamanho = false;
+  var epi = item.epiId ? epiPorId(item.epiId) : null;
+  if(epi) pedeTamanho = !!epi.temTamanho;
+  var tam = maiuscula(item.tamanho || '');
+  var letra = TAMANHOS.indexOf(tam) >= 0;
+  if(letra || (pedeTamanho && !tam)){
+    var marcas = TAMANHOS.map(function(t){
+      return t + ' (' + (t === tam ? ' X ' : '    ') + ')';
+    }).join('  ');
+    return item.nome + ':  ' + marcas;
+  }
+  if(tam) return item.nome + ' — Nº ' + tam;
+  return item.nome;
+}
+
 function gerarPDF(f){
   var Ctor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
   if(!Ctor){ mostrarMsg('A biblioteca de PDF não carregou. Recarregue a página e tente de novo.', 'erro', true); return; }
   if(!estado.cfg.empresa){
-    mostrarMsg('Cadastre o nome da empresa em Configurações — ele sai no cabeçalho da ficha.', 'alerta', true);
+    mostrarMsg('O nome da empresa está em branco na ficha. Preencha em Configurações para sair no cabeçalho.', 'alerta', true);
   }
   processando(true, 'Montando o PDF…', f.nome);
 
   setTimeout(function(){
     try{
-      var doc = new Ctor({ orientation:'portrait', unit:'mm', format:'a4', compress:true });
+      var doc = new Ctor({ orientation:'landscape', unit:'mm', format:'a4', compress:true });
       var y = MARGEM;
 
-      /* ------------------------------------------------ cabeçalho */
-      var divisor = MARGEM + UTIL * 0.42;
-      var xTexto = MARGEM + 4, larguraTexto = divisor - MARGEM - 8;
-      var comLogo = !!estado.cfg.logo;
-      var nomeEmpresa = estado.cfg.empresa || 'Empresa não configurada';
-      var fonteEmp = comLogo ? 9.5 : 11;
-      var alturaLinha = comLogo ? 4 : 4.6;
-
-      doc.setFont('helvetica','bold'); doc.setFontSize(fonteEmp);
-      var linhasEmp = doc.splitTextToSize(nomeEmpresa, larguraTexto).slice(0, 2);
-      var alturaTexto = linhasEmp.length * alturaLinha + (estado.cfg.cnpj ? 3.4 : 0);
-      // o cabeçalho cresce se a logo e o nome em duas linhas não couberem em 20 mm
-      var altCab = Math.max(20, (comLogo ? 12.5 : 4) + alturaTexto + 3.5);
-
-      caixa(doc, MARGEM, y, UTIL, altCab);
-      doc.setLineWidth(0.32);
-      doc.line(divisor, y, divisor, y + altCab);
-
-      if(comLogo) imagemNaCaixa(doc, estado.cfg.logo, MARGEM + 3, y + 2, Math.min(34, larguraTexto), 8.5, estado.cfg.logoDim);
-      var yTexto = comLogo ? (y + 12.5 + alturaLinha) : (y + (altCab - alturaTexto) / 2 + alturaLinha);
-      doc.setFont('helvetica','bold'); doc.setFontSize(fonteEmp);
-      doc.setTextColor(C_ESCURO[0], C_ESCURO[1], C_ESCURO[2]);
-      linhasEmp.forEach(function(linha, i){ doc.text(linha, xTexto, yTexto + i * alturaLinha); });
-      if(estado.cfg.cnpj){
-        txt(doc, 'CNPJ: ' + estado.cfg.cnpj, xTexto,
-            yTexto + (linhasEmp.length - 1) * alturaLinha + 3.4, 7, 'normal', C_CINZA);
+      /* -------------------------------------- faixa do título + logo */
+      var altTitulo = 13;
+      caixa(doc, MARGEM, y, UTIL, altTitulo);
+      if(estado.cfg.logo){
+        imagemNaCaixa(doc, estado.cfg.logo, MARGEM + 3, y + 1.8, 38, altTitulo - 3.6, estado.cfg.logoDim);
       }
-      txt(doc, 'FICHA DE ENTREGA DE EPI', divisor + (MARGEM + UTIL - divisor) / 2,
-          y + altCab / 2 + 1.6, 14, 'bold', C_ESCURO, 'center');
-      y += altCab;
+      txt(doc, 'FICHA DE ENTREGA DE EPI', PAG_L / 2, y + altTitulo / 2 + 1.8, 15, 'bold', C_ESCURO, 'center');
+      y += altTitulo;
 
-      /* --------------------------------------- dados do funcionário */
-      var corte = MARGEM + UTIL * 0.72;
-      function linhaDados(rot1, val1, rot2, val2){
-        var alt = 11;
+      /* ------------------------------ empresa e dados do funcionário */
+      var c1 = MARGEM + UTIL * 0.34, c2 = MARGEM + UTIL * 0.78;
+      function faixaDados(r1, v1, r2, v2, r3, v3, negritoEsq){
+        var alt = 12;
         caixa(doc, MARGEM, y, UTIL, alt);
-        doc.line(corte, y, corte, y + alt);
-        txt(doc, rot1, MARGEM + 3, y + 3.6, 6.2, 'normal', C_CINZA);
-        txt(doc, val1 || '', MARGEM + 3, y + 8.4, 9.5, 'bold', C_ESCURO);
-        txt(doc, rot2, corte + 3, y + 3.6, 6.2, 'normal', C_CINZA);
-        txt(doc, val2 || '', corte + 3, y + 8.4, 9.5, 'bold', C_ESCURO);
+        doc.setLineWidth(0.32);
+        doc.line(c1, y, c1, y + alt);
+        doc.line(c2, y, c2, y + alt);
+        [[r1, v1, MARGEM], [r2, v2, c1], [r3, v3, c2]].forEach(function(campo, i){
+          if(campo[0]) txt(doc, campo[0], campo[2] + 3, y + 4, 6.4, 'normal', C_CINZA);
+          if(campo[1]){
+            var estilo = (i === 0 && !negritoEsq) ? 'normal' : 'bold';
+            txt(doc, campo[1], campo[2] + 3, y + 9.2, i === 0 ? 10 : 10.5, estilo, C_ESCURO);
+          }
+        });
         y += alt;
       }
-      linhaDados('NOME DO FUNCIONÁRIO', f.nome, 'Nº REGISTRO', f.registro);
-      linhaDados('CARGO', f.cargo, 'SETOR', f.setor);
+      faixaDados('EMPRESA', estado.cfg.empresa || '', 'NOME DO FUNCIONÁRIO', f.nome, 'Nº REGISTRO', f.registro, true);
+      faixaDados(estado.cfg.cnpj ? 'CNPJ' : '', estado.cfg.cnpj || '', 'CARGO', f.cargo, 'SETOR', f.setor, false);
 
-      /* -------------------------------------------- declaração */
-      y += 1.6;
-      var textoTopo = 'Declaro que recebi da empresa ' + maiuscula(estado.cfg.empresa || '___________') +
+      /* ------------------------------------------------- declaração */
+      var textoTopo = 'Declaro que recebi da empresa ' + (maiuscula(estado.cfg.empresa) || '________________________') +
                       ' o(s) seguinte(s) equipamento(s) de proteção individual:';
-      doc.setFont('helvetica','normal'); doc.setFontSize(7.4);
-      var blocos = [textoTopo].concat(DECLARACAO).map(function(t){
-        return doc.splitTextToSize(t, UTIL - 8);
-      });
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.6);
+      var blocos = [textoTopo].concat(DECLARACAO).map(function(t){ return doc.splitTextToSize(t, UTIL - 8); });
       var altDecl = 4;
-      blocos.forEach(function(linhas){ altDecl += linhas.length * 3.1 + 1.1; });
+      blocos.forEach(function(linhas){ altDecl += linhas.length * 3.2 + 1.2; });
       caixa(doc, MARGEM, y, UTIL, altDecl);
-      var yTexto = y + 4.4;
+      var yTexto = y + 4.6;
       doc.setTextColor(C_ESCURO[0], C_ESCURO[1], C_ESCURO[2]);
       blocos.forEach(function(linhas){
         doc.text(linhas, MARGEM + 4, yTexto);
-        yTexto += linhas.length * 3.1 + 1.1;
+        yTexto += linhas.length * 3.2 + 1.2;
       });
       y += altDecl;
 
-      /* ---------------------------------------------- ciente em */
-      var altCiente = 21, meio = MARGEM + UTIL * 0.45;
+      /* ---------------------------------------------- ciente em ___ */
+      var altCiente = 19, meio = MARGEM + UTIL * 0.45;
       caixa(doc, MARGEM, y, UTIL, altCiente);
+      doc.setLineWidth(0.32);
       doc.line(meio, y, meio, y + altCiente);
       var ciente = f.cienteData
         ? 'CIENTE EM ' + dataBR(f.cienteData).split('/').join(' / ')
         : 'CIENTE EM ______ / ______ / __________';
-      txt(doc, ciente, MARGEM + 5, y + altCiente / 2 + 1.2, 9.5, 'bold', C_ESCURO);
-      if(f.assinAdmissao) imagemNaCaixa(doc, f.assinAdmissao, meio + 6, y + 2, UTIL * 0.55 - 12, 10.5);
-      var xLinha = meio + 6, lLinha = UTIL * 0.55 - 12;
+      txt(doc, ciente, MARGEM + 6, y + altCiente / 2 + 1.2, 10.5, 'bold', C_ESCURO);
+      var xLinha = meio + 10, lLinha = UTIL * 0.55 - 20;
+      if(f.assinAdmissao) imagemNaCaixa(doc, f.assinAdmissao, xLinha, y + 1.6, lLinha, altCiente - 8.6);
       doc.setLineWidth(0.2); doc.setDrawColor(120,120,120);
-      doc.line(xLinha, y + altCiente - 5.4, xLinha + lLinha, y + altCiente - 5.4);
-      txt(doc, 'x', xLinha - 1.5, y + altCiente - 5.6, 6.5, 'normal', C_CINZA);
-      txt(doc, 'ASSINATURA DO FUNCIONÁRIO', xLinha + lLinha / 2, y + altCiente - 2, 6.5, 'normal', C_CINZA, 'center');
+      doc.line(xLinha, y + altCiente - 5.6, xLinha + lLinha, y + altCiente - 5.6);
+      txt(doc, 'x', xLinha - 2.5, y + altCiente - 5.8, 7, 'normal', C_CINZA);
+      txt(doc, 'ASSINATURA DO FUNCIONÁRIO', xLinha + lLinha / 2, y + altCiente - 2, 7, 'normal', C_CINZA, 'center');
       y += altCiente + 2.5;
 
-      /* ------------------------------------------------- tabela */
-      var COL = [0.105, 0.30, 0.09, 0.06, 0.20, 0.105, 0.14].map(function(p){ return UTIL * p; });
+      /* ---------------------------------------------------- tabela */
+      var COL = [0.085, 0.30, 0.08, 0.05, 0.21, 0.085, 0.19].map(function(p){ return UTIL * p; });
       function xCol(i){
         var x = MARGEM;
         for(var k = 0; k < i; k++) x += COL[k];
@@ -1924,16 +2180,16 @@ function gerarPDF(f){
       }
 
       function cabecalhoTabela(){
-        var alt = 8.5;
+        var alt = 9;
         doc.setFillColor(C_CAB[0], C_CAB[1], C_CAB[2]);
         doc.rect(MARGEM, y, UTIL, alt, 'F');
         var titulos = [['DATA DE','ENTREGA'], ['EPI / UNIFORME'], ['CA'], ['QTDE'], ['ASSINATURA'],
                        ['DATA DE','DEVOLUÇÃO'], ['ASS. DEVOLUÇÃO']];
-        doc.setFont('helvetica','bold'); doc.setFontSize(6.6); doc.setTextColor(255,255,255);
+        doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(255,255,255);
         titulos.forEach(function(linhas, i){
           var cx = xCol(i) + COL[i] / 2;
-          var yb = y + (linhas.length === 2 ? 3.6 : 5.4);
-          linhas.forEach(function(t, k){ doc.text(t, cx, yb + k * 2.9, { align:'center' }); });
+          var yb = y + (linhas.length === 2 ? 3.9 : 5.7);
+          linhas.forEach(function(t, k){ doc.text(t, cx, yb + k * 3.1, { align:'center' }); });
         });
         doc.setDrawColor(C_LINHA[0], C_LINHA[1], C_LINHA[2]);
         doc.setLineWidth(0.22);
@@ -1957,60 +2213,71 @@ function gerarPDF(f){
       });
 
       if(!entregas.length){
-        var altV = 10;
+        var altV = 11;
         doc.setDrawColor(C_LINHA[0], C_LINHA[1], C_LINHA[2]); doc.setLineWidth(0.22);
         doc.rect(MARGEM, y, UTIL, altV);
-        txt(doc, 'Nenhuma entrega registrada.', PAG_L / 2, y + 6.4, 7.6, 'normal', C_CINZA, 'center');
+        txt(doc, 'Nenhuma entrega registrada.', PAG_L / 2, y + 7, 8, 'normal', C_CINZA, 'center');
         y += altV;
       }
 
       entregas.forEach(function(e){
         var itens = (e.itens && e.itens.length) ? e.itens : [{ nome:'—', ca:'', qtde:'', tamanho:'' }];
-        doc.setFont('helvetica','normal'); doc.setFontSize(7.6);
+        doc.setFont('helvetica','normal'); doc.setFontSize(7.8);
 
-        // altura de cada linha de item, considerando nome que quebra em duas linhas
-        var alturas = itens.map(function(i){
-          var nome = i.nome + (i.tamanho ? ' — ' + i.tamanho : '');
-          var linhas = doc.splitTextToSize(nome, COL[1] - 4).length;
-          return Math.max(6.4, 3.2 + linhas * 3.2);
+        var descricoes = itens.map(descricaoItem);
+        // cada material tem a sua própria assinatura, então cada linha precisa de altura
+        var alturas = descricoes.map(function(d){
+          var linhas = doc.splitTextToSize(d, COL[1] - 4).length;
+          return Math.max(13, 3.4 + linhas * 3.4);
         });
-        var somaItens = alturas.reduce(function(a,b){ return a + b; }, 0);
-        var precisaAssin = (e.assinatura || e.assinaturaDevolucao) ? 14 : 0;
-        var altGrupo = Math.max(somaItens, precisaAssin);
-        if(altGrupo > somaItens) alturas[alturas.length - 1] += (altGrupo - somaItens);
+        var altGrupo = alturas.reduce(function(a,b){ return a + b; }, 0);
 
-        if(y + altGrupo > PAG_A - 16) novaPagina();
+        if(y + altGrupo > PAG_A - 14){
+          // o grupo inteiro não cabe: começa na página seguinte
+          if(altGrupo <= PAG_A - MARGEM - 23) novaPagina();
+        }
 
         var yGrupo = y;
-        // colunas do meio, uma linha por item
-        itens.forEach(function(i, k){
+        itens.forEach(function(item, k){
           var alt = alturas[k];
-          var nome = i.nome + (i.tamanho ? ' — ' + i.tamanho : '');
-          var linhas = doc.splitTextToSize(nome, COL[1] - 4);
-          doc.setFont('helvetica','normal'); doc.setFontSize(7.6);
+          if(y + alt > PAG_A - 14){          // grupo grande: quebra entre linhas
+            doc.setDrawColor(C_LINHA[0], C_LINHA[1], C_LINHA[2]); doc.setLineWidth(0.22);
+            doc.rect(MARGEM, yGrupo, UTIL, y - yGrupo);
+            for(var c = 1; c < COL.length; c++) doc.line(xCol(c), yGrupo, xCol(c), y);
+            txt(doc, dataBR(e.dataEntrega), xCol(0) + COL[0] / 2, yGrupo + (y - yGrupo) / 2 + 1,
+                8, 'normal', C_ESCURO, 'center');
+            novaPagina();
+            yGrupo = y;
+          }
+          var linhas = doc.splitTextToSize(descricoes[k], COL[1] - 4);
+          doc.setFont('helvetica','normal'); doc.setFontSize(7.8);
           doc.setTextColor(C_ESCURO[0], C_ESCURO[1], C_ESCURO[2]);
-          doc.text(linhas, xCol(1) + 2, y + 4.2);
-          doc.text(String(i.ca || ''), xCol(2) + COL[2] / 2, y + 4.2, { align:'center' });
-          doc.text(numeroBonito(i.qtde), xCol(3) + COL[3] / 2, y + 4.2, { align:'center' });
+          doc.text(linhas, xCol(1) + 2, y + 5);
+          doc.text(String(item.ca || ''), xCol(2) + COL[2] / 2, y + 5, { align:'center' });
+          doc.text(numeroBonito(item.qtde), xCol(3) + COL[3] / 2, y + 5, { align:'center' });
+
+          if(item.assinatura) imagemNaCaixa(doc, item.assinatura, xCol(4) + 2, y + 1.2, COL[4] - 4, alt - 2.4);
+          if(item.dataDevolucao){
+            txt(doc, dataBR(item.dataDevolucao), xCol(5) + COL[5] / 2, y + alt / 2 + 1, 8, 'normal', C_ESCURO, 'center');
+          }
+          if(item.assinaturaDevolucao){
+            imagemNaCaixa(doc, item.assinaturaDevolucao, xCol(6) + 2, y + 1.2, COL[6] - 4, alt - 2.4);
+          }
+
+          // linha separando os materiais: só as colunas que mudam a cada item
           if(k < itens.length - 1){
             doc.setDrawColor(C_LINHA[0], C_LINHA[1], C_LINHA[2]); doc.setLineWidth(0.18);
-            doc.line(xCol(1), y + alt, xCol(4), y + alt);
+            doc.line(xCol(1), y + alt, MARGEM + UTIL, y + alt);
           }
           y += alt;
         });
 
-        // colunas da entrega, ocupando todas as linhas dos itens
-        txt(doc, dataBR(e.dataEntrega), xCol(0) + COL[0] / 2, yGrupo + altGrupo / 2 + 1, 7.6, 'normal', C_ESCURO, 'center');
-        if(e.dataDevolucao){
-          txt(doc, dataBR(e.dataDevolucao), xCol(5) + COL[5] / 2, yGrupo + altGrupo / 2 + 1, 7.6, 'normal', C_ESCURO, 'center');
-        }
-        if(e.assinatura) imagemNaCaixa(doc, e.assinatura, xCol(4) + 2, yGrupo + 1.5, COL[4] - 4, altGrupo - 3);
-        if(e.assinaturaDevolucao) imagemNaCaixa(doc, e.assinaturaDevolucao, xCol(6) + 2, yGrupo + 1.5, COL[6] - 4, altGrupo - 3);
-
-        // grade do grupo
+        // moldura do grupo e a data da entrega ocupando as linhas dos materiais
         doc.setDrawColor(C_LINHA[0], C_LINHA[1], C_LINHA[2]); doc.setLineWidth(0.22);
-        doc.rect(MARGEM, yGrupo, UTIL, altGrupo);
-        for(var i = 1; i < COL.length; i++) doc.line(xCol(i), yGrupo, xCol(i), yGrupo + altGrupo);
+        doc.rect(MARGEM, yGrupo, UTIL, y - yGrupo);
+        for(var i = 1; i < COL.length; i++) doc.line(xCol(i), yGrupo, xCol(i), y);
+        txt(doc, dataBR(e.dataEntrega), xCol(0) + COL[0] / 2, yGrupo + (y - yGrupo) / 2 + 1,
+            8, 'normal', C_ESCURO, 'center');
       });
 
       rodape(doc);
@@ -2031,8 +2298,8 @@ function gerarPDF(f){
 
 function rodape(doc){
   var pag = doc.internal.getCurrentPageInfo().pageNumber;
-  txt(doc, 'Emitido em ' + dataBR(hojeISO()), MARGEM, PAG_A - 8, 6.5, 'normal', C_CINZA);
-  txt(doc, 'Página ' + pag, PAG_L - MARGEM, PAG_A - 8, 6.5, 'normal', C_CINZA, 'right');
+  txt(doc, 'Emitido em ' + dataBR(hojeISO()), MARGEM, PAG_A - 6, 7, 'normal', C_CINZA);
+  txt(doc, 'Página ' + pag, PAG_L - MARGEM, PAG_A - 6, 7, 'normal', C_CINZA, 'right');
 }
 
 /* -------------------- entrega do arquivo ao usuário ------------------ */
@@ -2051,7 +2318,6 @@ function publicarArquivo(nome, blob, dica){
         '<a class="sec" href="' + url + '" target="_blank" rel="noopener">Abrir em nova aba</a>' +
       '</div>' +
     '</div>';
-  // o bloco vai para a área de avisos, que aparece em qualquer tela
   var avisos = $('avisos');
   var antigo = avisos.querySelector('.blocoArq');
   if(antigo) antigo.remove();
@@ -2228,13 +2494,18 @@ function normalizarEpi(o){
 
 function normalizarEntrega(o){
   if(!o || typeof o !== 'object' || !o.funcId) throw new Error('entrega inválida no arquivo');
+  // backups antigos traziam uma assinatura para a entrega inteira: ela vira
+  // a assinatura de cada material, que é o que a ficha em papel exige
   var itens = Array.isArray(o.itens) ? o.itens.map(function(i){
     return {
       epiId: String(i.epiId || ''),
       nome: String(i.nome || '').trim(),
       ca: String(i.ca || '').trim(),
       qtde: (isFinite(Number(i.qtde)) && Number(i.qtde) > 0) ? Number(i.qtde) : 1,
-      tamanho: String(i.tamanho || '').trim()
+      tamanho: String(i.tamanho || '').trim(),
+      assinatura: String(i.assinatura || o.assinatura || ''),
+      dataDevolucao: String(i.dataDevolucao || o.dataDevolucao || ''),
+      assinaturaDevolucao: String(i.assinaturaDevolucao || o.assinaturaDevolucao || '')
     };
   }).filter(function(i){ return i.nome; }) : [];
   return {
@@ -2242,9 +2513,6 @@ function normalizarEntrega(o){
     funcId: String(o.funcId),
     dataInicio: String(o.dataInicio || ''),
     dataEntrega: String(o.dataEntrega || hojeISO()),
-    dataDevolucao: String(o.dataDevolucao || ''),
-    assinatura: String(o.assinatura || ''),
-    assinaturaDevolucao: String(o.assinaturaDevolucao || ''),
     obs: String(o.obs || ''),
     itens: itens,
     criadoEm: String(o.criadoEm || new Date().toISOString())
@@ -2363,6 +2631,28 @@ function apagarTudo(){
     .catch(function(e){ mostrarMsg('Falha ao apagar: ' + msgErro(e), 'erro', true); });
 }
 
+/* Fichas gravadas antes tinham uma assinatura para a entrega inteira.
+   Aqui ela é copiada para cada material, que é como a ficha em papel exige. */
+function migrarAssinaturaParaItens(){
+  var mudadas = [];
+  estado.entregas.forEach(function(e){
+    if(!e.assinatura && !e.dataDevolucao && !e.assinaturaDevolucao) return;
+    (e.itens || []).forEach(function(i){
+      if(!i.assinatura && e.assinatura) i.assinatura = e.assinatura;
+      if(!i.dataDevolucao && e.dataDevolucao) i.dataDevolucao = e.dataDevolucao;
+      if(!i.assinaturaDevolucao && e.assinaturaDevolucao) i.assinaturaDevolucao = e.assinaturaDevolucao;
+    });
+    delete e.assinatura;
+    delete e.dataDevolucao;
+    delete e.assinaturaDevolucao;
+    mudadas.push(e);
+  });
+  if(!mudadas.length) return Promise.resolve();
+  return mudadas.reduce(function(p, e){
+    return p.then(function(){ return Armaz.salvar('entregas', e, estado.entregas); });
+  }, Promise.resolve());
+}
+
 /* ============================ INICIALIZAÇÃO ========================== */
 function ligarEventos(){
   $('abaFunc').addEventListener('click', function(){ mostrarTela('lista'); });
@@ -2386,10 +2676,12 @@ function ligarEventos(){
   $('btAddItem').addEventListener('click', function(){
     var no = criarLinhaItem();
     $('itens').appendChild(no);
+    marcarItensSemAssinatura();
     try{ no.scrollIntoView({ block:'center', behavior:'smooth' }); }catch(e){}
     no.querySelector('.selEpi').focus();
   });
   $('btSalvarEntrega').addEventListener('click', salvarEntrega);
+  $('btSalvarDevolucao').addEventListener('click', salvarDevolucao);
 
   $('btAddEpi').addEventListener('click', adicionarEpi);
   $('pNome').addEventListener('keydown', function(ev){ if(ev.key === 'Enter') adicionarEpi(); });
@@ -2416,10 +2708,10 @@ function ligarEventos(){
 }
 
 function iniciar(){
-  $('versaoApp').textContent = 'Versão de ' + VERSAO_APP + ' — aplicativo de arquivo único, funciona offline.';
+  $('versaoApp').textContent = 'Versão de ' + VERSAO_APP + ' — ficha em paisagem, uma assinatura por material. ' +
+    'Se o seu aplicativo mostrar uma data mais antiga, recarregue a página para atualizar.';
   iniciarAssinaturas();
   ligarEventos();
-  ajustarAssinaturas();
 
   Armaz.iniciar().then(function(){
     $('txtArmaz').textContent = Armaz.detalhe;
@@ -2450,6 +2742,7 @@ function iniciar(){
       });
       return Armaz.trocarTudo('epis', estado.epis);
     }
+    return migrarAssinaturaParaItens();
   }).then(function(){
     aplicarCfgNaTela();
     renderListaFuncionarios();

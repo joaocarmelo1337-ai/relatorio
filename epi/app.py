@@ -56,36 +56,67 @@ def create_app(test_config=None):
         return f
 
     def itens_do_formulario():
-        """Lê as linhas de itens do formulário de entrega."""
+        """Lê as linhas de itens do formulário de entrega.
+
+        Cada material carrega a sua própria assinatura: ou uma nova, colhida
+        agora (PNG em base64), ou a que já estava gravada (id da assinatura).
+        """
         nomes = request.form.getlist("item_nome[]")
         epi_ids = request.form.getlist("item_epi_id[]")
         cas = request.form.getlist("item_ca[]")
         qtdes = request.form.getlist("item_qtde[]")
         tams = request.form.getlist("item_tamanho[]")
         salvar = request.form.getlist("item_salvar[]")
+        assinaturas = request.form.getlist("item_assinatura[]")
+        assinaturas_id = request.form.getlist("item_assinatura_id[]")
+        apagar = request.form.getlist("item_assinatura_apagar[]")
+        devolucoes = request.form.getlist("item_data_devolucao[]")
+        devolucoes_id = request.form.getlist("item_assinatura_devolucao_id[]")
+
+        def pega(lista, i):
+            return lista[i] if i < len(lista) else ""
+
         itens = []
         for i, nome in enumerate(nomes):
             nome = (nome or "").strip()
             if not nome:
                 continue
             try:
-                quantidade = float((qtdes[i] if i < len(qtdes) else "1").replace(",", ".") or 1)
+                quantidade = float((pega(qtdes, i) or "1").replace(",", ".") or 1)
             except ValueError:
                 quantidade = 1.0
-            epi_id = (epi_ids[i] if i < len(epi_ids) else "") or ""
+            epi_id = pega(epi_ids, i) or ""
+            antiga = pega(assinaturas_id, i)
             itens.append({
                 "epi_id": int(epi_id) if epi_id.isdigit() else None,
                 "nome": nome.upper(),
-                "ca": (cas[i] if i < len(cas) else "").strip(),
+                "ca": pega(cas, i).strip(),
                 "quantidade": quantidade,
-                "tamanho": (tams[i] if i < len(tams) else "").strip().upper(),
-                "salvar": (salvar[i] if i < len(salvar) else "0") == "1",
+                "tamanho": pega(tams, i).strip().upper(),
+                "salvar": pega(salvar, i) == "1",
+                "assinatura_nova": pega(assinaturas, i),
+                "assinatura_id": int(antiga) if antiga.isdigit() else None,
+                "apagar_assinatura": pega(apagar, i) == "1",
+                "data_devolucao": pega(devolucoes, i).strip() or None,
+                "assinatura_devolucao_id": (
+                    int(pega(devolucoes_id, i)) if pega(devolucoes_id, i).isdigit() else None
+                ),
             })
         return itens
 
     def gravar_itens(entrega_id, itens):
         con = db()
+        # assinaturas que sobrarem (item removido ou substituído) são apagadas
+        antigas = {
+            r["id"]: (r["assinatura_id"], r["assinatura_devolucao_id"])
+            for r in con.execute(
+                "SELECT id, assinatura_id, assinatura_devolucao_id FROM entrega_itens WHERE entrega_id = ?",
+                (entrega_id,),
+            )
+        }
+        usadas = set()
         con.execute("DELETE FROM entrega_itens WHERE entrega_id = ?", (entrega_id,))
+
         for ordem, item in enumerate(itens):
             epi_id = item["epi_id"]
             if item["salvar"] and epi_id is None:
@@ -99,11 +130,27 @@ def create_app(test_config=None):
                         "INSERT INTO epi_master (nome, ca, tem_tamanho) VALUES (?, ?, ?)",
                         (item["nome"], item["ca"], 1 if item["tamanho"] else 0),
                     ).lastrowid
+
+            assinatura_id = database.salvar_assinatura(item["assinatura_nova"])
+            if assinatura_id is None and not item["apagar_assinatura"]:
+                assinatura_id = item["assinatura_id"]          # mantém a que já existia
+            if assinatura_id:
+                usadas.add(assinatura_id)
+            if item["assinatura_devolucao_id"]:
+                usadas.add(item["assinatura_devolucao_id"])
+
             con.execute(
-                "INSERT INTO entrega_itens (entrega_id, epi_id, nome, ca, quantidade, tamanho, ordem)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (entrega_id, epi_id, item["nome"], item["ca"], item["quantidade"], item["tamanho"], ordem),
+                "INSERT INTO entrega_itens (entrega_id, epi_id, nome, ca, quantidade, tamanho,"
+                " assinatura_id, data_devolucao, assinatura_devolucao_id, ordem)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (entrega_id, epi_id, item["nome"], item["ca"], item["quantidade"], item["tamanho"],
+                 assinatura_id, item["data_devolucao"], item["assinatura_devolucao_id"], ordem),
             )
+
+        for recebimento, devolucao in antigas.values():
+            for aid in (recebimento, devolucao):
+                if aid and aid not in usadas:
+                    database.apagar_assinatura(aid)
 
     def historico(funcionario_id):
         con = db()
@@ -115,7 +162,9 @@ def create_app(test_config=None):
         blocos = []
         for e in entregas:
             itens = con.execute(
-                "SELECT * FROM entrega_itens WHERE entrega_id = ? ORDER BY ordem, id", (e["id"],)
+                "SELECT i.*, COALESCE(p.tem_tamanho, 0) AS tem_tamanho"
+                " FROM entrega_itens i LEFT JOIN epi_master p ON p.id = i.epi_id"
+                " WHERE i.entrega_id = ? ORDER BY i.ordem, i.id", (e["id"],)
             ).fetchall()
             blocos.append({"entrega": e, "itens": itens})
         return blocos
@@ -160,6 +209,7 @@ def create_app(test_config=None):
                 (request.form.get("ciente_data") or "").strip() or None,
             )
             assinatura_id = database.salvar_assinatura(request.form.get("assinatura"))
+            apagar_assinatura = request.form.get("assinatura_apagar") == "1"
             con = db()
             if f is None:
                 cur = con.execute(
@@ -170,7 +220,7 @@ def create_app(test_config=None):
                 fid = cur.lastrowid
                 msg = "Funcionário cadastrado."
             else:
-                if assinatura_id:
+                if assinatura_id or apagar_assinatura:
                     database.apagar_assinatura(f["assinatura_admissao_id"])
                     con.execute(
                         "UPDATE funcionarios SET assinatura_admissao_id = ? WHERE id = ?", (assinatura_id, fid)
@@ -222,41 +272,41 @@ def create_app(test_config=None):
         if request.method == "POST":
             data_entrega = (request.form.get("data_entrega") or "").strip() or date.today().isoformat()
             data_inicio = (request.form.get("data_inicio") or "").strip() or None
-            data_devolucao = (request.form.get("data_devolucao") or "").strip() or None
             observacoes = (request.form.get("observacoes") or "").strip()
             lista = itens_do_formulario()
             if not lista:
                 flash("Inclua ao menos um item na entrega.", "erro")
                 return render_template("entrega_form.html", funcionario=f, epis=epis,
                                        entrega=entrega, itens=itens)
-            assinatura_id = database.salvar_assinatura(request.form.get("assinatura"))
-            assinatura_dev_id = database.salvar_assinatura(request.form.get("assinatura_devolucao"))
 
             if entrega is None:
                 eid = con.execute(
-                    "INSERT INTO entregas (funcionario_id, data_inicio, data_entrega, assinatura_id,"
-                    " data_devolucao, assinatura_devolucao_id, observacoes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (fid, data_inicio, data_entrega, assinatura_id, data_devolucao,
-                     assinatura_dev_id, observacoes),
+                    "INSERT INTO entregas (funcionario_id, data_inicio, data_entrega, observacoes)"
+                    " VALUES (?, ?, ?, ?)",
+                    (fid, data_inicio, data_entrega, observacoes),
                 ).lastrowid
                 msg = "Entrega registrada."
             else:
-                if assinatura_id:
-                    database.apagar_assinatura(entrega["assinatura_id"])
-                    con.execute("UPDATE entregas SET assinatura_id = ? WHERE id = ?", (assinatura_id, eid))
-                if assinatura_dev_id:
-                    database.apagar_assinatura(entrega["assinatura_devolucao_id"])
-                    con.execute("UPDATE entregas SET assinatura_devolucao_id = ? WHERE id = ?",
-                                (assinatura_dev_id, eid))
                 con.execute(
-                    "UPDATE entregas SET data_inicio = ?, data_entrega = ?, data_devolucao = ?,"
-                    " observacoes = ? WHERE id = ?",
-                    (data_inicio, data_entrega, data_devolucao, observacoes, eid),
+                    "UPDATE entregas SET data_inicio = ?, data_entrega = ?, observacoes = ? WHERE id = ?",
+                    (data_inicio, data_entrega, observacoes, eid),
                 )
                 msg = "Entrega atualizada."
             gravar_itens(eid, lista)
             con.commit()
-            flash(msg, "ok")
+
+            sem_assinatura = [
+                i["nome"] for i in con.execute(
+                    "SELECT nome FROM entrega_itens WHERE entrega_id = ? AND assinatura_id IS NULL"
+                    " ORDER BY ordem, id", (eid,)
+                )
+            ]
+            if sem_assinatura:
+                flash("Sem assinatura ainda: " + ", ".join(sem_assinatura) +
+                      ". Cada material precisa da assinatura de quem recebeu — abra em Editar para colher.",
+                      "erro")
+            else:
+                flash(msg + " Todos os materiais estão assinados.", "ok")
             return redirect(url_for("ficha", fid=fid))
 
         return render_template("entrega_form.html", funcionario=f, epis=epis, entrega=entrega, itens=itens)
@@ -271,16 +321,43 @@ def create_app(test_config=None):
         itens = con.execute(
             "SELECT * FROM entrega_itens WHERE entrega_id = ? ORDER BY ordem, id", (eid,)
         ).fetchall()
+
         if request.method == "POST":
             data_devolucao = (request.form.get("data_devolucao") or "").strip() or None
-            assinatura_id = database.salvar_assinatura(request.form.get("assinatura_devolucao"))
-            if assinatura_id:
-                database.apagar_assinatura(entrega["assinatura_devolucao_id"])
-                con.execute("UPDATE entregas SET assinatura_devolucao_id = ? WHERE id = ?", (assinatura_id, eid))
-            con.execute("UPDATE entregas SET data_devolucao = ? WHERE id = ?", (data_devolucao, eid))
+            devolvidos = set(request.form.getlist("devolver[]"))
+            if devolvidos and not data_devolucao:
+                flash("Informe a data da devolução.", "erro")
+                return render_template("devolucao.html", funcionario=f, entrega=entrega, itens=itens)
+
+            sem_assinatura, total = [], 0
+            for item in itens:
+                iid = str(item["id"])
+                if iid in devolvidos:
+                    nova = database.salvar_assinatura(request.form.get(f"assinatura_{iid}"))
+                    assinatura_id = nova or item["assinatura_devolucao_id"]
+                    if nova and item["assinatura_devolucao_id"]:
+                        database.apagar_assinatura(item["assinatura_devolucao_id"])
+                    con.execute(
+                        "UPDATE entrega_itens SET data_devolucao = ?, assinatura_devolucao_id = ? WHERE id = ?",
+                        (data_devolucao, assinatura_id, item["id"]),
+                    )
+                    total += 1
+                    if not assinatura_id:
+                        sem_assinatura.append(item["nome"])
+                elif item["data_devolucao"]:
+                    database.apagar_assinatura(item["assinatura_devolucao_id"])
+                    con.execute(
+                        "UPDATE entrega_itens SET data_devolucao = NULL, assinatura_devolucao_id = NULL"
+                        " WHERE id = ?", (item["id"],),
+                    )
             con.commit()
-            flash("Devolução registrada.", "ok")
+            if sem_assinatura:
+                flash("Devolução registrada, mas sem assinatura em: " + ", ".join(sem_assinatura) + ".", "erro")
+            else:
+                flash(f"Devolução registrada em {total} material(is)." if total
+                      else "Devoluções atualizadas.", "ok")
             return redirect(url_for("ficha", fid=f["id"]))
+
         return render_template("devolucao.html", funcionario=f, entrega=entrega, itens=itens)
 
     @app.post("/entregas/<int:eid>/excluir")
@@ -289,6 +366,11 @@ def create_app(test_config=None):
         entrega = con.execute("SELECT * FROM entregas WHERE id = ?", (eid,)).fetchone()
         if entrega is None:
             abort(404)
+        for item in con.execute(
+            "SELECT assinatura_id, assinatura_devolucao_id FROM entrega_itens WHERE entrega_id = ?", (eid,)
+        ).fetchall():
+            database.apagar_assinatura(item["assinatura_id"])
+            database.apagar_assinatura(item["assinatura_devolucao_id"])
         con.execute("DELETE FROM entregas WHERE id = ?", (eid,))
         database.apagar_assinatura(entrega["assinatura_id"])
         database.apagar_assinatura(entrega["assinatura_devolucao_id"])
@@ -400,15 +482,20 @@ def create_app(test_config=None):
             "SELECT * FROM entregas WHERE funcionario_id = ? ORDER BY date(data_entrega), id", (fid,)
         ).fetchall()
         for e in entregas:
+            # tem_tamanho vem da lista mestre: é o que faz o PDF imprimir P/M/G/GG/EXG
             itens = con.execute(
-                "SELECT * FROM entrega_itens WHERE entrega_id = ? ORDER BY ordem, id", (e["id"],)
+                "SELECT i.*, COALESCE(p.tem_tamanho, 0) AS tem_tamanho"
+                " FROM entrega_itens i LEFT JOIN epi_master p ON p.id = i.epi_id"
+                " WHERE i.entrega_id = ? ORDER BY i.ordem, i.id", (e["id"],)
             ).fetchall()
-            blocos.append({
-                "entrega": e,
-                "itens": [dict(i) for i in itens],
-                "assinatura": _blob_assinatura(con, e["assinatura_id"]),
-                "assinatura_devolucao": _blob_assinatura(con, e["assinatura_devolucao_id"]),
-            })
+            linhas = []
+            for item in itens:
+                dados = dict(item)
+                # cada material leva a sua própria assinatura para a ficha
+                dados["assinatura"] = _blob_assinatura(con, item["assinatura_id"])
+                dados["assinatura_devolucao"] = _blob_assinatura(con, item["assinatura_devolucao_id"])
+                linhas.append(dados)
+            blocos.append({"entrega": e, "itens": linhas})
         conteudo = pdf_ficha.gerar_ficha(
             database.empresa(), f, blocos, _blob_assinatura(con, f["assinatura_admissao_id"])
         )

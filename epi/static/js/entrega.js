@@ -19,8 +19,10 @@
   function criarLinha(dados) {
     dados = dados || {};
     var i = contador++;
+    var chave = 'item_assin_' + i;          // cada material assina em separado
     var no = document.createElement('div');
     no.className = 'item';
+    no.dataset.chave = chave;
     no.innerHTML =
       '<div class="item-topo">' +
         '<div class="campo"><label>EPI / Uniforme</label>' +
@@ -42,9 +44,28 @@
           '<input type="text" class="in-tamanho" name="item_tamanho[]" list="lista-tamanhos" ' +
           'placeholder="P, M, G, GG, EXG ou nº" value="' + (dados.tamanho || '') + '"></div>' +
       '</div>' +
+      '<div class="assin-item">' +
+        '<label>Assinatura de quem recebeu este material</label>' +
+        '<div class="previa-assin" data-previa="' + chave + '" data-rotulo="Assinatura do material">' +
+          (dados.assinatura_url
+            ? '<img src="' + dados.assinatura_url + '" alt="Assinatura já registrada">'
+            : '<span class="sem">Nenhuma assinatura ainda — toque para assinar</span>') +
+        '</div>' +
+        '<div class="acoes">' +
+          '<button type="button" class="btn primario pequeno" data-assinar="' + chave + '">Assinar em tela cheia</button>' +
+          '<button type="button" class="btn pequeno" data-apagar="' + chave + '">Apagar</button>' +
+        '</div>' +
+      '</div>' +
       '<input type="hidden" class="hd-nome" name="item_nome[]" value="">' +
       '<input type="hidden" class="hd-epi" name="item_epi_id[]" value="">' +
-      '<input type="hidden" class="hd-salvar" name="item_salvar[]" value="0">';
+      '<input type="hidden" class="hd-salvar" name="item_salvar[]" value="0">' +
+      '<input type="hidden" id="' + chave + '" name="item_assinatura[]" value="">' +
+      '<input type="hidden" id="' + chave + '_apagar" name="item_assinatura_apagar[]" value="">' +
+      '<input type="hidden" name="item_assinatura_id[]" value="' +
+        (dados.assinatura_id != null ? dados.assinatura_id : '') + '">' +
+      '<input type="hidden" name="item_data_devolucao[]" value="' + (dados.data_devolucao || '') + '">' +
+      '<input type="hidden" name="item_assinatura_devolucao_id[]" value="' +
+        (dados.assinatura_devolucao_id != null ? dados.assinatura_devolucao_id : '') + '">';
 
     var sel = no.querySelector('.sel-epi');
     var campoNome = no.querySelector('.campo-nome');
@@ -69,11 +90,15 @@
 
     function sincronizar() {
       var novo = sel.value === '__novo__';
+      var previa = no.querySelector('[data-previa]');
       no.querySelector('.hd-epi').value = novo || !sel.value ? '' : sel.value;
       no.querySelector('.hd-nome').value = novo
         ? (inNome.value || '')
         : (sel.value ? sel.selectedOptions[0].textContent.replace(/\s*\(CA .*\)$/, '').trim() : '');
       no.querySelector('.hd-salvar').value = novo && no.querySelector('.ck-salvar').checked ? '1' : '0';
+      if (previa) {
+        previa.dataset.rotulo = 'Assinatura — ' + (no.querySelector('.hd-nome').value || 'material');
+      }
     }
 
     sel.addEventListener('change', function () { aplicar(false); });
@@ -85,6 +110,7 @@
     });
 
     container.appendChild(no);
+    if (window.Assinatura) { window.Assinatura.ligar(no); }
 
     if (dados.epi_id) {
       sel.value = String(dados.epi_id);
@@ -114,12 +140,31 @@
 
     document.getElementById('form-entrega').addEventListener('submit', function (ev) {
       var vazio = true;
+      var semAssinatura = [];
       container.querySelectorAll('.item').forEach(function (it) {
-        if (it.querySelector('.hd-nome').value.trim()) { vazio = false; }
+        var nome = it.querySelector('.hd-nome').value.trim();
+        if (!nome) { return; }
+        vazio = false;
+        var chave = it.dataset.chave;
+        var nova = document.getElementById(chave).value;
+        var antiga = it.querySelector('[name="item_assinatura_id[]"]').value;
+        var apagada = document.getElementById(chave + '_apagar').value === '1';
+        if (!nova && (!antiga || apagada)) {
+          semAssinatura.push(nome);
+          it.classList.add('sem-assinatura');
+        } else {
+          it.classList.remove('sem-assinatura');
+        }
       });
       if (vazio) {
         ev.preventDefault();
         alert('Inclua ao menos um item na entrega.');
+        return;
+      }
+      if (semAssinatura.length) {
+        var texto = 'Cada material precisa da assinatura de quem recebeu.\n\nEstá sem assinatura: ' +
+                    semAssinatura.join(', ') + '\n\nSalvar assim mesmo e colher depois em “Editar”?';
+        if (!confirm(texto)) { ev.preventDefault(); }
       }
     });
   });

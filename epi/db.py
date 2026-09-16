@@ -73,7 +73,34 @@ def init_db():
             "INSERT INTO epi_master (nome, ca, tem_tamanho) VALUES (?, ?, ?)",
             EPI_PADRAO,
         )
+
+    migrar_assinatura_por_item(db)
     db.commit()
+
+
+def migrar_assinatura_por_item(db):
+    """Bancos criados antes guardavam uma assinatura para a entrega inteira.
+    Aqui as colunas passam a existir no item e o que havia é copiado para cada
+    material — que é o que a ficha em papel exige."""
+    colunas = {c["name"] for c in db.execute("PRAGMA table_info(entrega_itens)")}
+    novas = [
+        ("assinatura_id", "INTEGER REFERENCES assinaturas(id) ON DELETE SET NULL"),
+        ("data_devolucao", "TEXT"),
+        ("assinatura_devolucao_id", "INTEGER REFERENCES assinaturas(id) ON DELETE SET NULL"),
+    ]
+    faltando = [(nome, tipo) for nome, tipo in novas if nome not in colunas]
+    for nome, tipo in faltando:
+        db.execute(f"ALTER TABLE entrega_itens ADD COLUMN {nome} {tipo}")
+    if faltando:
+        db.execute(
+            "UPDATE entrega_itens SET"
+            " assinatura_id = COALESCE(assinatura_id,"
+            "     (SELECT e.assinatura_id FROM entregas e WHERE e.id = entrega_itens.entrega_id)),"
+            " data_devolucao = COALESCE(data_devolucao,"
+            "     (SELECT e.data_devolucao FROM entregas e WHERE e.id = entrega_itens.entrega_id)),"
+            " assinatura_devolucao_id = COALESCE(assinatura_devolucao_id,"
+            "     (SELECT e.assinatura_devolucao_id FROM entregas e WHERE e.id = entrega_itens.entrega_id))"
+        )
 
 
 def init_app(app):

@@ -72,27 +72,37 @@ Um EPI que não está na lista pode ser incluído de dois jeitos:
 
 ## Registro de entrega
 
-Cada entrega guarda a data de início do preenchimento da ficha, a data de
-entrega, os itens (nome, CA, quantidade e tamanho), a assinatura do funcionário
-capturada no canvas e, quando houver, a data e a assinatura de devolução — que
-podem ficar em branco e ser preenchidas depois, em **Registrar devolução**.
+Cada entrega guarda a data de início do preenchimento da ficha, a data de entrega e os
+materiais (nome, CA, quantidade e tamanho). **Cada material tem a sua própria
+assinatura**, como na ficha em papel: o formulário mostra um bloco de assinatura por
+item, e ao salvar o aplicativo avisa quais materiais ainda estão sem assinar.
+
+A assinatura é colhida em **tela cheia**: o botão abre uma tela em que o funcionário
+assina usando o aparelho inteiro, sobre uma linha de apoio, e o traço é recortado
+antes de ser gravado.
+
+Em **Registrar devolução** a tela lista os materiais daquela entrega: você marca o que
+está voltando, informa a data e colhe a assinatura de devolução de cada um.
 
 O nome do item é copiado para a entrega no momento do registro: alterar ou
 excluir um item da lista mestre depois **não muda o histórico já assinado**.
 
 ## PDF
 
-O botão **Gerar PDF** na ficha do funcionário reproduz a ficha tradicional:
+O botão **Gerar PDF** na ficha do funcionário reproduz a ficha tradicional, em
+**A4 paisagem**:
 
-- cabeçalho com a logo e o nome da empresa (vindos das configurações) e o título
-  **FICHA DE ENTREGA DE EPI**;
-- dados do funcionário: nome, nº de registro, cargo e setor;
+- faixa do título **FICHA DE ENTREGA DE EPI** com a logo à esquerda;
+- linha com EMPRESA | NOME DO FUNCIONÁRIO | Nº REGISTRO e linha com CNPJ | CARGO | SETOR
+  (empresa e logo vêm das configurações — é a única parte que muda de empresa para empresa);
 - texto de declaração de responsabilidade (itens A a D), citando a NR-6, item
   6.7.1, e o art. 158 da CLT (Lei 6.514/77);
 - campo **“Ciente em ___/___/___”** com a linha e a assinatura de admissão;
 - tabela **Data de Entrega | EPI/Uniforme | CA | Qtde | Assinatura | Data de
   Devolução | Assinatura de Devolução**, preenchida com todo o histórico e com as
-  assinaturas capturadas desenhadas dentro da célula.
+  assinaturas desenhadas dentro da célula. Os uniformes saem com os tamanhos marcados
+  entre parênteses — `CAMISA: P ( ) M ( ) G ( ) GG ( X ) EXG ( )` — e o calçado com a
+  numeração, como na ficha em papel.
 
 ## Banco de dados
 
@@ -101,8 +111,8 @@ O botão **Gerar PDF** na ficha do funcionário reproduz a ficha tradicional:
 | `empresa` | Linha única (id = 1): nome, CNPJ e logo (blob) |
 | `funcionarios` | Nome, registro, cargo, setor, data do ciente e assinatura de admissão |
 | `epi_master` | Lista mestre: nome, CA, pede tamanho, ativo |
-| `entregas` | Ficha de entrega: FK do funcionário, datas, assinaturas e observações |
-| `entrega_itens` | Itens de cada entrega: FK da entrega, FK do EPI, nome, CA, qtde e tamanho |
+| `entregas` | Ficha de entrega: FK do funcionário, datas e observações (agrupa os materiais entregues na mesma data) |
+| `entrega_itens` | Materiais de cada entrega: FK da entrega, FK do EPI, nome, CA, qtde, tamanho, **assinatura de recebimento, data e assinatura de devolução** |
 | `assinaturas` | Imagens PNG das assinaturas (blob), referenciadas pelas demais tabelas |
 
 O esquema completo está em `schema.sql`.
@@ -113,5 +123,9 @@ O esquema completo está em `schema.sql`.
 python teste_smoke.py
 ```
 
-Cria um banco temporário, cadastra empresa, funcionário e entregas, confere que o
-item novo foi para a lista mestre, registra devolução e gera o PDF.
+Cria um banco temporário, cadastra empresa, funcionário e entregas, confere que cada
+material guardou a sua própria assinatura, que o item novo foi para a lista mestre,
+registra a devolução material a material e gera o PDF.
+
+Bancos criados antes desta mudança são migrados sozinhos na primeira execução: a
+assinatura que valia para a entrega inteira é copiada para cada material.

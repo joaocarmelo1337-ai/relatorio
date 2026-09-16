@@ -105,13 +105,34 @@ img.assin-mini{height:40px;max-width:150px;object-fit:contain;background:#fff}
 .novo-epi{margin-top:10px;padding-top:10px;border-top:1px dashed var(--borda)}
 
 /* ---------------------------------------------------------------- assinatura */
-.assinatura-caixa{border:1px dashed #9fb2bc;border-radius:var(--raio);background:#fff;position:relative}
-canvas.assinatura{width:100%;height:170px;display:block;touch-action:none;border-radius:var(--raio)}
-.assinatura-caixa .dica{position:absolute;left:0;right:0;bottom:8px;text-align:center;
-  font-size:.78rem;color:#9fb2bc;pointer-events:none}
+.previa-assin{border:1px dashed #9fb2bc;border-radius:var(--raio);background:#fff;min-height:96px;
+  display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;cursor:pointer}
+.previa-assin img{max-height:110px;max-width:100%;object-fit:contain}
+.previa-assin .sem{color:#9fb2bc;font-size:.85rem}
 .assinatura-atual{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .assinatura-atual img{height:56px;max-width:100%;object-fit:contain;border:1px solid var(--borda);
   border-radius:8px;background:#fff;padding:4px}
+
+/* assinatura em tela cheia: o espaço todo do aparelho para o funcionário assinar */
+#modalAssin{position:fixed;inset:0;z-index:80;background:#eef1f3;display:flex;flex-direction:column}
+#modalAssin[hidden]{display:none !important}
+#modalAssin .cab{background:var(--azul);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px}
+#modalAssin .cab .quem{flex:1;min-width:0}
+#modalAssin .cab .titulo{font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#modalAssin .cab .sub{font-size:.72rem;opacity:.85}
+#modalAssin .area{flex:1;position:relative;margin:10px;background:#fff;border:1px solid var(--borda);
+  border-radius:var(--raio);overflow:hidden}
+#modalAssin canvas{width:100%;height:100%;display:block;touch-action:none}
+#modalAssin .base{position:absolute;left:6%;right:6%;bottom:22%;border-bottom:1.5px dashed #b8c6ce;pointer-events:none}
+#modalAssin .dicaGrande{position:absolute;left:0;right:0;bottom:calc(22% - 26px);text-align:center;
+  color:#a9b8c0;font-size:.9rem;pointer-events:none}
+#modalAssin .pes{display:flex;gap:8px;padding:0 10px 12px}
+#modalAssin .pes .btn{flex:1}
+
+/* ---------------------------------------------------------------- detalhes */
+details > summary::-webkit-details-marker{display:none}
+details > summary{outline:none}
+.lista li details[open] > summary{border-bottom:1px solid var(--borda)}
 
 @media (max-width:560px){
   main{padding:10px}
@@ -119,7 +140,8 @@ canvas.assinatura{width:100%;height:170px;display:block;touch-action:none;border
   .topo-linha img.logo{height:34px}
 }
 
-/* ---------------------------------------------------------------- detalhes */
-details > summary::-webkit-details-marker{display:none}
-details > summary{outline:none}
-.lista li details[open] > summary{border-bottom:1px solid var(--borda)}
+/* linha de item: cada material tem a sua assinatura */
+.item .assin-item{margin-top:10px;padding-top:10px;border-top:1px dashed var(--borda)}
+.item .previa-assin{min-height:70px}
+.item .previa-assin img{max-height:64px}
+.item.sem-assinatura{border-color:#f0c4bf;background:#fffaf9}

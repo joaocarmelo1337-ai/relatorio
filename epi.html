@@ -836,7 +836,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 (function(){
 'use strict';
 
-var VERSAO_APP = '08/09/2026';
+var VERSAO_APP = '16/09/2026';
 var AVISO_BACKUP_DIAS = 7;          // lembra de exportar backup a cada 7 dias
 
 var CHAVE_LS = {
@@ -2708,7 +2708,8 @@ function ligarEventos(){
 }
 
 function iniciar(){
-  $('versaoApp').textContent = 'Versão de ' + VERSAO_APP + ' — aplicativo de arquivo único, funciona offline.';
+  $('versaoApp').textContent = 'Versão de ' + VERSAO_APP + ' — ficha em paisagem, uma assinatura por material. ' +
+    'Se o seu aplicativo mostrar uma data mais antiga, recarregue a página para atualizar.';
   iniciarAssinaturas();
   ligarEventos();
 

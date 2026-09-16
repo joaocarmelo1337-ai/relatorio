@@ -238,30 +238,29 @@ def _tabela_entregas(entregas):
         e = bloco["entrega"]
         itens = bloco["itens"] or [{"nome": "—", "ca": "", "quantidade": "", "tamanho": ""}]
         primeira = linha
-        altura_assinatura = 13 * mm if (bloco["assinatura"] or bloco["assinatura_devolucao"]) else 0
         for item in itens:
+            # cada material tem a sua própria assinatura, como na ficha em papel
             dados.append([
                 Paragraph(_br(e["data_entrega"]), ST_TD_C) if linha == primeira else "",
                 Paragraph(descricao_item(item), ST_TD),
                 Paragraph(item["ca"] or "", ST_TD_C),
                 Paragraph(_num(item["quantidade"]), ST_TD_C),
-                "" if linha > primeira else (_imagem(bloco["assinatura"], larguras[4] - 8, altura_assinatura) or ""),
-                Paragraph(_br(e["data_devolucao"]), ST_TD_C) if linha == primeira else "",
-                "" if linha > primeira else (_imagem(bloco["assinatura_devolucao"], larguras[6] - 8,
-                                                     altura_assinatura) or ""),
+                _imagem(item.get("assinatura"), larguras[4] - 8, 11 * mm) or "",
+                Paragraph(_br(item.get("data_devolucao")), ST_TD_C),
+                _imagem(item.get("assinatura_devolucao"), larguras[6] - 8, 11 * mm) or "",
             ])
             linha += 1
         ultima = linha - 1
-        if ultima > primeira:                       # células da entrega ocupam todas as linhas dos itens
-            for col in (0, 4, 5, 6):
-                estilo.append(("SPAN", (col, primeira), (col, ultima)))
+        if ultima > primeira:          # só a data da entrega ocupa as linhas dos materiais
+            estilo.append(("SPAN", (0, primeira), (0, ultima)))
         estilo.append(("LINEABOVE", (0, primeira), (-1, primeira), 0.9, colors.black))
 
     if len(dados) == 1:
         dados.append([Paragraph("Nenhuma entrega registrada.", ST_TD_C), "", "", "", "", "", ""])
         estilo.append(("SPAN", (0, 1), (-1, 1)))
 
-    t = Table(dados, colWidths=larguras, repeatRows=1)
+    alturas = [None] + [13 * mm] * (len(dados) - 1)
+    t = Table(dados, colWidths=larguras, rowHeights=alturas, repeatRows=1)
     t.setStyle(TableStyle(estilo))
     return t
 

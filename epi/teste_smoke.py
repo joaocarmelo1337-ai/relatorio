@@ -71,6 +71,7 @@ def principal():
     calcado = next(e for e in epis if e["nome"].startswith("CALÇADO"))
     assert calcado["ca"] == "28513", "CA padrão do calçado não foi pré-carregado"
 
+    # cada material vai com a SUA assinatura; o último fica sem, de propósito
     ok(c.post(f"/funcionarios/{fid}/entregas/nova", data={
         "data_inicio": "2026-03-01", "data_entrega": "2026-03-02",
         "item_epi_id[]": [str(camisa["id"]), str(calcado["id"]), ""],
@@ -79,7 +80,12 @@ def principal():
         "item_qtde[]": ["2", "1", "3"],
         "item_tamanho[]": ["GG", "41", ""],
         "item_salvar[]": ["0", "0", "1"],
-        "assinatura": assinatura, "observacoes": "Entrega de admissão"}), (302,), "nova entrega")
+        "item_assinatura[]": [assinatura, assinatura, ""],
+        "item_assinatura_id[]": ["", "", ""],
+        "item_assinatura_apagar[]": ["0", "0", "0"],
+        "item_data_devolucao[]": ["", "", ""],
+        "item_assinatura_devolucao_id[]": ["", "", ""],
+        "observacoes": "Entrega de admissão"}), (302,), "nova entrega")
 
     ficha = c.get(f"/funcionarios/{fid}").get_data(as_text=True)
     assert "LUVA NITRÍLICA" in ficha and "CALÇADO DE SEGURANÇA" in ficha and "GG" in ficha
@@ -89,11 +95,25 @@ def principal():
     con = sqlite3.connect(BANCO)
     con.row_factory = sqlite3.Row
     eid = con.execute("SELECT id FROM entregas ORDER BY id").fetchone()["id"]
+    itens = con.execute(
+        "SELECT id, nome, assinatura_id FROM entrega_itens WHERE entrega_id = ? ORDER BY ordem", (eid,)
+    ).fetchall()
+    assert itens[0]["assinatura_id"] and itens[1]["assinatura_id"], "assinatura por material não gravou"
+    assert itens[0]["assinatura_id"] != itens[1]["assinatura_id"], "os materiais dividiram a mesma assinatura"
+    assert itens[2]["assinatura_id"] is None, "item sem assinatura deveria ficar sem"
+    print("· cada material guardou a sua própria assinatura")
+
+    # devolve só o primeiro material, com assinatura própria
     ok(c.post(f"/entregas/{eid}/devolucao", data={
-        "data_devolucao": "2026-08-01", "assinatura_devolucao": assinatura}), (302,), "devolução")
-    entrega = con.execute("SELECT * FROM entregas WHERE id = ?", (eid,)).fetchone()
-    assert entrega["data_devolucao"] == "2026-08-01" and entrega["assinatura_devolucao_id"]
-    print("· devolução registrada com assinatura")
+        "data_devolucao": "2026-08-01",
+        "devolver[]": [str(itens[0]["id"])],
+        f"assinatura_{itens[0]['id']}": assinatura}), (302,), "devolução")
+    depois = con.execute(
+        "SELECT id, data_devolucao, assinatura_devolucao_id FROM entrega_itens WHERE entrega_id = ? ORDER BY ordem",
+        (eid,)).fetchall()
+    assert depois[0]["data_devolucao"] == "2026-08-01" and depois[0]["assinatura_devolucao_id"]
+    assert depois[1]["data_devolucao"] is None, "material não marcado não deveria constar como devolvido"
+    print("· devolução registrada material a material")
 
     r = c.get(f"/funcionarios/{fid}/pdf")
     assert r.status_code == 200 and r.data[:4] == b"%PDF", (r.status_code, r.data[:200])

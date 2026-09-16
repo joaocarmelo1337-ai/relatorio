@@ -1,35 +1,57 @@
 {% extends "base.html" %}
-{% from "_assinatura.html" import assinatura %}
 {% block titulo %}Registrar devolução{% endblock %}
 {% block conteudo %}
 <p class="pequeno"><a href="{{ url_for('ficha', fid=funcionario.id) }}">← Ficha de {{ funcionario.nome }}</a></p>
 <h1>Registrar devolução</h1>
 
-<div class="cartao">
-  <h2>Entrega de {{ entrega.data_entrega | data_br }}</h2>
-  <div class="rolagem">
-    <table>
-      <thead><tr><th>EPI/Uniforme</th><th>CA</th><th>Qtde</th><th>Tamanho</th></tr></thead>
-      <tbody>
-        {% for i in itens %}
-        <tr><td>{{ i.nome }}</td><td>{{ i.ca or '—' }}</td><td>{{ i.quantidade | qtd }}</td><td>{{ i.tamanho or '—' }}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<form method="post">
+  <div class="cartao">
+    <h2>Entrega de {{ entrega.data_entrega | data_br }}</h2>
+    <p class="pequeno suave">Marque o que está sendo devolvido e colha a assinatura de cada material.</p>
+    <div class="campo" style="max-width:260px">
+      <label for="data_devolucao">Data da devolução</label>
+      <input type="date" id="data_devolucao" name="data_devolucao"
+             value="{{ hoje }}">
+    </div>
   </div>
-</div>
 
-<form method="post" class="cartao">
-  <div class="campo" style="max-width:260px">
-    <label for="data_devolucao">Data de devolução</label>
-    <input type="date" id="data_devolucao" name="data_devolucao"
-           value="{{ entrega.data_devolucao or hoje }}">
+  {% for i in itens %}
+  <div class="cartao">
+    <h3>{{ i.nome }}{% if i.tamanho %} — {{ i.tamanho }}{% endif %}
+      <span class="pequeno suave">({{ i.quantidade | qtd }}{% if i.ca %} · CA {{ i.ca }}{% endif %})</span></h3>
+    {% if i.data_devolucao %}
+      <div class="pequeno suave">Já devolvido em {{ i.data_devolucao | data_br }}</div>
+    {% endif %}
+    <div class="linha-check">
+      <input type="checkbox" id="dev{{ i.id }}" name="devolver[]" value="{{ i.id }}"
+             {{ 'checked' if i.data_devolucao }}>
+      <label for="dev{{ i.id }}">Este material está sendo devolvido</label>
+    </div>
+    <div class="campo">
+      <label>Assinatura da devolução</label>
+      <div class="previa-assin" data-previa="assinatura_{{ i.id }}"
+           data-rotulo="Devolução — {{ i.nome }}{% if i.tamanho %} {{ i.tamanho }}{% endif %}">
+        {% if i.assinatura_devolucao_id %}
+          <img src="{{ url_for('assinatura', aid=i.assinatura_devolucao_id) }}" alt="Assinatura de devolução">
+        {% else %}
+          <span class="sem">Nenhuma assinatura ainda — toque para assinar</span>
+        {% endif %}
+      </div>
+      <div class="acoes">
+        <button type="button" class="btn pequeno" data-assinar="assinatura_{{ i.id }}">Assinar em tela cheia</button>
+        <button type="button" class="btn pequeno" data-apagar="assinatura_{{ i.id }}">Apagar</button>
+      </div>
+      <input type="hidden" id="assinatura_{{ i.id }}" name="assinatura_{{ i.id }}" value="">
+      <input type="hidden" id="assinatura_{{ i.id }}_apagar" name="assinatura_{{ i.id }}_apagar" value="">
+    </div>
   </div>
-  {{ assinatura('assinatura_devolucao', 'Assinatura de devolução', entrega.assinatura_devolucao_id,
-                botao='Assinar devolução em tela cheia') }}
-  <div class="acoes">
-    <button class="btn primario" type="submit">Salvar devolução</button>
-    <a class="btn" href="{{ url_for('ficha', fid=funcionario.id) }}">Cancelar</a>
+  {% endfor %}
+
+  <div class="cartao">
+    <div class="acoes">
+      <button class="btn primario" type="submit">Salvar devolução</button>
+      <a class="btn" href="{{ url_for('ficha', fid=funcionario.id) }}">Cancelar</a>
+    </div>
   </div>
 </form>
 {% endblock %}

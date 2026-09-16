@@ -120,6 +120,12 @@ img.assin-mini{height:40px;max-width:150px;object-fit:contain}
 .item{border:1px solid var(--borda);border-radius:var(--raio);padding:10px;margin-bottom:10px;background:#fbfcfc}
 .item-topo{display:flex;gap:8px;align-items:flex-end}
 .item-topo .campo{flex:1;margin-bottom:0}
+.item .assin-item{margin-top:10px;padding-top:10px;border-top:1px dashed var(--borda)}
+.item .previa-assin{min-height:70px}
+.item .previa-assin img{max-height:64px}
+.item .acoes{margin-top:8px}
+.item.sem-assinatura{border-color:#f0c4bf;background:#fffaf9}
+.aviso-assin{font-size:.78rem;color:var(--vermelho);font-weight:600;margin-top:6px}
 
 /* ---------------------------------------------------------- assinatura */
 .previa-assin{border:1px dashed #9fb2bc;border-radius:var(--raio);background:#fff;min-height:96px;
@@ -281,38 +287,33 @@ img.assin-mini{height:40px;max-width:150px;object-fit:contain}
     </div>
 
     <div class="cartao">
-      <h2>Assinatura do funcionário</h2>
-      <div class="previa-assin" data-previa="eAssin">
-        <span class="sem">Nenhuma assinatura ainda</span>
-      </div>
-      <div class="acoes">
-        <button type="button" class="btn primario" data-assinar="eAssin">Assinar em tela cheia</button>
-        <button type="button" class="btn pequeno" data-apagar="eAssin">Apagar</button>
-      </div>
-    </div>
-
-    <div class="cartao">
-      <h2>Devolução <span class="pequeno suave">(opcional — pode ficar em branco)</span></h2>
-      <div class="campo" style="max-width:260px">
-        <label for="eDevolucao">Data de devolução</label>
-        <input type="date" id="eDevolucao">
-      </div>
-      <div class="previa-assin" data-previa="eAssinDev">
-        <span class="sem">Nenhuma assinatura ainda</span>
-      </div>
-      <div class="acoes">
-        <button type="button" class="btn" data-assinar="eAssinDev">Assinar devolução em tela cheia</button>
-        <button type="button" class="btn pequeno" data-apagar="eAssinDev">Apagar</button>
-      </div>
-    </div>
-
-    <div class="cartao">
       <div class="campo">
         <label for="eObs">Observações</label>
         <textarea id="eObs" rows="2"></textarea>
       </div>
       <div class="acoes">
         <button type="button" class="btn primario" id="btSalvarEntrega">Salvar entrega</button>
+        <button type="button" class="btn" data-voltar="ficha">Cancelar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------- devolução por item -->
+  <section id="telaDevolucao" hidden>
+    <a href="#" class="voltar" data-voltar="ficha">← Voltar para a ficha</a>
+    <h1>Registrar devolução</h1>
+    <div class="cartao">
+      <h2 id="devEntregaTitulo"></h2>
+      <p class="pequeno suave">Marque o que está sendo devolvido e colha a assinatura de cada material.</p>
+      <div class="campo" style="max-width:260px">
+        <label for="dDataDevolucao">Data da devolução</label>
+        <input type="date" id="dDataDevolucao">
+      </div>
+    </div>
+    <div id="devItens"></div>
+    <div class="cartao">
+      <div class="acoes">
+        <button type="button" class="btn primario" id="btSalvarDevolucao">Salvar devolução</button>
         <button type="button" class="btn" data-voltar="ficha">Cancelar</button>
       </div>
     </div>
@@ -1205,15 +1206,19 @@ function episAtivos(){
 var Assinaturas = {
   valores: {},          // chave -> PNG colhido agora (ainda não salvo)
   atuais: {},           // chave -> PNG que já estava gravado no registro
+  rotulos: {},          // chave -> nome do material, para o título da tela
   pad: null,
   campoAberto: null
 };
 
 var ROTULO_ASSINATURA = {
-  fAssin:    'Assinatura do funcionário (admissão)',
-  eAssin:    'Assinatura de recebimento',
-  eAssinDev: 'Assinatura de devolução'
+  fAssin: 'Assinatura do funcionário (admissão)'
 };
+
+/* Rótulos das assinaturas de item são montados na hora (um por material). */
+function rotuloAssinatura(chave){
+  return ROTULO_ASSINATURA[chave] || Assinaturas.rotulos[chave] || 'Assinatura';
+}
 
 function iniciarAssinaturas(){
   var canvas = $('canvasAssin');
@@ -1225,15 +1230,7 @@ function iniciarAssinaturas(){
   });
   Assinaturas.pad.addEventListener('beginStroke', function(){ $('dicaAssin').style.display = 'none'; });
 
-  document.querySelectorAll('[data-assinar]').forEach(function(bt){
-    bt.addEventListener('click', function(){ abrirAssinatura(bt.dataset.assinar); });
-  });
-  document.querySelectorAll('[data-apagar]').forEach(function(bt){
-    bt.addEventListener('click', function(){ apagarAssinatura(bt.dataset.apagar); });
-  });
-  document.querySelectorAll('[data-previa]').forEach(function(el){
-    el.addEventListener('click', function(){ abrirAssinatura(el.dataset.previa); });
-  });
+  ligarBotoesAssinatura(document);
 
   $('btCancelarAssin').addEventListener('click', fecharAssinatura);
   $('btLimparAssin').addEventListener('click', function(){
@@ -1244,6 +1241,26 @@ function iniciarAssinaturas(){
 
   window.addEventListener('resize', ajustarCanvasAssinatura);
   window.addEventListener('orientationchange', function(){ setTimeout(ajustarCanvasAssinatura, 350); });
+}
+
+/* Liga os botões de assinar/apagar de um pedaço da tela (usado também nas
+   linhas de item, que são criadas depois que a página carrega). */
+function ligarBotoesAssinatura(raiz){
+  raiz.querySelectorAll('[data-assinar]').forEach(function(bt){
+    if(bt.dataset.ligado) return;
+    bt.dataset.ligado = '1';
+    bt.addEventListener('click', function(){ abrirAssinatura(bt.dataset.assinar); });
+  });
+  raiz.querySelectorAll('[data-apagar]').forEach(function(bt){
+    if(bt.dataset.ligado) return;
+    bt.dataset.ligado = '1';
+    bt.addEventListener('click', function(){ apagarAssinatura(bt.dataset.apagar); });
+  });
+  raiz.querySelectorAll('[data-previa]').forEach(function(el){
+    if(el.dataset.ligado) return;
+    el.dataset.ligado = '1';
+    el.addEventListener('click', function(){ abrirAssinatura(el.dataset.previa); });
+  });
 }
 
 function ajustarCanvasAssinatura(){
@@ -1260,7 +1277,7 @@ function ajustarCanvasAssinatura(){
 
 function abrirAssinatura(chave){
   Assinaturas.campoAberto = chave;
-  $('modalAssinTitulo').textContent = ROTULO_ASSINATURA[chave] || 'Assinatura';
+  $('modalAssinTitulo').textContent = rotuloAssinatura(chave);
   var f = funcionarioPorId(estado.funcId);
   $('modalAssinSub').textContent = (f && chave !== 'fAssin' ? f.nome + ' — ' : '') +
     'vire o aparelho na horizontal para assinar com mais espaço';
@@ -1287,6 +1304,7 @@ function confirmarAssinatura(){
   Assinaturas.valores[chave] = recortarAssinatura($('canvasAssin'));
   fecharAssinatura();
   mostrarPrevia(chave);
+  marcarItensSemAssinatura();
 }
 
 function apagarAssinatura(chave){
@@ -1295,12 +1313,14 @@ function apagarAssinatura(chave){
   Assinaturas.valores[chave] = '';
   Assinaturas.atuais[chave] = '';
   mostrarPrevia(chave);
+  marcarItensSemAssinatura();
 }
 
 /* Prepara um campo ao abrir o formulário: mostra o que já estava gravado. */
-function prepararAssinatura(chave, valorGravado){
+function prepararAssinatura(chave, valorGravado, rotulo){
   Assinaturas.valores[chave] = '';
   Assinaturas.atuais[chave] = valorGravado || '';
+  if(rotulo) Assinaturas.rotulos[chave] = rotulo;
   mostrarPrevia(chave);
 }
 
@@ -1363,6 +1383,7 @@ var TELAS = {
   ficha:       'telaFicha',
   formFunc:    'telaFormFunc',
   formEntrega: 'telaFormEntrega',
+  devolucao:   'telaDevolucao',
   epis:        'telaEpis',
   cfg:         'telaCfg'
 };
@@ -1461,7 +1482,7 @@ function renderFicha(){
     bt.addEventListener('click', function(){
       var id = bt.dataset.entrega, a = bt.dataset.acao;
       if(a === 'editar') abrirFormEntrega(id);
-      if(a === 'devolucao') abrirFormEntrega(id, true);
+      if(a === 'devolucao') abrirDevolucao(id);
       if(a === 'excluir') excluirEntrega(id);
     });
   });
@@ -1469,6 +1490,26 @@ function renderFicha(){
 
 function cartaoEntrega(e){
   var itens = e.itens || [];
+  var assinados = itens.filter(function(i){ return i.assinatura; }).length;
+  var devolvidos = itens.filter(function(i){ return i.dataDevolucao; }).length;
+
+  var linhas = itens.map(function(i){
+    return '<tr>' +
+      '<td>' + esc(i.nome) + (i.tamanho ? ' — <strong>' + esc(i.tamanho) + '</strong>' : '') +
+        '<div class="pequeno suave">' + (i.ca ? 'CA ' + esc(i.ca) + ' · ' : '') +
+        'Qtde ' + esc(numeroBonito(i.qtde)) + '</div></td>' +
+      '<td>' + (i.assinatura
+        ? '<img class="assin-mini" src="' + i.assinatura + '" alt="Assinatura de recebimento">'
+        : '<span class="pequeno" style="color:var(--vermelho)">sem assinatura</span>') + '</td>' +
+      '<td>' + (i.dataDevolucao
+        ? esc(dataBR(i.dataDevolucao)) +
+          (i.assinaturaDevolucao
+            ? '<br><img class="assin-mini" src="' + i.assinaturaDevolucao + '" alt="Assinatura de devolução">'
+            : '<div class="pequeno suave">sem assinatura</div>')
+        : '<span class="pequeno suave">—</span>') + '</td>' +
+    '</tr>';
+  }).join('');
+
   return '<div class="cartao">' +
     '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between">' +
       '<h3 style="margin:0">Entrega de ' + esc(dataBR(e.dataEntrega)) + '</h3>' +
@@ -1476,24 +1517,13 @@ function cartaoEntrega(e){
     '</div>' +
     '<div class="pequeno suave">' +
       (e.dataInicio ? 'Ficha iniciada em ' + esc(dataBR(e.dataInicio)) + ' · ' : '') +
-      (e.dataDevolucao ? 'Devolvido em ' + esc(dataBR(e.dataDevolucao)) : 'Sem devolução registrada') +
+      assinados + ' de ' + itens.length + ' assinado(s)' +
+      (devolvidos ? ' · ' + devolvidos + ' devolvido(s)' : '') +
     '</div>' +
     '<div class="rolagem" style="margin-top:10px"><table>' +
-      '<thead><tr><th>EPI/Uniforme</th><th>CA</th><th>Qtde</th></tr></thead><tbody>' +
-      itens.map(function(i){
-        // o tamanho vai junto do nome, como sai no PDF, para a tabela caber na tela do celular
-        return '<tr><td>' + esc(i.nome) + (i.tamanho ? ' — <strong>' + esc(i.tamanho) + '</strong>' : '') +
-               '</td><td>' + esc(i.ca || '—') + '</td><td>' + esc(numeroBonito(i.qtde)) + '</td></tr>';
-      }).join('') +
-    '</tbody></table></div>' +
-    '<div class="grade" style="margin-top:12px">' +
-      '<div><label>Assinatura de recebimento</label>' +
-        (e.assinatura ? '<img class="assin-mini" src="' + e.assinatura + '" alt="Assinatura de recebimento">'
-                      : '<div class="pequeno suave">Não assinada</div>') + '</div>' +
-      '<div><label>Assinatura de devolução</label>' +
-        (e.assinaturaDevolucao ? '<img class="assin-mini" src="' + e.assinaturaDevolucao + '" alt="Assinatura de devolução">'
-                               : '<div class="pequeno suave">Não assinada</div>') + '</div>' +
-    '</div>' +
+      '<thead><tr><th>EPI/Uniforme</th><th>Assinatura</th><th>Devolução</th></tr></thead>' +
+      '<tbody>' + linhas + '</tbody>' +
+    '</table></div>' +
     (e.obs ? '<p class="pequeno" style="margin-top:10px"><strong>Observações:</strong> ' + esc(e.obs) + '</p>' : '') +
     '<div class="acoes">' +
       '<button type="button" class="btn pequeno" data-entrega="' + esc(e.id) + '" data-acao="devolucao">Registrar devolução</button>' +
@@ -1575,10 +1605,15 @@ function opcoesEpi(selecionado){
   return html;
 }
 
+/* Devolução já registrada de cada linha, preservada quando a entrega é editada. */
+var devolucaoDaLinha = {};
+
 function criarLinhaItem(dados){
   dados = dados || {};
   var no = document.createElement('div');
   no.className = 'item';
+  var chave = novoId('it');           // cada material tem a sua própria assinatura
+  no.dataset.chave = chave;
   var idck = novoId('ck');
   no.innerHTML =
     '<div class="item-topo">' +
@@ -1598,6 +1633,15 @@ function criarLinhaItem(dados){
         '<input type="text" class="inQtde" inputmode="decimal" value="1"></div>' +
       '<div class="campo campoTamanho"><label>Tamanho</label>' +
         '<input type="text" class="inTamanho" list="listaTamanhos" placeholder="P, M, G, GG, EXG ou nº"></div>' +
+    '</div>' +
+    '<div class="assin-item">' +
+      '<label>Assinatura de quem recebeu este material</label>' +
+      '<div class="previa-assin" data-previa="' + chave + '">' +
+        '<span class="sem">Nenhuma assinatura ainda — toque para assinar</span></div>' +
+      '<div class="acoes">' +
+        '<button type="button" class="btn primario pequeno" data-assinar="' + chave + '">Assinar em tela cheia</button>' +
+        '<button type="button" class="btn pequeno" data-apagar="' + chave + '">Apagar</button>' +
+      '</div>' +
     '</div>';
 
   var sel = no.querySelector('.selEpi');
@@ -1607,6 +1651,15 @@ function criarLinhaItem(dados){
   var inQtde = no.querySelector('.inQtde');
   var inTam = no.querySelector('.inTamanho');
   var campoTam = no.querySelector('.campoTamanho');
+
+  function nomeDaLinha(){
+    if(sel.value === '__novo__') return maiuscula(inNome.value) || 'Item novo';
+    var epi = epiPorId(sel.value);
+    return epi ? epi.nome : 'Material';
+  }
+  function atualizarRotulo(){
+    Assinaturas.rotulos[chave] = 'Assinatura — ' + nomeDaLinha();
+  }
 
   function aplicar(preservar){
     var novo = sel.value === '__novo__';
@@ -1619,15 +1672,18 @@ function criarLinhaItem(dados){
       campoTam.hidden = !(epi && epi.temTamanho);
       if(campoTam.hidden && !preservar) inTam.value = '';
     }
+    atualizarRotulo();
   }
 
   sel.addEventListener('change', function(){ aplicar(false); });
+  inNome.addEventListener('input', atualizarRotulo);
   no.querySelector('.remover').addEventListener('click', function(){
+    delete devolucaoDaLinha[chave];
     no.remove();
     if(!$('itens').querySelector('.item')) $('itens').appendChild(criarLinhaItem());
+    marcarItensSemAssinatura();
   });
 
-  // preenche com o que veio (edição de entrega já gravada)
   if(dados.epiId && epiPorId(dados.epiId)){
     sel.value = dados.epiId;
   }else if(dados.nome){
@@ -1639,12 +1695,33 @@ function criarLinhaItem(dados){
   inQtde.value = (dados.qtde != null && dados.qtde !== '') ? numeroBonito(dados.qtde) : '1';
   inTam.value = dados.tamanho || '';
   aplicar(true);
+
+  prepararAssinatura(chave, dados.assinatura || '', Assinaturas.rotulos[chave]);
+  devolucaoDaLinha[chave] = {
+    dataDevolucao: dados.dataDevolucao || '',
+    assinaturaDevolucao: dados.assinaturaDevolucao || ''
+  };
+  ligarBotoesAssinatura(no);
   return no;
+}
+
+/* Deixa em destaque as linhas que ainda estão sem assinatura. */
+function marcarItensSemAssinatura(){
+  var faltando = 0;
+  $('itens').querySelectorAll('.item').forEach(function(no){
+    var chave = no.dataset.chave;
+    var temNome = no.querySelector('.selEpi').value || maiuscula(no.querySelector('.inNome').value);
+    var vazia = !assinaturaParaSalvar(chave);
+    no.classList.toggle('sem-assinatura', !!temNome && vazia);
+    if(temNome && vazia) faltando++;
+  });
+  return faltando;
 }
 
 function lerItensDoFormulario(){
   var itens = [], novosParaLista = [];
   $('itens').querySelectorAll('.item').forEach(function(no){
+    var chave = no.dataset.chave;
     var sel = no.querySelector('.selEpi');
     var novo = sel.value === '__novo__';
     var nome = novo ? maiuscula(no.querySelector('.inNome').value)
@@ -1654,7 +1731,17 @@ function lerItensDoFormulario(){
     var tamanho = maiuscula(no.querySelector('.inTamanho').value);
     var qtde = parseFloat(String(no.querySelector('.inQtde').value || '1').replace(',','.'));
     if(!isFinite(qtde) || qtde <= 0) qtde = 1;
-    itens.push({ epiId: novo ? '' : sel.value, nome: nome, ca: ca, qtde: qtde, tamanho: tamanho });
+    var dev = devolucaoDaLinha[chave] || {};
+    itens.push({
+      epiId: novo ? '' : sel.value,
+      nome: nome,
+      ca: ca,
+      qtde: qtde,
+      tamanho: tamanho,
+      assinatura: assinaturaParaSalvar(chave),
+      dataDevolucao: dev.dataDevolucao || '',
+      assinaturaDevolucao: dev.assinaturaDevolucao || ''
+    });
     if(novo && no.querySelector('.ckSalvar').checked){
       novosParaLista.push({ nome: nome, ca: ca, temTamanho: tamanho ? 1 : 0 });
     }
@@ -1663,7 +1750,7 @@ function lerItensDoFormulario(){
 }
 
 /* -------------------------- formulário de entrega ------------------- */
-function abrirFormEntrega(id, focoDevolucao){
+function abrirFormEntrega(id){
   var f = funcionarioPorId(estado.funcId);
   if(!f) return;
   estado.entregaId = id || null;
@@ -1675,24 +1762,16 @@ function abrirFormEntrega(id, focoDevolucao){
     (f.registro ? 'Registro ' + f.registro + ' · ' : '') + (f.cargo || '—') + (f.setor ? ' · ' + f.setor : '');
   $('eInicio').value = e ? (e.dataInicio || '') : hojeISO();
   $('eEntrega').value = e ? e.dataEntrega : hojeISO();
-  $('eDevolucao').value = e ? (e.dataDevolucao || '') : '';
   $('eObs').value = e ? (e.obs || '') : '';
 
-  prepararAssinatura('eAssin', e ? e.assinatura : '');
-  prepararAssinatura('eAssinDev', e ? e.assinaturaDevolucao : '');
-
+  devolucaoDaLinha = {};
   var cx = $('itens');
   cx.innerHTML = '';
   var itens = (e && e.itens && e.itens.length) ? e.itens : [null];
   itens.forEach(function(i){ cx.appendChild(criarLinhaItem(i)); });
+  marcarItensSemAssinatura();
 
   mostrarTela('formEntrega');
-  if(focoDevolucao){
-    setTimeout(function(){
-      try{ $('eDevolucao').scrollIntoView({ block:'center', behavior:'smooth' }); }catch(err){}
-      if(!$('eDevolucao').value) $('eDevolucao').value = hojeISO();
-    }, 200);
-  }
 }
 
 function salvarEntrega(){
@@ -1704,19 +1783,23 @@ function salvarEntrega(){
   var lidos = lerItensDoFormulario();
   if(!lidos.itens.length){ mostrarMsg('Inclua ao menos um item na entrega.', 'erro', true); return; }
 
+  var semAssinatura = lidos.itens.filter(function(i){ return !i.assinatura; });
+  if(semAssinatura.length){
+    marcarItensSemAssinatura();
+    var lista = semAssinatura.map(function(i){ return i.nome; }).join(', ');
+    if(!confirm('Cada material precisa da assinatura de quem recebeu.\n\nEstá sem assinatura: ' + lista +
+                '\n\nSalvar assim mesmo e colher depois em “Editar”?')) return;
+  }
+
   var e = estado.entregaId ? entregaPorId(estado.entregaId) : null;
   var nova = !e;
-  if(nova){ e = { id: novoId('e'), funcId: f.id, criadoEm: new Date().toISOString(), assinatura:'', assinaturaDevolucao:'' }; }
+  if(nova){ e = { id: novoId('e'), funcId: f.id, criadoEm: new Date().toISOString() }; }
   e.dataInicio = $('eInicio').value || '';
   e.dataEntrega = dataEntrega;
-  e.dataDevolucao = $('eDevolucao').value || '';
   e.obs = ($('eObs').value || '').trim();
   e.itens = lidos.itens;
-  e.assinatura = assinaturaParaSalvar('eAssin');
-  e.assinaturaDevolucao = assinaturaParaSalvar('eAssinDev');
   if(nova) estado.entregas.push(e);
 
-  // itens novos que o usuário mandou guardar na lista mestre
   var promessaEpis = lidos.novosParaLista.reduce(function(p, item){
     return p.then(function(){
       var existe = estado.epis.some(function(x){ return semAcento(x.nome) === semAcento(item.nome); });
@@ -1730,11 +1813,10 @@ function salvarEntrega(){
   promessaEpis
     .then(function(){ return Armaz.salvar('entregas', e, estado.entregas); })
     .then(function(){
-      if(!e.assinatura){
-        mostrarMsg('Entrega salva, mas sem assinatura. Você pode abrir em “Editar” e colher a assinatura depois.', 'alerta', true);
-      }else{
-        mostrarMsg('Entrega registrada.', 'sucesso');
-      }
+      mostrarMsg(semAssinatura.length
+        ? 'Entrega salva. Faltam ' + semAssinatura.length + ' assinatura(s) — abra em “Editar” para colher.'
+        : 'Entrega registrada com a assinatura de cada material.',
+        semAssinatura.length ? 'alerta' : 'sucesso', !!semAssinatura.length);
       renderListaFuncionarios();
       renderListaEpis();
       renderFicha();
@@ -1749,13 +1831,98 @@ function salvarEntrega(){
 function excluirEntrega(id){
   var e = entregaPorId(id);
   if(!e) return;
-  if(!confirm('Excluir a entrega de ' + dataBR(e.dataEntrega) + '?\n\nIsso apaga também a assinatura colhida.')) return;
+  if(!confirm('Excluir a entrega de ' + dataBR(e.dataEntrega) + '?\n\nIsso apaga também as assinaturas colhidas.')) return;
   estado.entregas = estado.entregas.filter(function(x){ return x.id !== id; });
   Armaz.remover('entregas', id, estado.entregas).then(function(){
     mostrarMsg('Entrega excluída.', 'sucesso');
     renderListaFuncionarios();
     renderFicha();
   }).catch(function(err){ mostrarMsg('Falha ao excluir: ' + msgErro(err), 'erro', true); });
+}
+
+/* ------------------------- devolução, material a material ------------ */
+function abrirDevolucao(entregaId){
+  var e = entregaPorId(entregaId);
+  if(!e) return;
+  estado.entregaId = entregaId;
+  $('devEntregaTitulo').textContent = 'Entrega de ' + dataBR(e.dataEntrega);
+  $('dDataDevolucao').value = hojeISO();
+
+  var cx = $('devItens');
+  cx.innerHTML = '';
+  (e.itens || []).forEach(function(item, indice){
+    var chave = 'dev_' + indice;
+    var devolvido = !!item.dataDevolucao;
+    var no = document.createElement('div');
+    no.className = 'cartao';
+    no.dataset.indice = String(indice);
+    no.innerHTML =
+      '<h3>' + esc(item.nome) + (item.tamanho ? ' — ' + esc(item.tamanho) : '') +
+        ' <span class="pequeno suave">(' + esc(numeroBonito(item.qtde)) + ')</span></h3>' +
+      (devolvido
+        ? '<div class="pequeno suave">Já devolvido em ' + esc(dataBR(item.dataDevolucao)) + '</div>'
+        : '') +
+      '<div class="linha-check">' +
+        '<input type="checkbox" class="ckDev" id="ck_' + chave + '"' + (devolvido ? ' checked' : '') + '>' +
+        '<label for="ck_' + chave + '">Este material está sendo devolvido</label>' +
+      '</div>' +
+      '<div class="assin-item">' +
+        '<label>Assinatura da devolução</label>' +
+        '<div class="previa-assin" data-previa="' + chave + '">' +
+          '<span class="sem">Nenhuma assinatura ainda — toque para assinar</span></div>' +
+        '<div class="acoes">' +
+          '<button type="button" class="btn pequeno" data-assinar="' + chave + '">Assinar em tela cheia</button>' +
+          '<button type="button" class="btn pequeno" data-apagar="' + chave + '">Apagar</button>' +
+        '</div>' +
+      '</div>';
+    cx.appendChild(no);
+    prepararAssinatura(chave, item.assinaturaDevolucao || '',
+                       'Devolução — ' + item.nome + (item.tamanho ? ' ' + item.tamanho : ''));
+    ligarBotoesAssinatura(no);
+  });
+
+  mostrarTela('devolucao');
+}
+
+function salvarDevolucao(){
+  var e = entregaPorId(estado.entregaId);
+  if(!e) return;
+  var data = $('dDataDevolucao').value;
+  var marcados = 0, semAssin = [];
+
+  $('devItens').querySelectorAll('[data-indice]').forEach(function(no){
+    var indice = parseInt(no.dataset.indice, 10);
+    var item = e.itens[indice];
+    if(!item) return;
+    var chave = 'dev_' + indice;
+    if(no.querySelector('.ckDev').checked){
+      if(!data){ return; }
+      marcados++;
+      item.dataDevolucao = data;
+      item.assinaturaDevolucao = assinaturaParaSalvar(chave);
+      if(!item.assinaturaDevolucao) semAssin.push(item.nome);
+    }else{
+      item.dataDevolucao = '';
+      item.assinaturaDevolucao = '';
+    }
+  });
+
+  if(!data && marcados === 0 && !$('devItens').querySelector('.ckDev:checked')){
+    // nada marcado: só limpa devoluções anteriores
+  }else if(!data){
+    mostrarMsg('Informe a data da devolução.', 'erro', true);
+    return;
+  }
+  if(semAssin.length){
+    if(!confirm('Sem assinatura de devolução em: ' + semAssin.join(', ') +
+                '\n\nSalvar assim mesmo?')) return;
+  }
+
+  Armaz.salvar('entregas', e, estado.entregas).then(function(){
+    mostrarMsg(marcados ? 'Devolução registrada em ' + marcados + ' material(is).' : 'Devoluções atualizadas.', 'sucesso');
+    renderFicha();
+    mostrarTela('ficha');
+  }).catch(function(err){ mostrarMsg('Não foi possível salvar: ' + msgErro(err), 'erro', true); });
 }
 
 /* -------------------------- lista mestre de EPI --------------------- */
@@ -2058,44 +2225,59 @@ function gerarPDF(f){
         doc.setFont('helvetica','normal'); doc.setFontSize(7.8);
 
         var descricoes = itens.map(descricaoItem);
+        // cada material tem a sua própria assinatura, então cada linha precisa de altura
         var alturas = descricoes.map(function(d){
           var linhas = doc.splitTextToSize(d, COL[1] - 4).length;
-          return Math.max(6.6, 3.4 + linhas * 3.4);
+          return Math.max(13, 3.4 + linhas * 3.4);
         });
-        var somaItens = alturas.reduce(function(a,b){ return a + b; }, 0);
-        // a assinatura precisa de espaço: em paisagem ela cabe grande na célula
-        var precisaAssin = (e.assinatura || e.assinaturaDevolucao) ? 17 : 0;
-        var altGrupo = Math.max(somaItens, precisaAssin);
-        if(altGrupo > somaItens) alturas[alturas.length - 1] += (altGrupo - somaItens);
+        var altGrupo = alturas.reduce(function(a,b){ return a + b; }, 0);
 
-        if(y + altGrupo > PAG_A - 14) novaPagina();
+        if(y + altGrupo > PAG_A - 14){
+          // o grupo inteiro não cabe: começa na página seguinte
+          if(altGrupo <= PAG_A - MARGEM - 23) novaPagina();
+        }
 
         var yGrupo = y;
         itens.forEach(function(item, k){
           var alt = alturas[k];
+          if(y + alt > PAG_A - 14){          // grupo grande: quebra entre linhas
+            doc.setDrawColor(C_LINHA[0], C_LINHA[1], C_LINHA[2]); doc.setLineWidth(0.22);
+            doc.rect(MARGEM, yGrupo, UTIL, y - yGrupo);
+            for(var c = 1; c < COL.length; c++) doc.line(xCol(c), yGrupo, xCol(c), y);
+            txt(doc, dataBR(e.dataEntrega), xCol(0) + COL[0] / 2, yGrupo + (y - yGrupo) / 2 + 1,
+                8, 'normal', C_ESCURO, 'center');
+            novaPagina();
+            yGrupo = y;
+          }
           var linhas = doc.splitTextToSize(descricoes[k], COL[1] - 4);
           doc.setFont('helvetica','normal'); doc.setFontSize(7.8);
           doc.setTextColor(C_ESCURO[0], C_ESCURO[1], C_ESCURO[2]);
-          doc.text(linhas, xCol(1) + 2, y + 4.4);
-          doc.text(String(item.ca || ''), xCol(2) + COL[2] / 2, y + 4.4, { align:'center' });
-          doc.text(numeroBonito(item.qtde), xCol(3) + COL[3] / 2, y + 4.4, { align:'center' });
+          doc.text(linhas, xCol(1) + 2, y + 5);
+          doc.text(String(item.ca || ''), xCol(2) + COL[2] / 2, y + 5, { align:'center' });
+          doc.text(numeroBonito(item.qtde), xCol(3) + COL[3] / 2, y + 5, { align:'center' });
+
+          if(item.assinatura) imagemNaCaixa(doc, item.assinatura, xCol(4) + 2, y + 1.2, COL[4] - 4, alt - 2.4);
+          if(item.dataDevolucao){
+            txt(doc, dataBR(item.dataDevolucao), xCol(5) + COL[5] / 2, y + alt / 2 + 1, 8, 'normal', C_ESCURO, 'center');
+          }
+          if(item.assinaturaDevolucao){
+            imagemNaCaixa(doc, item.assinaturaDevolucao, xCol(6) + 2, y + 1.2, COL[6] - 4, alt - 2.4);
+          }
+
+          // linha separando os materiais: só as colunas que mudam a cada item
           if(k < itens.length - 1){
             doc.setDrawColor(C_LINHA[0], C_LINHA[1], C_LINHA[2]); doc.setLineWidth(0.18);
-            doc.line(xCol(1), y + alt, xCol(4), y + alt);
+            doc.line(xCol(1), y + alt, MARGEM + UTIL, y + alt);
           }
           y += alt;
         });
 
-        txt(doc, dataBR(e.dataEntrega), xCol(0) + COL[0] / 2, yGrupo + altGrupo / 2 + 1, 8, 'normal', C_ESCURO, 'center');
-        if(e.dataDevolucao){
-          txt(doc, dataBR(e.dataDevolucao), xCol(5) + COL[5] / 2, yGrupo + altGrupo / 2 + 1, 8, 'normal', C_ESCURO, 'center');
-        }
-        if(e.assinatura) imagemNaCaixa(doc, e.assinatura, xCol(4) + 2, yGrupo + 1.5, COL[4] - 4, altGrupo - 3);
-        if(e.assinaturaDevolucao) imagemNaCaixa(doc, e.assinaturaDevolucao, xCol(6) + 2, yGrupo + 1.5, COL[6] - 4, altGrupo - 3);
-
+        // moldura do grupo e a data da entrega ocupando as linhas dos materiais
         doc.setDrawColor(C_LINHA[0], C_LINHA[1], C_LINHA[2]); doc.setLineWidth(0.22);
-        doc.rect(MARGEM, yGrupo, UTIL, altGrupo);
-        for(var i = 1; i < COL.length; i++) doc.line(xCol(i), yGrupo, xCol(i), yGrupo + altGrupo);
+        doc.rect(MARGEM, yGrupo, UTIL, y - yGrupo);
+        for(var i = 1; i < COL.length; i++) doc.line(xCol(i), yGrupo, xCol(i), y);
+        txt(doc, dataBR(e.dataEntrega), xCol(0) + COL[0] / 2, yGrupo + (y - yGrupo) / 2 + 1,
+            8, 'normal', C_ESCURO, 'center');
       });
 
       rodape(doc);
@@ -2312,13 +2494,18 @@ function normalizarEpi(o){
 
 function normalizarEntrega(o){
   if(!o || typeof o !== 'object' || !o.funcId) throw new Error('entrega inválida no arquivo');
+  // backups antigos traziam uma assinatura para a entrega inteira: ela vira
+  // a assinatura de cada material, que é o que a ficha em papel exige
   var itens = Array.isArray(o.itens) ? o.itens.map(function(i){
     return {
       epiId: String(i.epiId || ''),
       nome: String(i.nome || '').trim(),
       ca: String(i.ca || '').trim(),
       qtde: (isFinite(Number(i.qtde)) && Number(i.qtde) > 0) ? Number(i.qtde) : 1,
-      tamanho: String(i.tamanho || '').trim()
+      tamanho: String(i.tamanho || '').trim(),
+      assinatura: String(i.assinatura || o.assinatura || ''),
+      dataDevolucao: String(i.dataDevolucao || o.dataDevolucao || ''),
+      assinaturaDevolucao: String(i.assinaturaDevolucao || o.assinaturaDevolucao || '')
     };
   }).filter(function(i){ return i.nome; }) : [];
   return {
@@ -2326,9 +2513,6 @@ function normalizarEntrega(o){
     funcId: String(o.funcId),
     dataInicio: String(o.dataInicio || ''),
     dataEntrega: String(o.dataEntrega || hojeISO()),
-    dataDevolucao: String(o.dataDevolucao || ''),
-    assinatura: String(o.assinatura || ''),
-    assinaturaDevolucao: String(o.assinaturaDevolucao || ''),
     obs: String(o.obs || ''),
     itens: itens,
     criadoEm: String(o.criadoEm || new Date().toISOString())
@@ -2447,6 +2631,28 @@ function apagarTudo(){
     .catch(function(e){ mostrarMsg('Falha ao apagar: ' + msgErro(e), 'erro', true); });
 }
 
+/* Fichas gravadas antes tinham uma assinatura para a entrega inteira.
+   Aqui ela é copiada para cada material, que é como a ficha em papel exige. */
+function migrarAssinaturaParaItens(){
+  var mudadas = [];
+  estado.entregas.forEach(function(e){
+    if(!e.assinatura && !e.dataDevolucao && !e.assinaturaDevolucao) return;
+    (e.itens || []).forEach(function(i){
+      if(!i.assinatura && e.assinatura) i.assinatura = e.assinatura;
+      if(!i.dataDevolucao && e.dataDevolucao) i.dataDevolucao = e.dataDevolucao;
+      if(!i.assinaturaDevolucao && e.assinaturaDevolucao) i.assinaturaDevolucao = e.assinaturaDevolucao;
+    });
+    delete e.assinatura;
+    delete e.dataDevolucao;
+    delete e.assinaturaDevolucao;
+    mudadas.push(e);
+  });
+  if(!mudadas.length) return Promise.resolve();
+  return mudadas.reduce(function(p, e){
+    return p.then(function(){ return Armaz.salvar('entregas', e, estado.entregas); });
+  }, Promise.resolve());
+}
+
 /* ============================ INICIALIZAÇÃO ========================== */
 function ligarEventos(){
   $('abaFunc').addEventListener('click', function(){ mostrarTela('lista'); });
@@ -2470,10 +2676,12 @@ function ligarEventos(){
   $('btAddItem').addEventListener('click', function(){
     var no = criarLinhaItem();
     $('itens').appendChild(no);
+    marcarItensSemAssinatura();
     try{ no.scrollIntoView({ block:'center', behavior:'smooth' }); }catch(e){}
     no.querySelector('.selEpi').focus();
   });
   $('btSalvarEntrega').addEventListener('click', salvarEntrega);
+  $('btSalvarDevolucao').addEventListener('click', salvarDevolucao);
 
   $('btAddEpi').addEventListener('click', adicionarEpi);
   $('pNome').addEventListener('keydown', function(ev){ if(ev.key === 'Enter') adicionarEpi(); });
@@ -2533,6 +2741,7 @@ function iniciar(){
       });
       return Armaz.trocarTudo('epis', estado.epis);
     }
+    return migrarAssinaturaParaItens();
   }).then(function(){
     aplicarCfgNaTela();
     renderListaFuncionarios();

@@ -139,3 +139,9 @@ details > summary{outline:none}
   .acoes .btn{flex:1 1 auto}
   .topo-linha img.logo{height:34px}
 }
+
+/* linha de item: cada material tem a sua assinatura */
+.item .assin-item{margin-top:10px;padding-top:10px;border-top:1px dashed var(--borda)}
+.item .previa-assin{min-height:70px}
+.item .previa-assin img{max-height:64px}
+.item.sem-assinatura{border-color:#f0c4bf;background:#fffaf9}

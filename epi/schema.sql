@@ -40,28 +40,32 @@ CREATE TABLE IF NOT EXISTS epi_master (
     criado_em   TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
--- Ficha de entrega (um registro por entrega)
+-- Ficha de entrega: agrupa os materiais entregues na mesma data
 CREATE TABLE IF NOT EXISTS entregas (
     id                      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     funcionario_id          INTEGER NOT NULL REFERENCES funcionarios(id) ON DELETE CASCADE,
     data_inicio             TEXT,          -- data de início do preenchimento da ficha
     data_entrega            TEXT NOT NULL,
-    assinatura_id           INTEGER REFERENCES assinaturas(id) ON DELETE SET NULL,
-    data_devolucao          TEXT,
-    assinatura_devolucao_id INTEGER REFERENCES assinaturas(id) ON DELETE SET NULL,
+    assinatura_id           INTEGER REFERENCES assinaturas(id) ON DELETE SET NULL,   -- herdado: migrado para os itens
+    data_devolucao          TEXT,                                                    -- herdado: migrado para os itens
+    assinatura_devolucao_id INTEGER REFERENCES assinaturas(id) ON DELETE SET NULL,   -- herdado: migrado para os itens
     observacoes             TEXT NOT NULL DEFAULT '',
     criado_em               TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
+-- Cada material entregue tem a SUA assinatura, como na ficha em papel
 CREATE TABLE IF NOT EXISTS entrega_itens (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    entrega_id  INTEGER NOT NULL REFERENCES entregas(id) ON DELETE CASCADE,
-    epi_id      INTEGER REFERENCES epi_master(id) ON DELETE SET NULL,
-    nome        TEXT NOT NULL,             -- nome gravado na ficha (histórico não muda se a lista mestre mudar)
-    ca          TEXT NOT NULL DEFAULT '',
-    quantidade  REAL NOT NULL DEFAULT 1,
-    tamanho     TEXT NOT NULL DEFAULT '',
-    ordem       INTEGER NOT NULL DEFAULT 0
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    entrega_id              INTEGER NOT NULL REFERENCES entregas(id) ON DELETE CASCADE,
+    epi_id                  INTEGER REFERENCES epi_master(id) ON DELETE SET NULL,
+    nome                    TEXT NOT NULL,   -- nome gravado na ficha (não muda se a lista mestre mudar)
+    ca                      TEXT NOT NULL DEFAULT '',
+    quantidade              REAL NOT NULL DEFAULT 1,
+    tamanho                 TEXT NOT NULL DEFAULT '',
+    assinatura_id           INTEGER REFERENCES assinaturas(id) ON DELETE SET NULL,
+    data_devolucao          TEXT,
+    assinatura_devolucao_id INTEGER REFERENCES assinaturas(id) ON DELETE SET NULL,
+    ordem                   INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_entregas_funcionario ON entregas(funcionario_id, data_entrega);

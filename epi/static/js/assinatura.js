@@ -54,6 +54,28 @@
     if (previa) { previa.innerHTML = '<span class="sem">Nenhuma assinatura ainda — toque para assinar</span>'; }
   }
 
+  /* Liga os botões de um pedaço da tela. As linhas de item do formulário de
+     entrega nascem depois do carregamento, então chamam esta função. */
+  function ligar(raiz) {
+    raiz.querySelectorAll('[data-assinar]').forEach(function (bt) {
+      if (bt.dataset.ligado) { return; }
+      bt.dataset.ligado = '1';
+      bt.addEventListener('click', function () { abrir(bt.dataset.assinar); });
+    });
+    raiz.querySelectorAll('[data-apagar]').forEach(function (bt) {
+      if (bt.dataset.ligado) { return; }
+      bt.dataset.ligado = '1';
+      bt.addEventListener('click', function () { apagar(bt.dataset.apagar); });
+    });
+    raiz.querySelectorAll('[data-previa]').forEach(function (el) {
+      if (el.dataset.ligado) { return; }
+      el.dataset.ligado = '1';
+      el.addEventListener('click', function () { abrir(el.dataset.previa); });
+    });
+  }
+
+  window.Assinatura = { ligar: ligar };
+
   /* Recorta o espaço em branco em volta do traço e devolve um PNG enxuto. */
   function recortar(origem) {
     var ctx = origem.getContext('2d');
@@ -102,15 +124,7 @@
       document.getElementById('dicaAssin').style.display = 'none';
     });
 
-    document.querySelectorAll('[data-assinar]').forEach(function (bt) {
-      bt.addEventListener('click', function () { abrir(bt.dataset.assinar); });
-    });
-    document.querySelectorAll('[data-apagar]').forEach(function (bt) {
-      bt.addEventListener('click', function () { apagar(bt.dataset.apagar); });
-    });
-    document.querySelectorAll('[data-previa]').forEach(function (el) {
-      el.addEventListener('click', function () { abrir(el.dataset.previa); });
-    });
+    ligar(document);
 
     document.getElementById('btCancelarAssin').addEventListener('click', fechar);
     document.getElementById('btLimparAssin').addEventListener('click', function () {

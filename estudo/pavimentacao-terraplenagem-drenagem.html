@@ -1,0 +1,1153 @@
+<title>Pavimento de Baixo para Cima</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  --ground:#F0F1EC; --surface:#FFFFFF; --surface-2:#E6E8E1; --surface-3:#DDE0D8;
+  --ink:#16191A; --ink-2:#464D4E; --ink-3:#6F7776;
+  --rule:#D2D6CD; --rule-2:#BFC4BA;
+  --signal:#C8501C; --water:#1A657F; --earth:#8A6A3B; --stone:#5A625F; --ok:#3D6A38;
+  --lay-asf:#2E3437; --lay-base:#8D9490; --lay-sub:#AEB4A9; --lay-reg:#B79A6E; --lay-solo:#9C7F53;
+  --lay-txt-asf:#F0F1EC; --lay-txt:#16191A;
+  --tone:var(--stone);
+  --sp:clamp(16px,4vw,20px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#131615; --surface:#1A1E1D; --surface-2:#222725; --surface-3:#2B302E;
+    --ink:#E9EAE4; --ink-2:#B6BCB6; --ink-3:#8B928C;
+    --rule:#313634; --rule-2:#414744;
+    --signal:#EE7B41; --water:#63B4D1; --earth:#C89E63; --stone:#9AA39E; --ok:#7FB177;
+    --lay-asf:#4A5254; --lay-base:#6E7571; --lay-sub:#575E59; --lay-reg:#7A6540; --lay-solo:#6A5638;
+    --lay-txt-asf:#E9EAE4; --lay-txt:#E9EAE4;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#131615; --surface:#1A1E1D; --surface-2:#222725; --surface-3:#2B302E;
+  --ink:#E9EAE4; --ink-2:#B6BCB6; --ink-3:#8B928C;
+  --rule:#313634; --rule-2:#414744;
+  --signal:#EE7B41; --water:#63B4D1; --earth:#C89E63; --stone:#9AA39E; --ok:#7FB177;
+  --lay-asf:#4A5254; --lay-base:#6E7571; --lay-sub:#575E59; --lay-reg:#7A6540; --lay-solo:#6A5638;
+  --lay-txt-asf:#E9EAE4; --lay-txt:#E9EAE4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+  font-size:17px; line-height:1.62; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:1140px; margin:0 auto; padding-inline:var(--sp); padding-block:0}
+h1,h2,h3,h4,.disp{font-family:"Barlow Condensed","Arial Narrow",Helvetica,sans-serif; font-weight:700; line-height:1.08; text-wrap:balance; margin:0}
+.mono,code,.num{font-family:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace; font-variant-numeric:tabular-nums}
+a{color:var(--water)}
+:focus-visible{outline:2px solid var(--signal); outline-offset:3px; border-radius:2px}
+
+/* ---------- masthead ---------- */
+.mast{border-bottom:2px solid var(--ink); padding-block:clamp(24px,5vw,44px) 18px; margin-bottom:26px}
+.eyebrow{font-family:"Barlow Condensed","Arial Narrow",sans-serif; font-weight:600; font-size:.86rem; letter-spacing:.16em; text-transform:uppercase; color:var(--signal); margin:0 0 10px}
+.mast h1{font-size:clamp(2.6rem,9vw,4.6rem); letter-spacing:-.01em}
+.mast .sub{font-size:clamp(1.02rem,2.6vw,1.2rem); color:var(--ink-2); max-width:60ch; margin:14px 0 0}
+.mast .meta{display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:20px; font-family:"Barlow Condensed",sans-serif; font-size:.95rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+
+/* ---------- layout ---------- */
+.grid{display:grid; grid-template-columns:230px minmax(0,1fr); gap:0 52px; align-items:start}
+.rail{position:sticky; top:calc(env(safe-area-inset-top,0px) + 18px); padding-bottom:40px}
+.rail ol{list-style:none; margin:0; padding:0; border-left:1px solid var(--rule)}
+.rail a{display:flex; gap:10px; padding:7px 0 7px 14px; margin-left:-1px; border-left:2px solid transparent; text-decoration:none; color:var(--ink-2); font-family:"Barlow Condensed",sans-serif; font-size:1.06rem; line-height:1.2; letter-spacing:.01em}
+.rail a:hover{color:var(--ink); border-left-color:var(--rule-2)}
+.rail a .n{color:var(--ink-3); font-family:"JetBrains Mono",monospace; font-size:.74rem; padding-top:.18em}
+.rail .rl{font-family:"Barlow Condensed",sans-serif; font-size:.78rem; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3); margin:0 0 10px}
+main{min-width:0; padding-bottom:60px}
+@media (max-width:900px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static; padding-bottom:22px; margin-bottom:8px; border-bottom:1px solid var(--rule)}
+  .rail ol{display:flex; gap:0 6px; overflow-x:auto; border-left:0; padding-bottom:8px; -webkit-overflow-scrolling:touch}
+  .rail li{flex:0 0 auto}
+  .rail a{border:1px solid var(--rule); border-radius:999px; padding:5px 12px; margin:0; white-space:nowrap}
+  .rail a .n{display:none}
+}
+
+/* ---------- sections ---------- */
+section{padding-block:clamp(30px,6vw,52px) 0; scroll-margin-top:20px}
+section+section{border-top:1px solid var(--rule)}
+.s-terra{--tone:var(--earth)} .s-sub{--tone:var(--stone)} .s-asf{--tone:var(--ink-2)} .s-dren{--tone:var(--water)}
+.h2row{display:flex; align-items:baseline; gap:14px; margin-bottom:6px}
+.h2row .hn{font-family:"JetBrains Mono",monospace; font-weight:600; font-size:.9rem; color:var(--tone); padding-top:.25em}
+h2{font-size:clamp(1.9rem,5vw,2.7rem); letter-spacing:-.005em}
+.lede{font-size:1.08rem; color:var(--ink-2); max-width:64ch; margin:10px 0 0}
+h3{font-size:1.42rem; margin:34px 0 8px; letter-spacing:.005em}
+h4{font-size:1.07rem; margin:22px 0 4px; font-weight:600; font-family:"Source Serif 4",Georgia,serif}
+p{margin:0 0 14px; max-width:68ch}
+ul,ol{max-width:68ch; padding-left:1.15em; margin:0 0 14px}
+li{margin-bottom:6px}
+strong{font-weight:600}
+em.term{font-style:normal; font-weight:600; border-bottom:2px solid var(--tone); padding-bottom:1px}
+
+/* ---------- blocks ---------- */
+.tw{overflow-x:auto; margin:16px 0 18px; border:1px solid var(--rule); background:var(--surface)}
+table{border-collapse:collapse; width:100%; min-width:520px; font-size:.95rem}
+caption{text-align:left; font-family:"Barlow Condensed",sans-serif; font-size:.88rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); padding:10px 14px 0}
+th,td{text-align:left; padding:9px 14px; border-bottom:1px solid var(--rule); vertical-align:top}
+thead th{font-family:"Barlow Condensed",sans-serif; font-weight:600; font-size:.86rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2); background:var(--surface-2); border-bottom:1px solid var(--rule-2)}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; font-size:.88rem; white-space:nowrap}
+
+.formula{background:var(--surface-2); border-left:3px solid var(--tone); padding:14px 16px; margin:16px 0; max-width:68ch}
+.formula .eq{font-family:"JetBrains Mono",monospace; font-size:1.02rem; font-weight:600; display:block; overflow-x:auto; padding-bottom:4px}
+.formula .leg{font-size:.9rem; color:var(--ink-2); margin:8px 0 0}
+.formula .leg b{font-family:"JetBrains Mono",monospace; font-weight:600; font-size:.85rem; color:var(--ink)}
+
+.note{border:1px solid var(--rule); background:var(--surface); padding:14px 16px; margin:16px 0; max-width:68ch}
+.note .lbl{font-family:"Barlow Condensed",sans-serif; font-size:.82rem; letter-spacing:.14em; text-transform:uppercase; color:var(--tone); display:block; margin-bottom:4px}
+.note p:last-child{margin-bottom:0}
+.risk{border-left:3px solid var(--signal)}
+.risk .lbl{color:var(--signal)}
+
+.flag{font-size:.88rem; color:var(--ink-3); font-style:italic; max-width:68ch; margin:-6px 0 16px}
+
+.check{list-style:none; padding:0; margin:12px 0 18px; border-top:1px solid var(--rule)}
+.check li{display:flex; gap:11px; align-items:flex-start; margin:0; padding:9px 2px; border-bottom:1px solid var(--rule); font-size:.97rem}
+.check input{margin:.34em 0 0; width:16px; height:16px; accent-color:var(--tone); flex:0 0 auto}
+.check label{cursor:pointer}
+.check input:checked+label{color:var(--ink-3); text-decoration:line-through}
+
+figure{margin:22px 0 24px}
+figure .fw{overflow-x:auto; border:1px solid var(--rule); background:var(--surface); padding:10px}
+figure svg{display:block; max-width:100%; height:auto; color:var(--ink)}
+figcaption{font-size:.9rem; color:var(--ink-3); margin-top:8px; max-width:68ch}
+figcaption b{color:var(--ink-2); font-weight:600}
+
+details{border-bottom:1px solid var(--rule); padding:10px 0}
+summary{cursor:pointer; font-weight:600; list-style-position:outside}
+details p{margin:8px 0 0; color:var(--ink-2)}
+.qz{counter-reset:q}
+.qz details summary::marker{color:var(--tone)}
+
+.deck{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:1px; background:var(--rule); border:1px solid var(--rule); margin:18px 0}
+.deck>div{background:var(--surface); padding:14px 16px}
+.deck .k{font-family:"Barlow Condensed",sans-serif; font-size:.8rem; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3)}
+.deck .v{font-family:"JetBrains Mono",monospace; font-size:1.18rem; font-weight:600; margin-top:3px; color:var(--tone)}
+.deck .d{font-size:.88rem; color:var(--ink-2); margin-top:4px}
+
+.foot{border-top:2px solid var(--ink); margin-top:46px; padding-block:20px 50px; font-size:.9rem; color:var(--ink-3)}
+.btn{font-family:"Barlow Condensed",sans-serif; font-size:.92rem; letter-spacing:.1em; text-transform:uppercase; background:transparent; color:var(--ink-2); border:1px solid var(--rule-2); padding:7px 14px; cursor:pointer}
+.btn:hover{border-color:var(--ink-2); color:var(--ink)}
+@media print{
+  .rail,.btn{display:none}
+  body{background:#fff; color:#000; font-size:11pt}
+  .grid{display:block}
+  section{break-inside:auto} figure,table,.formula,.note{break-inside:avoid}
+  details{border:0} details>*{display:block}
+}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <p class="eyebrow">Caderno de estudo &middot; obra urbana de pavimentação</p>
+  <h1>Pavimento de Baixo para Cima</h1>
+  <p class="sub">Terraplenagem, subleito, revestimento asfáltico e drenagem — o que cada camada faz,
+  que número precisa fechar para ela ser aceita, que ensaio prova isso e o que costuma dar errado no campo.</p>
+  <div class="meta">
+    <span>4 módulos + anexos</span>
+    <span>Parâmetros DNIT / ABNT</span>
+    <span>20 questões de fixação</span>
+  </div>
+</header>
+
+<div class="grid">
+<nav class="rail" aria-label="Sumário">
+  <p class="rl">Sumário</p>
+  <ol>
+    <li><a href="#estrutura"><span class="n">00</span><span>A lógica do pavimento</span></a></li>
+    <li><a href="#terraplenagem"><span class="n">01</span><span>Terraplenagem</span></a></li>
+    <li><a href="#subleito"><span class="n">02</span><span>Subleito</span></a></li>
+    <li><a href="#asfalto"><span class="n">03</span><span>Pavimento asfáltico</span></a></li>
+    <li><a href="#drenagem"><span class="n">04</span><span>Drenagem</span></a></li>
+    <li><a href="#ensaios"><span class="n">A</span><span>Caderno de ensaios</span></a></li>
+    <li><a href="#formulas"><span class="n">B</span><span>Fórmulas</span></a></li>
+    <li><a href="#normas"><span class="n">C</span><span>Normas</span></a></li>
+    <li><a href="#glossario"><span class="n">D</span><span>Glossário de campo</span></a></li>
+    <li><a href="#questoes"><span class="n">E</span><span>Questões</span></a></li>
+  </ol>
+</nav>
+
+<main>
+<section id="estrutura">
+  <div class="h2row"><span class="hn">00</span><h2>A lógica do pavimento</h2></div>
+  <p class="lede">Pavimento é uma estrutura em camadas apoiada no terreno. Cada camada recebe a carga
+  espalhada pela de cima e entrega ainda mais espalhada para a de baixo — por isso o material vai
+  ficando mais barato e mais fraco à medida que se desce, e por isso um erro embaixo nunca se
+  conserta em cima.</p>
+
+  <p>A roda do caminhão aplica no asfalto uma pressão da ordem de <span class="mono">0,56 MPa</span>
+  (a pressão do pneu). Quando essa carga chega ao subleito, dois metros de camada abaixo, ela já se
+  espalhou em um bulbo de tensões e vale uma fração disso. O pavimento é, no fundo, um distribuidor
+  de tensões: ele existe para entregar ao solo natural uma tensão que o solo natural aguente repetir
+  milhões de vezes sem deformar.</p>
+
+  <h3>Flexível, rígido e semirrígido</h3>
+  <ul>
+    <li><strong>Flexível</strong> — revestimento asfáltico sobre base granular. Trabalha por
+      distribuição de tensões em várias camadas; deforma junto com o subleito. É o pavimento de
+      quase toda obra urbana de asfalto.</li>
+    <li><strong>Rígido</strong> — placa de concreto de cimento Portland. A própria placa absorve a
+      flexão e distribui a carga numa área grande; o subleito importa muito menos.</li>
+    <li><strong>Semirrígido</strong> — base cimentada (solo-cimento, BGTC) com revestimento
+      asfáltico. Ganha capacidade de carga, mas a base trinca por retração e a trinca <em>reflete</em>
+      para cima, aparecendo na capa.</li>
+  </ul>
+
+  <figure>
+    <div class="fw">
+      <svg viewBox="0 0 880 400" role="img" aria-label="Seção transversal de uma via urbana mostrando revestimento, base, sub-base, regularização do subleito e subleito natural, com meio-fio, sarjeta, boca de lobo, tubo de ligação, galeria e passeio">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+          </marker>
+          <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="8" stroke="currentColor" stroke-width="1" opacity=".22"></line>
+          </pattern>
+        </defs>
+
+        <rect x="60" y="255" width="780" height="145" style="fill:var(--lay-solo)" opacity=".55"></rect>
+        <rect x="592" y="120" width="248" height="140" style="fill:var(--lay-solo)" opacity=".55"></rect>
+
+        <polygon points="60,110 560,124 560,159 60,145" style="fill:var(--lay-asf)"></polygon>
+        <polygon points="60,145 560,159 560,209 60,195" style="fill:var(--lay-base)"></polygon>
+        <polygon points="60,195 560,209 560,249 60,235" style="fill:var(--lay-sub)"></polygon>
+        <polygon points="60,235 560,249 560,279 60,265" style="fill:var(--lay-reg)"></polygon>
+
+        <text x="76" y="132" font-size="13" style="fill:var(--lay-txt-asf)" font-weight="600">REVESTIMENTO — CBUQ faixa C</text>
+        <text x="544" y="132" font-size="13" style="fill:var(--lay-txt-asf)" text-anchor="end">3 a 5 cm</text>
+        <text x="76" y="176" font-size="13" style="fill:var(--lay-txt)" font-weight="600">BASE granular — CBR ≥ 60%</text>
+        <text x="544" y="178" font-size="13" style="fill:var(--lay-txt)" text-anchor="end">10 a 20 cm</text>
+        <text x="76" y="221" font-size="13" style="fill:var(--lay-txt)" font-weight="600">SUB-BASE — CBR ≥ 20%</text>
+        <text x="544" y="223" font-size="13" style="fill:var(--lay-txt)" text-anchor="end">15 a 20 cm</text>
+        <text x="76" y="256" font-size="12" style="fill:var(--lay-txt)" font-weight="600">REGULARIZAÇÃO DO SUBLEITO</text>
+        <text x="544" y="258" font-size="12" style="fill:var(--lay-txt)" text-anchor="end">20 cm</text>
+        <text x="76" y="300" font-size="13" style="fill:var(--lay-txt)" font-weight="600">SUBLEITO — terreno de fundação, CBR ≥ 2%</text>
+        <text x="76" y="320" font-size="12" style="fill:var(--lay-txt)" opacity=".85">zona de influência ~1,5 m</text>
+
+        <line x1="200" y1="100" x2="430" y2="107" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar)"></line>
+        <text x="200" y="92" font-size="13" fill="currentColor" font-weight="600">caimento 2% (abaulamento)</text>
+
+        <polygon points="556,96 592,96 592,265 556,279" style="fill:var(--lay-base)" stroke="currentColor" stroke-width="1"></polygon>
+        <text x="574" y="88" font-size="12" fill="currentColor" text-anchor="middle">meio-fio</text>
+        <rect x="548" y="104" width="10" height="18" style="fill:var(--lay-asf)" stroke="currentColor" stroke-width="1"></rect>
+        <text x="500" y="98" font-size="12" fill="currentColor" text-anchor="end">boca de lobo</text>
+        <line x1="505" y1="94" x2="546" y2="108" stroke="currentColor" stroke-width="1"></line>
+
+        <rect x="556" y="122" width="48" height="58" fill="url(#hatch)" stroke="currentColor" stroke-width="1"></rect>
+        <text x="580" y="155" font-size="11" fill="currentColor" text-anchor="middle">caixa</text>
+        <polygon points="604,140 700,178 700,192 604,154" style="fill:var(--lay-sub)" stroke="currentColor" stroke-width="1"></polygon>
+        <text x="648" y="135" font-size="12" fill="currentColor" text-anchor="middle">ligação Ø400, i ≥ 1%</text>
+
+        <circle cx="742" cy="200" r="32" style="fill:var(--lay-sub)" stroke="currentColor" stroke-width="1.5"></circle>
+        <circle cx="742" cy="200" r="22" style="fill:var(--ground)" stroke="currentColor" stroke-width="1"></circle>
+        <text x="742" y="205" font-size="12" fill="currentColor" text-anchor="middle">galeria</text>
+        <line x1="742" y1="120" x2="742" y2="166" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3"></line>
+        <text x="736" y="112" font-size="12" fill="currentColor" text-anchor="end">recobrimento ≥ 1,00 m</text>
+
+        <polygon points="592,96 840,88 840,104 592,112" style="fill:var(--lay-base)"></polygon>
+        <polygon points="592,112 840,104 840,120 592,128" style="fill:var(--lay-sub)"></polygon>
+        <text x="828" y="80" font-size="12" fill="currentColor" text-anchor="end">passeio — 2% para a rua</text>
+
+        <text transform="rotate(-90 26 190)" x="26" y="190" font-size="12" fill="currentColor" text-anchor="middle" letter-spacing="2">PAVIMENTO</text>
+        <text transform="rotate(-90 26 320)" x="26" y="320" font-size="12" fill="currentColor" text-anchor="middle" letter-spacing="2">SUBLEITO</text>
+        <line x1="40" y1="110" x2="40" y2="265" stroke="currentColor" stroke-width="1"></line>
+        <line x1="40" y1="265" x2="40" y2="380" stroke="currentColor" stroke-width="1" opacity=".5"></line>
+      </svg>
+    </div>
+    <figcaption><b>Figura 1 — seção transversal de uma via urbana</b> (esquemática, fora de escala).
+    A água que cai no asfalto desce pelo caimento de 2%, corre na sarjeta junto ao meio-fio, entra
+    pela boca de lobo, desce pela caixa, segue pelo tubo de ligação e cai na galeria. Espessuras
+    indicadas são as usuais em via urbana; quem manda é o projeto.</figcaption>
+  </figure>
+
+  <div class="deck">
+    <div><p class="k">Eixo padrão</p><p class="v">80 kN</p><p class="d">8,2 tf — eixo simples de rodas duplas. Todo o tráfego é convertido nele.</p></div>
+    <div><p class="k">Caimento da pista</p><p class="v">2%</p><p class="d">Abaulamento do eixo para a sarjeta. Menos que isso, empoça.</p></div>
+    <div><p class="k">Grau de compactação</p><p class="v">≥ 100%</p><p class="d">Nas camadas do pavimento, referido ao Proctor da energia especificada.</p></div>
+    <div><p class="k">Inimigo nº 1</p><p class="v">água</p><p class="d">Quase toda ruína de pavimento flexível passa por água onde não devia estar.</p></div>
+  </div>
+
+  <div class="note">
+    <span class="lbl">Como usar este caderno</span>
+    <p>Cada módulo segue a mesma ordem: <strong>o que a camada faz</strong> → <strong>que número
+    precisa fechar</strong> → <strong>que ensaio prova</strong> → <strong>o que dá errado</strong>.
+    Os valores numéricos são os usuais das especificações do DNIT e das NBR citadas; a especificação
+    do seu contrato e o edital podem ser mais exigentes, e é sempre a do contrato que vale na
+    medição. Confira a versão vigente antes de usar qualquer número em documento assinado.</p>
+  </div>
+</section>
+
+<section id="terraplenagem" class="s-terra">
+  <div class="h2row"><span class="hn">01</span><h2>Terraplenagem</h2></div>
+  <p class="lede">Mover terra até que o terreno tenha a forma geométrica do projeto — o
+  <em class="term">greide</em> — e a resistência necessária para receber o pavimento. Em obra urbana
+  ela é curta e mal-agradecida: pouca altura, muita interferência enterrada e nenhum espaço para
+  errar.</p>
+
+  <h3>O vocabulário do serviço</h3>
+  <ul>
+    <li><strong>Corte</strong> — o terreno está acima do greide de projeto e se escava.</li>
+    <li><strong>Aterro</strong> — o terreno está abaixo e se traz material. O <em>corpo</em> do aterro
+      é o volume; a <em>camada final</em> são os últimos 60 cm, que viram o subleito e por isso têm
+      exigência maior.</li>
+    <li><strong>Empolamento</strong> — 1 m³ cortado vira mais de 1 m³ solto no caminhão (10 a 40%,
+      conforme o solo) e volta a menos de 1 m³ depois de compactado. Por isso volume de corte,
+      de transporte e de aterro nunca batem entre si.</li>
+    <li><strong>Bota-fora / empréstimo</strong> — sobra que sai da obra / material que entra de
+      jazida quando o corte não dá o aterro.</li>
+    <li><strong>DMT</strong> — distância média de transporte, o que define o preço do metro cúbico
+      movimentado.</li>
+    <li><strong>Off-set</strong> — a estaca que marca, no terreno, onde o talude encontra o terreno
+      natural; é o piquete que o topógrafo deixa para o operador.</li>
+  </ul>
+
+  <h3>Compactação: o coração do serviço</h3>
+  <p>Compactar é expulsar ar do solo com energia mecânica, aproximando os grãos. Não se expulsa
+  água — água em excesso atrapalha, porque ocupa o vazio e não deixa o grão acomodar. Existe, para
+  cada solo e cada energia, <strong>uma umidade que rende a maior densidade</strong>: a umidade ótima.
+  É isso que o ensaio de Proctor (NBR 7182) determina, e é contra esse resultado que o campo é
+  julgado.</p>
+
+  <figure>
+    <div class="fw">
+      <svg viewBox="0 0 560 360" role="img" aria-label="Curva de compactação Proctor: massa específica aparente seca contra umidade, com pico na umidade ótima, ramo seco e ramo úmido, faixa de aceitação de umidade ótima mais ou menos dois por cento e linha de 95 por cento da densidade máxima">
+        <rect x="266.9" y="40" width="112.5" height="260" style="fill:var(--earth)" opacity=".13"></rect>
+        <line x1="70" y1="40" x2="70" y2="300" stroke="currentColor" stroke-width="1.5"></line>
+        <line x1="70" y1="300" x2="520" y2="300" stroke="currentColor" stroke-width="1.5"></line>
+
+        <g font-size="11" fill="currentColor" opacity=".75">
+          <line x1="70" y1="267.5" x2="520" y2="267.5" stroke="currentColor" stroke-width=".5" opacity=".3"></line>
+          <line x1="70" y1="202.5" x2="520" y2="202.5" stroke="currentColor" stroke-width=".5" opacity=".3"></line>
+          <line x1="70" y1="137.5" x2="520" y2="137.5" stroke="currentColor" stroke-width=".5" opacity=".3"></line>
+          <line x1="70" y1="72.5" x2="520" y2="72.5" stroke="currentColor" stroke-width=".5" opacity=".3"></line>
+          <text x="62" y="271" text-anchor="end">1,60</text>
+          <text x="62" y="206" text-anchor="end">1,70</text>
+          <text x="62" y="141" text-anchor="end">1,80</text>
+          <text x="62" y="76" text-anchor="end">1,90</text>
+          <text x="126" y="318" text-anchor="middle">8</text>
+          <text x="182" y="318" text-anchor="middle">10</text>
+          <text x="239" y="318" text-anchor="middle">12</text>
+          <text x="295" y="318" text-anchor="middle">14</text>
+          <text x="351" y="318" text-anchor="middle">16</text>
+          <text x="407" y="318" text-anchor="middle">18</text>
+          <text x="464" y="318" text-anchor="middle">20</text>
+        </g>
+        <text x="295" y="340" font-size="12" fill="currentColor" text-anchor="middle" font-weight="600">umidade w (%)</text>
+        <text transform="rotate(-90 20 170)" x="20" y="170" font-size="12" fill="currentColor" text-anchor="middle" font-weight="600">massa específica seca γd (g/cm³)</text>
+
+        <polyline points="491.9,189.5 435.6,137.5 379.4,85.5 323.1,40" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="6 4" opacity=".6"></polyline>
+        <text x="500" y="182" font-size="11" fill="currentColor" text-anchor="end" opacity=".7">curva de saturação (S = 100%)</text>
+
+        <line x1="70" y1="159" x2="520" y2="159" stroke="currentColor" stroke-width="1.2" stroke-dasharray="5 4"></line>
+        <text x="516" y="152" font-size="11" fill="currentColor" text-anchor="end">95% de γd máx — mínimo no corpo do aterro</text>
+
+        <polyline points="126.2,254.5 182.5,196 238.8,144 266.9,118 295,101.8 323.1,98.5 351.2,108.2 379.4,127.8 407.5,153.8 463.8,202.5"
+          fill="none" style="stroke:var(--earth)" stroke-width="2.6"></polyline>
+        <circle cx="323.1" cy="98.5" r="5" style="fill:var(--signal)"></circle>
+        <line x1="323.1" y1="98.5" x2="323.1" y2="300" style="stroke:var(--signal)" stroke-width="1" stroke-dasharray="4 3"></line>
+        <text x="331" y="70" font-size="12" fill="currentColor" font-weight="600">γd máx</text>
+        <text x="331" y="86" font-size="11" fill="currentColor" opacity=".8">na umidade ótima</text>
+        <text x="323" y="296" font-size="11" style="fill:var(--signal)" text-anchor="middle" font-weight="600">w ót</text>
+
+        <text x="150" y="238" font-size="11" fill="currentColor" opacity=".8">ramo seco</text>
+        <text x="440" y="222" font-size="11" fill="currentColor" opacity=".8">ramo úmido</text>
+        <text x="323" y="34" font-size="11" fill="currentColor" text-anchor="middle" opacity=".85">faixa de trabalho: w ót ± 2%</text>
+      </svg>
+    </div>
+    <figcaption><b>Figura 2 — curva de compactação</b>. Onde a linha dos 95% corta a curva estão os
+    dois extremos de umidade que ainda entregam o grau exigido: é essa a faixa de trabalho do campo.
+    No ramo seco falta água para o grão acomodar; no ramo úmido a água ocupa o vazio e a densidade
+    cai, além de o material "borrachar" sob o rolo.</figcaption>
+  </figure>
+
+  <div class="formula">
+    <span class="eq">GC = (γd campo / γd máx laboratório) × 100</span>
+    <p class="leg"><b>GC</b> grau de compactação, em %. <b>γd campo</b> massa específica aparente
+    seca medida no aterro (frasco de areia, NBR 7185, ou densímetro nuclear). <b>γd máx</b> o pico da
+    curva de Proctor, na energia que a especificação mandou usar — normal, intermediária ou
+    modificada. Comparar campo de uma energia com laboratório de outra é o erro clássico que reprova
+    ou aprova indevidamente uma camada.</p>
+  </div>
+
+  <h3>Números de aceitação</h3>
+  <div class="tw">
+    <table>
+      <caption>Aterro e regularização — valores usuais (DNIT 108/2009-ES e 137/2010-ES)</caption>
+      <thead><tr><th>Item</th><th>Corpo do aterro</th><th>Camada final / subleito</th></tr></thead>
+      <tbody>
+        <tr><td>Grau de compactação</td><td class="num">≥ 95% (Proctor normal)</td><td class="num">≥ 100% (Proctor normal)</td></tr>
+        <tr><td>Desvio de umidade</td><td class="num">w ót ± 3%</td><td class="num">w ót ± 2%</td></tr>
+        <tr><td>Espessura da camada solta</td><td class="num">≤ 30 cm</td><td class="num">≤ 20 cm</td></tr>
+        <tr><td>ISC / CBR do material</td><td class="num">≥ 2%</td><td class="num">≥ 8%</td></tr>
+        <tr><td>Expansão</td><td class="num">≤ 4%</td><td class="num">≤ 2%</td></tr>
+        <tr><td>Cota do greide acabado</td><td class="num">± 4 cm</td><td class="num">± 3 cm</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="flag">Valores usuais de especificação rodoviária, adotados por quase todo edital urbano.
+  Confira a ES vigente e o memorial do seu contrato — alguns exigem CBR ≥ 10% na camada final, e
+  obras com tráfego pesado pedem energia intermediária no lugar da normal.</p>
+
+  <h4>Frequência de ensaio, na prática</h4>
+  <ul>
+    <li>Densidade <em>in situ</em>: em geral 1 determinação a cada 100 m de pista por camada, ou a
+      cada jornada de compactação, alternando bordo e eixo.</li>
+    <li>Umidade: junto de cada densidade, e mais uma leitura rápida (speedy ou frigideira) antes de
+      liberar o rolo.</li>
+    <li>Proctor + CBR: a cada mudança de material ou de jazida, e por volume (ordem de 1.000 m³).</li>
+  </ul>
+
+  <h3>O que dá errado</h3>
+  <div class="note risk">
+    <span class="lbl">Campo</span>
+    <p><strong>Camada grossa demais.</strong> O rolo compacta bem os 15 cm de cima e deixa o fundo
+    fofo. Aparece depois como recalque localizado com a pista já asfaltada — e aí o conserto custa
+    dez vezes mais.</p>
+    <p><strong>Solo borrachudo.</strong> A camada balança sob o rolo em vez de densificar: umidade
+    muito acima da ótima, solo fino saturado ou matéria orgânica. Insistir com o rolo piora. Abrir,
+    revolver e secar; se não secar, substituir.</p>
+    <p><strong>Compactar sobre lama.</strong> Nenhum grau de compactação sobrevive a um fundo de vala
+    ou a um subleito encharcado. Drenar primeiro, compactar depois.</p>
+    <p><strong>Reaterro de vala mal feito.</strong> É a origem mais comum de recalque em rua nova:
+    a vala do ramal de água ou de esgoto reaterrada de qualquer jeito, sem camada e sem controle,
+    e o pavimento afundando exatamente na linha da vala meses depois.</p>
+  </div>
+
+  <ul class="check" data-ck="terra">
+    <li><input type="checkbox" id="ck-t1"><label for="ck-t1">Greide e off-sets conferidos com o topógrafo antes de liberar a máquina</label></li>
+    <li><input type="checkbox" id="ck-t2"><label for="ck-t2">Limpeza: capa vegetal, raiz e entulho removidos (não entram no aterro)</label></li>
+    <li><input type="checkbox" id="ck-t3"><label for="ck-t3">Material de empréstimo com Proctor e CBR ensaiados e aprovados</label></li>
+    <li><input type="checkbox" id="ck-t4"><label for="ck-t4">Camada solta na espessura máxima especificada, homogênea, sem bolsão de material diferente</label></li>
+    <li><input type="checkbox" id="ck-t5"><label for="ck-t5">Umidade dentro da faixa antes de rolar — medida, não estimada no olho</label></li>
+    <li><input type="checkbox" id="ck-t6"><label for="ck-t6">Densidade in situ ensaiada e camada liberada antes de lançar a seguinte</label></li>
+    <li><input type="checkbox" id="ck-t7"><label for="ck-t7">Valas de interferência reaterradas em camadas e compactadas com controle</label></li>
+    <li><input type="checkbox" id="ck-t8"><label for="ck-t8">Superfície final selada e com caimento — não deixar a camada acabada tomar chuva aberta</label></li>
+  </ul>
+</section>
+<section id="subleito" class="s-sub">
+  <div class="h2row"><span class="hn">02</span><h2>Subleito</h2></div>
+  <p class="lede">O terreno de fundação do pavimento. Não é uma camada que se constrói: é o que
+  estava lá, preparado. Tudo o que vem por cima é dimensionado <strong>a partir</strong> dele — um
+  subleito ruim não encarece o subleito, encarece o pavimento inteiro.</p>
+
+  <p>Considera-se subleito a faixa de solo que ainda recebe tensão relevante da carga do tráfego —
+  na prática, cerca de <strong>1,5 m abaixo do greide de terraplenagem</strong>. Os 20 cm superiores
+  recebem tratamento próprio, a <em class="term">regularização do subleito</em>: escarificar,
+  homogeneizar, acertar umidade, conformar no greide e compactar a 100% do Proctor normal. Ela não
+  acrescenta capacidade estrutural — acerta geometria e uniformidade.</p>
+
+  <h3>Reconhecer o solo</h3>
+  <p>Três ensaios simples classificam o solo e já dizem quase tudo sobre o trabalho que ele vai dar:
+  granulometria (NBR 7181), limite de liquidez (NBR 6459) e limite de plasticidade (NBR 7180). Deles
+  saem o índice de plasticidade (IP = LL − LP), o índice de grupo (IG) e a classificação TRB.</p>
+
+  <div class="tw">
+    <table>
+      <caption>Classificação TRB — comportamento como subleito</caption>
+      <thead><tr><th>Grupo</th><th>Material</th><th class="num">CBR típico</th><th>Comportamento</th></tr></thead>
+      <tbody>
+        <tr><td>A-1, A-2-4</td><td>Pedregulho e areia bem graduados, pouco fino</td><td class="num">20 – 60%</td><td>Excelente a bom. Compacta fácil, drena, não incha.</td></tr>
+        <tr><td>A-3</td><td>Areia fina uniforme</td><td class="num">10 – 25%</td><td>Bom, mas escorrega: sem coesão, exige confinamento.</td></tr>
+        <tr><td>A-4, A-5</td><td>Solo siltoso</td><td class="num">4 – 10%</td><td>Sofrível. O silte é traiçoeiro: perde resistência com água e bombeia finos.</td></tr>
+        <tr><td>A-6, A-7</td><td>Solo argiloso, IP alto</td><td class="num">2 – 8%</td><td>Mau. Expansivo, retém água, seca e trinca. O subleito que obriga a reforçar.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>ISC / CBR — o número que dimensiona</h4>
+  <p>O <em class="term">Índice de Suporte Califórnia</em> (NBR 9895) mede a resistência do solo
+  compactado à penetração de um pistão, comparada à de uma brita padrão. Corpo de prova moldado na
+  energia e na umidade de projeto, <strong>4 dias imerso</strong> — é a condição mais desfavorável,
+  o solo saturado — medindo a expansão a cada dia. Resultado em porcentagem: CBR 8% significa 8% da
+  resistência da brita padrão. Adota-se o maior valor entre as penetrações de 2,54 mm e 5,08 mm.</p>
+  <p>A imersão não é detalhe burocrático: é o ensaio perguntando "e quando chover uma semana
+  seguida?". Um solo com CBR 12% seco e 3% saturado é um solo de CBR 3% — porque o pavimento vai
+  viver molhado várias vezes na vida.</p>
+
+  <h3>Quando o subleito não serve</h3>
+  <ul>
+    <li><strong>Substituição</strong> — retirar 60 cm a 1,0 m do solo ruim e repor com material de
+      jazida aprovado, compactado em camadas. Solução direta e cara.</li>
+    <li><strong>Rachão / bica corrida afogada</strong> — em fundo mole e encharcado, lançar pedra
+      grande e cravar com a lâmina até formar um colchão estável. Clássico em brejo e em fundo de
+      vala alagado.</li>
+    <li><strong>Geotêxtil de separação</strong> — manta entre o solo mole e o material bom: impede
+      que a brita afunde no barro e que o barro suba pela brita. Barato e resolve muito.</li>
+    <li><strong>Geogrelha de reforço</strong> — trabalha por intertravamento do agregado, reduzindo
+      espessura de camada granular sobre subleito fraco.</li>
+    <li><strong>Estabilização química</strong> — cal em solo argiloso (reduz plasticidade e expansão)
+      ou cimento em solo arenoso (ganha resistência). Exige dosagem de laboratório, não palpite.</li>
+    <li><strong>Rebaixamento do lençol</strong> — dreno profundo antes de qualquer camada. Se a água
+      sobe, nenhuma das soluções acima dura.</li>
+  </ul>
+
+  <div class="note risk">
+    <span class="lbl">O mecanismo da ruína</span>
+    <p><strong>Bombeamento de finos (<em>pumping</em>).</strong> Trinca na capa → água entra e chega
+    ao subleito → sob a passagem de cada roda, a água pressurizada sobe e desce carregando fino do
+    subleito para dentro da base → a base perde apoio embaixo e se contamina por dentro → afunda,
+    trinca mais, entra mais água. É uma espiral: quando a mancha branca de fino aparece na trinca,
+    o estrago já está embaixo. Tapar a trinca cedo é a intervenção mais barata da vida do pavimento.</p>
+  </div>
+
+  <h3>Do CBR ao pavimento: dimensionamento</h3>
+  <p>O método clássico do DNER parte de dois números: o <strong>CBR do subleito</strong> e o
+  <strong>número N</strong>, que é o tráfego traduzido em repetições do eixo padrão de 8,2 tf durante
+  a vida de projeto. Com eles se lê no ábaco a espessura total de pavimento necessária, e essa
+  espessura é depois repartida entre as camadas por coeficientes de equivalência estrutural.</p>
+
+  <div class="formula">
+    <span class="eq">N = 365 × V × P × FV × FR × FC</span>
+    <p class="leg"><b>N</b> número de repetições do eixo padrão no período de projeto. <b>V</b> volume
+    médio diário de veículos na faixa de projeto. <b>P</b> período de projeto em anos (10 é o usual).
+    <b>FV</b> fator de veículo — converte a frota real em eixos padrão; é o número que mais muda o
+    resultado. <b>FR</b> fator regional (clima). <b>FC</b> fator de crescimento do tráfego.</p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <caption>Coeficiente de equivalência estrutural K — quanto cada material "vale" em espessura</caption>
+      <thead><tr><th>Material</th><th class="num">K</th><th>Leitura</th></tr></thead>
+      <tbody>
+        <tr><td>Concreto asfáltico (CBUQ)</td><td class="num">2,00</td><td>1 cm de CBUQ substitui 2 cm de base granular</td></tr>
+        <tr><td>Pré-misturado a quente</td><td class="num">1,70</td><td>—</td></tr>
+        <tr><td>Pré-misturado a frio</td><td class="num">1,40</td><td>—</td></tr>
+        <tr><td>Tratamento superficial</td><td class="num">1,20</td><td>—</td></tr>
+        <tr><td>Base ou sub-base granular</td><td class="num">1,00</td><td>é a referência do método</td></tr>
+        <tr><td>Solo-cimento (Rc ≥ 45 kgf/cm²)</td><td class="num">1,70</td><td>ganha espessura, mas trinca por retração</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tw">
+    <table>
+      <caption>Espessura mínima de revestimento asfáltico em função do tráfego</caption>
+      <thead><tr><th class="num">Número N</th><th>Revestimento mínimo</th></tr></thead>
+      <tbody>
+        <tr><td class="num">N ≤ 10⁶</td><td>Tratamento superficial por penetração</td></tr>
+        <tr><td class="num">10⁶ &lt; N ≤ 5×10⁶</td><td>5,0 cm de concreto asfáltico</td></tr>
+        <tr><td class="num">5×10⁶ &lt; N ≤ 10⁷</td><td>7,5 cm de concreto asfáltico</td></tr>
+        <tr><td class="num">10⁷ &lt; N ≤ 5×10⁷</td><td>10,0 cm de concreto asfáltico</td></tr>
+        <tr><td class="num">N &gt; 5×10⁷</td><td>12,5 cm de concreto asfáltico</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="flag">Este é o método empírico do CBR, ainda o mais usado em projeto urbano. O método
+  vigente de dimensionamento nacional é o <strong>MeDiNa</strong>, mecanístico-empírico: em vez do
+  CBR usa o <strong>módulo de resiliência</strong> dos materiais e calcula, por camada, o dano por
+  fadiga e a deformação permanente ao longo do tempo. Vale conhecer os dois — o CBR para entender a
+  obra que existe, o MeDiNa para entender o projeto que está chegando.</p>
+</section>
+
+<section id="asfalto" class="s-asf">
+  <div class="h2row"><span class="hn">03</span><h2>Pavimento asfáltico</h2></div>
+  <p class="lede">O revestimento tem três funções: dar superfície de rolamento segura e confortável,
+  impermeabilizar a estrutura e resistir ao esforço direto da roda. As duas primeiras explicam por
+  que uma trinca aberta é urgência, não estética.</p>
+
+  <h3>Os ligantes</h3>
+  <ul>
+    <li><strong>CAP</strong> — cimento asfáltico de petróleo, sólido a frio, trabalhado quente.
+      Classificado por penetração: <span class="mono">CAP 30/45</span> (mais duro, clima quente e
+      tráfego pesado), <span class="mono">CAP 50/70</span> (o mais usado no Brasil),
+      <span class="mono">CAP 85/100</span> (mais mole, clima frio).</li>
+    <li><strong>Asfalto modificado por polímero (AMP)</strong> — <span class="mono">60/85-E</span> e
+      similares. Mais caro, mais resistente a deformação permanente e a fadiga; usado em corredor de
+      ônibus, ponto de parada e trecho de tráfego muito pesado.</li>
+    <li><strong>Emulsão asfáltica</strong> — asfalto disperso em água, aplicável a frio. A sigla diz
+      tudo: <span class="mono">RR</span> ruptura rápida, <span class="mono">RM</span> média,
+      <span class="mono">RL</span> lenta; <span class="mono">C</span> de catiônica. Pintura de
+      ligação usa RR-1C ou RR-2C.</li>
+    <li><strong>Asfalto diluído</strong> — <span class="mono">CM-30</span>, CAP cortado com solvente,
+      de cura média. É o material de imprimação, porque penetra na base.</li>
+  </ul>
+
+  <h3>Imprimação × pintura de ligação</h3>
+  <p>Confundir as duas é o erro mais frequente de quem está começando — e a origem de descolamento
+  de capa em obra.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>&nbsp;</th><th>Imprimação (DNIT 144)</th><th>Pintura de ligação (DNIT 145)</th></tr></thead>
+      <tbody>
+        <tr><td>Onde</td><td>Sobre a base granular, uma única vez</td><td>Entre duas camadas asfálticas</td></tr>
+        <tr><td>Para quê</td><td>Impermeabilizar e amarrar o pó da base; dar aderência ao asfalto</td><td>Colar a camada nova na camada asfáltica existente</td></tr>
+        <tr><td>Material</td><td>Asfalto diluído CM-30 (penetra)</td><td>Emulsão RR-1C ou RR-2C diluída 1:1 (não penetra)</td></tr>
+        <tr><td>Taxa</td><td class="num">0,8 a 1,6 L/m²</td><td class="num">0,3 a 0,4 L/m² de ligante residual</td></tr>
+        <tr><td>Cura</td><td class="num">24 h, sem tráfego</td><td>Até a emulsão romper (marrom → preto)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Regra de campo: a imprimação tem que <strong>penetrar</strong> — se ficar empoçada na superfície
+  a taxa está alta ou a base está selada demais; se sumir na hora, a taxa está baixa. A pintura de
+  ligação tem que <strong>romper antes</strong> de receber a massa, e não pode ser carregada pelo
+  pneu do caminhão: por isso se pinta na frente do serviço, não a rua inteira de manhã.</p>
+
+  <h3>A mistura: CBUQ</h3>
+  <p>Concreto betuminoso usinado a quente é agregado graúdo, agregado miúdo, material de enchimento
+  (fíler) e ligante, dosados em usina e misturados a quente. A granulometria segue uma
+  <strong>faixa</strong> do DNIT 031/2006-ES: faixa A para camadas mais grossas, B para binder,
+  <strong>C para capa de rolamento</strong> — a que se vê em rua urbana. A espessura da camada não
+  pode ser menor que 2 a 3 vezes o diâmetro máximo do agregado; por isso capa em faixa C sai entre
+  3 e 5 cm.</p>
+
+  <div class="tw">
+    <table>
+      <caption>Dosagem Marshall — parâmetros de projeto (DNIT 031/2006-ES)</caption>
+      <thead><tr><th>Parâmetro</th><th class="num">Capa de rolamento</th><th class="num">Binder</th><th>O que significa</th></tr></thead>
+      <tbody>
+        <tr><td>Volume de vazios (Vv)</td><td class="num">3 a 5%</td><td class="num">4 a 6%</td><td>Vazio de menos, exsuda e deforma; de mais, oxida e desagrega</td></tr>
+        <tr><td>Relação betume/vazios (RBV)</td><td class="num">75 a 82%</td><td class="num">65 a 72%</td><td>Quanto do vazio do agregado está preenchido de ligante</td></tr>
+        <tr><td>Estabilidade Marshall</td><td class="num">≥ 500 kgf</td><td class="num">≥ 500 kgf</td><td>Carga de ruptura do corpo de prova (75 golpes)</td></tr>
+        <tr><td>Fluência</td><td class="num">2,0 a 4,5 mm</td><td class="num">2,0 a 4,5 mm</td><td>Deformação na ruptura — rigidez da mistura</td></tr>
+        <tr><td>Resistência à tração (25 °C)</td><td class="num">≥ 0,65 MPa</td><td class="num">≥ 0,65 MPa</td><td>Compressão diametral; liga com a vida de fadiga</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Temperatura: o parâmetro que se perde no caminho</h3>
+  <p>Asfalto é um material termossensível — a mesma mistura é fluida a 150 °C e praticamente rígida
+  a 80 °C. Quase todo defeito de compactação de capa é, na origem, um problema de temperatura.</p>
+  <div class="tw">
+    <table>
+      <caption>Janela térmica usual do CBUQ</caption>
+      <thead><tr><th>Etapa</th><th class="num">Temperatura</th><th>Observação</th></tr></thead>
+      <tbody>
+        <tr><td>CAP na usina</td><td class="num">107 – 177 °C</td><td>Definida pela faixa de viscosidade do ligante</td></tr>
+        <tr><td>Agregado</td><td class="num">10 a 15 °C acima do ligante</td><td>Nunca mais de 15 °C acima — queima o ligante</td></tr>
+        <tr><td>Saída da usina</td><td class="num">≤ 177 °C</td><td>Acima disso o ligante envelhece antes de ir para a pista</td></tr>
+        <tr><td>Chegada e espalhamento</td><td class="num">≥ 140 °C</td><td>Caminhão lonado; carga fria volta</td></tr>
+        <tr><td>Fim da compactação</td><td class="num">≈ 80 °C</td><td>Abaixo disso o rolo só marca a superfície, não densifica</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Não se aplica CBUQ com chuva, com pista úmida, nem com temperatura ambiente abaixo de 10 °C.
+  A base tem que estar imprimada, curada, limpa e seca.</p>
+
+  <h4>Compactação da capa</h4>
+  <ul>
+    <li><strong>Rolo liso tandem</strong> na rolagem inicial, logo atrás da vibroacabadora, e no
+      acabamento (fecha a superfície e apaga marca de pneu).</li>
+    <li><strong>Rolo de pneus</strong> na rolagem intermediária — é ele que dá o grau de compactação,
+      amassando a mistura enquanto ainda está quente.</li>
+    <li>Rolar sempre do <strong>bordo mais baixo para o mais alto</strong>, com recobrimento de meia
+      largura entre passadas, e nunca parar, virar ou manobrar o rolo sobre massa quente.</li>
+    <li>Juntas longitudinais e transversais: recortar a borda fria em corte vertical, pintar a face
+      com ligante e sobrepor a massa nova. Junta mal feita é por onde a água entra primeiro.</li>
+  </ul>
+
+  <h3>Controle do que foi executado</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Item</th><th class="num">Critério usual</th><th>Como se verifica</th></tr></thead>
+      <tbody>
+        <tr><td>Grau de compactação da capa</td><td class="num">97 a 101%</td><td>Densidade in situ ou corpo de prova extraído, contra a densidade Marshall de projeto</td></tr>
+        <tr><td>Teor de ligante</td><td class="num">projeto ± 0,3%</td><td>Extração de betume de amostra da pista</td></tr>
+        <tr><td>Granulometria</td><td>dentro da faixa</td><td>Peneiramento do agregado da extração</td></tr>
+        <tr><td>Espessura da camada</td><td class="num">projeto ± 5%</td><td>Sonda rotativa (corpo de prova extraído) ou nivelamento antes/depois</td></tr>
+        <tr><td>Irregularidade da superfície</td><td class="num">≤ 3 a 4 mm na régua de 3 m</td><td>Régua e cunha; em rodovia, IRI com perfilômetro</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Defeitos: ler o pavimento</h3>
+  <ul>
+    <li><strong>Trinca couro de jacaré (FC-2 / FC-3)</strong> — malha fina interligada na trilha de
+      roda. É fadiga: a estrutura está trabalhando além do que aguenta. Com erosão nas bordas
+      (FC-3), a água já está entrando. Não se resolve com capa nova por cima.</li>
+    <li><strong>Afundamento de trilha de roda</strong> — deformação permanente. Se o afundamento tem
+      bordas levantadas, a origem é a mistura asfáltica (ligante demais, agregado arredondado, AMP
+      faltando); se afunda sem levantar, a origem é camada inferior ou subleito.</li>
+    <li><strong>Panela / buraco</strong> — estágio final: trinca → água → perda de suporte →
+      desagregação. Tapar só resolve o sintoma.</li>
+    <li><strong>Exsudação</strong> — mancha preta brilhante, ligante subindo à superfície. Teor de
+      betume alto ou vazio insuficiente. Perigosa: derrapagem.</li>
+    <li><strong>Escorregamento</strong> — massa empurrada em meia-lua, típico de frenagem antes de
+      semáforo, e sinal de pintura de ligação mal feita ou ausente.</li>
+    <li><strong>Remendo</strong> — conta como defeito na avaliação do pavimento, e entra no cálculo
+      do IGG junto com os demais.</li>
+  </ul>
+
+  <ul class="check" data-ck="asf">
+    <li><input type="checkbox" id="ck-a1"><label for="ck-a1">Base aprovada, imprimada e curada — sem tráfego sobre a imprimação</label></li>
+    <li><input type="checkbox" id="ck-a2"><label for="ck-a2">Pista limpa e seca; previsão de chuva conferida antes de pedir massa</label></li>
+    <li><input type="checkbox" id="ck-a3"><label for="ck-a3">Pintura de ligação aplicada na frente do serviço e já rompida</label></li>
+    <li><input type="checkbox" id="ck-a4"><label for="ck-a4">Temperatura medida na chegada de cada caminhão, com registro</label></li>
+    <li><input type="checkbox" id="ck-a5"><label for="ck-a5">Acabadora regulada: espessura solta, sapata e cilindro com massa constante</label></li>
+    <li><input type="checkbox" id="ck-a6"><label for="ck-a6">Plano de rolagem definido: pneus no intermediário, liso no acabamento</label></li>
+    <li><input type="checkbox" id="ck-a7"><label for="ck-a7">Juntas recortadas e pintadas antes da nova massa</label></li>
+    <li><input type="checkbox" id="ck-a8"><label for="ck-a8">Amostra da pista coletada para extração de betume e granulometria</label></li>
+    <li><input type="checkbox" id="ck-a9"><label for="ck-a9">Tráfego liberado só depois do resfriamento; sem estacionar sobre capa nova</label></li>
+  </ul>
+</section>
+<section id="drenagem" class="s-dren">
+  <div class="h2row"><span class="hn">04</span><h2>Drenagem</h2></div>
+  <p class="lede">Drenagem não é um serviço ao lado da pavimentação: é parte da estrutura do
+  pavimento. Tirar a água da superfície, tirar a água de dentro das camadas e impedir que a água do
+  terreno suba — as três coisas decidem se o asfalto dura dez anos ou dois.</p>
+
+  <h3>Micro e macrodrenagem</h3>
+  <ul>
+    <li><strong>Microdrenagem</strong> — o que recolhe a chuva da rua: caimento da pista, sarjeta,
+      meio-fio, boca de lobo, tubo de ligação, poço de visita e galeria. Dimensionada para tempo de
+      recorrência de <span class="mono">2 a 10 anos</span> (usual 5 a 10 em galeria).</li>
+    <li><strong>Macrodrenagem</strong> — o que recebe tudo isso: canais, travessias, córregos e
+      bacias de detenção. Tempo de recorrência de <span class="mono">25 a 100 anos</span>.</li>
+    <li><strong>Drenagem subsuperficial</strong> — a que quase ninguém vê e todo pavimento precisa:
+      dreno longitudinal profundo, camada drenante, saída d'água da base, rebaixamento de lençol.</li>
+  </ul>
+
+  <figure>
+    <div class="fw">
+      <svg viewBox="0 0 880 330" role="img" aria-label="Dois caminhos da água: o caminho de projeto, da chuva na pista até o corpo receptor passando por sarjeta, boca de lobo, ligação, poço de visita e galeria; e o caminho da ruína, da infiltração pela trinca até a panela, realimentando o ciclo, com o dreno de base como interrupção do ciclo">
+        <defs>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+          </marker>
+        </defs>
+        <text x="8" y="30" font-size="11" fill="currentColor" letter-spacing="2" opacity=".7">CAMINHO DE PROJETO</text>
+
+        <g style="stroke:var(--water)" stroke-width="1.5">
+          <rect x="8" y="42" width="108" height="48" style="fill:var(--surface-2)"></rect>
+          <rect x="134" y="42" width="108" height="48" style="fill:var(--surface-2)"></rect>
+          <rect x="260" y="42" width="108" height="48" style="fill:var(--surface-2)"></rect>
+          <rect x="386" y="42" width="108" height="48" style="fill:var(--surface-2)"></rect>
+          <rect x="512" y="42" width="108" height="48" style="fill:var(--surface-2)"></rect>
+          <rect x="638" y="42" width="108" height="48" style="fill:var(--surface-2)"></rect>
+          <rect x="764" y="42" width="108" height="48" style="fill:var(--surface-2)"></rect>
+        </g>
+        <g font-size="11.5" fill="currentColor" text-anchor="middle" font-weight="600">
+          <text x="62" y="64">Chuva na pista</text>
+          <text x="188" y="64">Sarjeta</text>
+          <text x="314" y="64">Boca de lobo</text>
+          <text x="440" y="64">Tubo de ligação</text>
+          <text x="566" y="64">Poço de visita</text>
+          <text x="692" y="64">Galeria</text>
+          <text x="818" y="64">Corpo receptor</text>
+        </g>
+        <g font-size="10" fill="currentColor" text-anchor="middle" opacity=".8">
+          <text x="62" y="80">caimento 2%</text>
+          <text x="188" y="80">i ≥ 0,5%</text>
+          <text x="314" y="80">a cada ≤ 60 m</text>
+          <text x="440" y="80">Ø 400, i ≥ 1%</text>
+          <text x="566" y="80">toda mudança</text>
+          <text x="692" y="80">Ø ≥ 600</text>
+          <text x="818" y="80">com dissipador</text>
+        </g>
+        <g style="stroke:var(--water);color:var(--water)" stroke-width="1.6" marker-end="url(#ar2)">
+          <line x1="116" y1="66" x2="132" y2="66"></line>
+          <line x1="242" y1="66" x2="258" y2="66"></line>
+          <line x1="368" y1="66" x2="384" y2="66"></line>
+          <line x1="494" y1="66" x2="510" y2="66"></line>
+          <line x1="620" y1="66" x2="636" y2="66"></line>
+          <line x1="746" y1="66" x2="762" y2="66"></line>
+        </g>
+
+        <polyline points="62,90 62,176 130,176 130,196" fill="none" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar2)"></polyline>
+        <text x="72" y="170" font-size="10.5" fill="currentColor" opacity=".85">o que não é recolhido, infiltra</text>
+
+        <g style="stroke:var(--signal)" stroke-width="1.5">
+          <rect x="70" y="198" width="130" height="50" style="fill:var(--surface-2)"></rect>
+          <rect x="224" y="198" width="130" height="50" style="fill:var(--surface-2)"></rect>
+          <rect x="378" y="198" width="130" height="50" style="fill:var(--surface-2)"></rect>
+          <rect x="532" y="198" width="130" height="50" style="fill:var(--surface-2)"></rect>
+          <rect x="686" y="198" width="130" height="50" style="fill:var(--surface-2)"></rect>
+        </g>
+        <g font-size="11.5" fill="currentColor" text-anchor="middle" font-weight="600">
+          <text x="135" y="220">Trinca aberta</text>
+          <text x="289" y="220">Camadas saturadas</text>
+          <text x="443" y="220">Bombeamento</text>
+          <text x="597" y="220">Perda de suporte</text>
+          <text x="751" y="220">Panela</text>
+        </g>
+        <g font-size="10" fill="currentColor" text-anchor="middle" opacity=".8">
+          <text x="135" y="236">porta de entrada</text>
+          <text x="289" y="236">subleito perde CBR</text>
+          <text x="443" y="236">fino sobe a cada roda</text>
+          <text x="597" y="236">afunda e trinca mais</text>
+          <text x="751" y="236">buraco</text>
+        </g>
+        <g stroke="currentColor" stroke-width="1.4" marker-end="url(#ar2)">
+          <line x1="200" y1="223" x2="222" y2="223"></line>
+          <line x1="354" y1="223" x2="376" y2="223"></line>
+          <line x1="508" y1="223" x2="530" y2="223"></line>
+          <line x1="662" y1="223" x2="684" y2="223"></line>
+        </g>
+        <polyline points="751,248 751,296 135,296 135,250" fill="none" style="stroke:var(--signal)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#ar2)"></polyline>
+        <text x="443" y="314" font-size="10.5" fill="currentColor" text-anchor="middle" opacity=".85">cada ciclo abre mais caminho para a água — por isso selar trinca cedo é a intervenção mais barata</text>
+
+        <rect x="250" y="120" width="224" height="42" style="fill:var(--surface);stroke:var(--water)" stroke-width="1.5" stroke-dasharray="4 3"></rect>
+        <text x="362" y="137" font-size="10" fill="currentColor" text-anchor="middle" letter-spacing="1.5" opacity=".75">O QUE INTERROMPE O CICLO</text>
+        <text x="362" y="153" font-size="11.5" fill="currentColor" text-anchor="middle" font-weight="600">dreno de base com saída no meio-fio</text>
+        <line x1="300" y1="162" x2="292" y2="194" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar2)"></line>
+      </svg>
+    </div>
+    <figcaption><b>Figura 3 — os dois caminhos da água.</b> Em cima, o percurso que o projeto
+    previu. Embaixo, o que acontece com a parcela que infiltra e não tem por onde sair — um ciclo
+    que se realimenta. A camada drenante com saída é o que tira essa água de dentro da estrutura.</figcaption>
+  </figure>
+
+  <h3>O cálculo, em quatro passos</h3>
+  <p>Toda microdrenagem urbana sai da mesma sequência: quanto tempo a bacia leva para contribuir,
+  que chuva usar para esse tempo, quanta vazão isso gera e que tubo transporta essa vazão.</p>
+
+  <div class="formula">
+    <span class="eq">1. tc = 0,0195 × (L³ / H)^0,385</span>
+    <p class="leg">Fórmula de Kirpich para o <b>tempo de concentração</b>, em minutos. <b>L</b>
+    comprimento do talvegue, em metros. <b>H</b> desnível entre o ponto mais afastado e a seção, em
+    metros. Em bacia urbana pequena costuma-se adotar um mínimo de 10 minutos, porque nenhuma sarjeta
+    responde mais rápido que isso.</p>
+  </div>
+  <div class="formula">
+    <span class="eq">2. i = k × T^a / (t + b)^c</span>
+    <p class="leg">Equação <b>IDF</b> (intensidade–duração–frequência) da cidade, em mm/h. <b>T</b>
+    tempo de recorrência em anos, <b>t</b> duração da chuva em minutos (adota-se t = tc), e
+    <b>k, a, b, c</b> são os coeficientes locais — cada município tem os seus, publicados em estudo
+    hidrológico. Nunca use a IDF de outra cidade.</p>
+  </div>
+  <div class="formula">
+    <span class="eq">3. Q = C × i × A / 360</span>
+    <p class="leg"><b>Método Racional</b>. <b>Q</b> vazão de projeto em m³/s, <b>C</b> coeficiente de
+    escoamento superficial (adimensional), <b>i</b> intensidade em mm/h, <b>A</b> área da bacia em
+    hectares. Válido para bacias pequenas, até cerca de 2 km² — que é o caso de praticamente toda
+    microdrenagem urbana.</p>
+  </div>
+  <div class="formula">
+    <span class="eq">4. V = (1/n) × Rh^(2/3) × I^(1/2)     e     Q = V × A</span>
+    <p class="leg"><b>Manning</b>, para dimensionar o condutor. <b>V</b> velocidade em m/s, <b>n</b>
+    coeficiente de rugosidade do material, <b>Rh</b> raio hidráulico (área molhada ÷ perímetro
+    molhado, em m), <b>I</b> declividade em m/m, <b>A</b> área molhada em m². Dimensiona-se a galeria
+    para funcionar como conduto livre — em geral com lâmina máxima de 0,80 do diâmetro.</p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <caption>Coeficiente de escoamento C — quanto da chuva vira enxurrada</caption>
+      <thead><tr><th>Superfície</th><th class="num">C</th><th>Superfície</th><th class="num">C</th></tr></thead>
+      <tbody>
+        <tr><td>Pavimento asfáltico</td><td class="num">0,80 – 0,95</td><td>Área urbana densa</td><td class="num">0,70 – 0,90</td></tr>
+        <tr><td>Concreto e calçada</td><td class="num">0,80 – 0,95</td><td>Área residencial</td><td class="num">0,40 – 0,60</td></tr>
+        <tr><td>Telhado</td><td class="num">0,75 – 0,95</td><td>Gramado, solo arenoso plano</td><td class="num">0,05 – 0,10</td></tr>
+        <tr><td>Solo compactado sem revestimento</td><td class="num">0,50 – 0,70</td><td>Gramado, solo argiloso íngreme</td><td class="num">0,25 – 0,35</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>É esta tabela que explica por que pavimentar uma rua aumenta o problema de drenagem da rua de
+  baixo: um terreno que devolvia 10% da chuva passa a devolver 90%, e mais rápido.</p>
+
+  <div class="tw">
+    <table>
+      <caption>Coeficiente de rugosidade n de Manning</caption>
+      <thead><tr><th>Material</th><th class="num">n</th></tr></thead>
+      <tbody>
+        <tr><td>Tubo de PVC ou PEAD de parede interna lisa</td><td class="num">0,010 – 0,012</td></tr>
+        <tr><td>Tubo de concreto pré-moldado, boa execução</td><td class="num">0,013</td></tr>
+        <tr><td>Canal de concreto moldado no local</td><td class="num">0,015</td></tr>
+        <tr><td>Canal de terra, com vegetação</td><td class="num">0,025 – 0,035</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Parâmetros de projeto e execução</h3>
+  <div class="tw">
+    <table>
+      <caption>Valores usuais de microdrenagem urbana</caption>
+      <thead><tr><th>Item</th><th class="num">Valor</th><th>Por quê</th></tr></thead>
+      <tbody>
+        <tr><td>Diâmetro mínimo de galeria</td><td class="num">400 mm</td><td>Abaixo disso entope e não há como desobstruir</td></tr>
+        <tr><td>Tubo de ligação da boca de lobo</td><td class="num">300 – 400 mm, i ≥ 1%</td><td>Declividade alta para arrastar o que entra pela grelha</td></tr>
+        <tr><td>Velocidade mínima</td><td class="num">0,60 – 0,75 m/s</td><td>Autolimpante: abaixo disso sedimenta areia dentro do tubo</td></tr>
+        <tr><td>Velocidade máxima</td><td class="num">4,5 – 5,0 m/s</td><td>Acima disso a água abrasiona o concreto do tubo</td></tr>
+        <tr><td>Lâmina máxima na galeria</td><td class="num">0,80 D</td><td>Deixa ar acima da lâmina — conduto livre, não forçado</td></tr>
+        <tr><td>Recobrimento sobre o tubo</td><td class="num">≥ 1,00 m sob via / ≥ 0,60 m sob passeio</td><td>Protege o tubo da carga de roda</td></tr>
+        <tr><td>Espaçamento entre bocas de lobo</td><td class="num">≤ 60 m</td><td>E sempre no ponto baixo e a montante de travessia de pedestre</td></tr>
+        <tr><td>Espaçamento entre poços de visita</td><td class="num">≤ 60 – 80 m</td><td>E em toda mudança de direção, declividade ou diâmetro</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="flag">Valores correntes de manual municipal de drenagem. Cada cidade tem o seu — em Campo
+  Grande, as diretrizes são da Prefeitura (SISEP/PLANURB), e é o manual local que prevalece.</p>
+
+  <h3>Assentamento de tubo: onde a obra costuma falhar</h3>
+  <p>A NBR 12266 (valas) e a NBR 15645 (execução com tubos e aduelas de concreto) regem o serviço, e
+  a NBR 8890 classifica os tubos — <span class="mono">PA-1</span> a <span class="mono">PA-4</span>,
+  por resistência à compressão diametral. Sob via com tráfego pesado e pouco recobrimento, tubo de
+  classe baixa quebra; a classe é decisão de projeto, não de disponibilidade do fornecedor.</p>
+  <ol>
+    <li><strong>Fundo de vala regularizado</strong> na declividade de projeto, sem degrau e sem lama.
+      Se aparecer água, esgotar antes de assentar.</li>
+    <li><strong>Berço</strong> de material granular, compactado, com nicho para a bolsa — o tubo tem
+      que apoiar no corpo, nunca na bolsa.</li>
+    <li><strong>Assentamento</strong> de jusante para montante, bolsa voltada para montante,
+      alinhamento e cota conferidos tubo a tubo.</li>
+    <li><strong>Envolvimento lateral</strong> compactado em camadas dos dois lados ao mesmo tempo, em
+      camadas de 15 a 20 cm. É o que dá ao tubo a capacidade de carga que o ensaio promete — tubo
+      bom com lateral fofa trabalha sozinho e trinca.</li>
+    <li><strong>Reaterro</strong> em camadas controladas até o greide, com o mesmo rigor da
+      terraplenagem. A vala é uma cicatriz na rua e vai aparecer no asfalto se for mal fechada.</li>
+  </ol>
+
+  <div class="note risk">
+    <span class="lbl">Segurança na vala</span>
+    <p>Vala é onde a obra mata. A NR-18 exige escoramento ou talude adequado e escadas de saída, e a
+    NBR 9061 trata da segurança de escavação a céu aberto. Regra prática: acima de
+    <strong>1,25 m</strong> de profundidade ninguém entra em vala sem escoramento ou talude
+    dimensionado. Material escavado afastado da borda, sinalização e barreira física para pedestre,
+    e atenção redobrada a interferências — rede de água, esgoto, energia e gás. Entrada em poço de
+    visita é <strong>espaço confinado</strong>: NR-33, com permissão de entrada, medição de
+    atmosfera e vigia. Nunca improvisar isso.</p>
+  </div>
+
+  <h3>Drenagem subsuperficial: a que ninguém vê</h3>
+  <ul>
+    <li><strong>Dreno longitudinal profundo</strong> — vala com geotêxtil, brita e tubo perfurado ao
+      longo do bordo, para rebaixar o lençol e interceptar água que chega de fora.</li>
+    <li><strong>Camada drenante com saída</strong> — quando a sub-base trabalha também como dreno, a
+      água precisa de um caminho de saída: dreno transversal ou saída pelo meio-fio. Sem saída, a
+      camada "drenante" vira reservatório dentro do pavimento.</li>
+    <li><strong>Geotêxtil como filtro</strong> — deixa a água passar e segura o fino. Sem filtro, o
+      dreno colmata em um ou dois anos e para de funcionar em silêncio.</li>
+    <li><strong>Espinha de peixe</strong> — drenos inclinados em área de alagamento, para secar o
+      subleito antes de construir.</li>
+  </ul>
+
+  <ul class="check" data-ck="dren">
+    <li><input type="checkbox" id="ck-d1"><label for="ck-d1">Cota de fundo de vala e declividade conferidas com nível — não "no olho da máquina"</label></li>
+    <li><input type="checkbox" id="ck-d2"><label for="ck-d2">Vala escorada ou taludada, com escada e sinalização; interferências locadas</label></li>
+    <li><input type="checkbox" id="ck-d3"><label for="ck-d3">Classe do tubo conferida contra o projeto e o recobrimento real</label></li>
+    <li><input type="checkbox" id="ck-d4"><label for="ck-d4">Berço executado com nicho para a bolsa; tubo apoiado no corpo</label></li>
+    <li><input type="checkbox" id="ck-d5"><label for="ck-d5">Envolvimento lateral compactado dos dois lados simultaneamente</label></li>
+    <li><input type="checkbox" id="ck-d6"><label for="ck-d6">Boca de lobo no ponto baixo real da rua, conferido depois do greide definitivo</label></li>
+    <li><input type="checkbox" id="ck-d7"><label for="ck-d7">Rede limpa e desobstruída antes da entrega — sem entulho de obra dentro</label></li>
+    <li><input type="checkbox" id="ck-d8"><label for="ck-d8">Saída d'água da camada drenante executada e desobstruída</label></li>
+    <li><input type="checkbox" id="ck-d9"><label for="ck-d9">Registro fotográfico do serviço enterrado antes do reaterro</label></li>
+  </ul>
+</section>
+<section id="ensaios">
+  <div class="h2row"><span class="hn">A</span><h2>Caderno de ensaios</h2></div>
+  <p class="lede">Os ensaios que decidem se uma camada é aceita, com a norma, o que medem e onde
+  entram no serviço.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Ensaio</th><th>Norma</th><th>O que mede</th><th>Onde decide</th></tr></thead>
+      <tbody>
+        <tr><td>Granulometria</td><td>NBR 7181</td><td>Distribuição dos tamanhos de grão</td><td>Classifica o solo; verifica se a brita está na faixa</td></tr>
+        <tr><td>Limite de liquidez</td><td>NBR 6459</td><td>Umidade de transição plástico/líquido</td><td>LL ≤ 25% em base granular</td></tr>
+        <tr><td>Limite de plasticidade</td><td>NBR 7180</td><td>Com o LL, dá o IP = LL − LP</td><td>IP ≤ 6 em base granular</td></tr>
+        <tr><td>Compactação (Proctor)</td><td>NBR 7182</td><td>Umidade ótima e γd máx na energia especificada</td><td>É a referência de todo grau de compactação</td></tr>
+        <tr><td>ISC / CBR e expansão</td><td>NBR 9895</td><td>Capacidade de suporte do solo saturado</td><td>Aceita o material e dimensiona o pavimento</td></tr>
+        <tr><td>Densidade in situ (frasco de areia)</td><td>NBR 7185</td><td>γd real da camada executada</td><td>Libera ou reprova a camada compactada</td></tr>
+        <tr><td>Umidade (speedy / estufa)</td><td>NBR 6457</td><td>Teor de água do solo</td><td>Autoriza o início da rolagem</td></tr>
+        <tr><td>Abrasão Los Angeles</td><td>NBR NM 51</td><td>Desgaste do agregado graúdo</td><td>Qualidade da brita de base e de CBUQ</td></tr>
+        <tr><td>Equivalente de areia</td><td>NBR 12052</td><td>Proporção de fino argiloso no agregado</td><td>Rejeita agregado "sujo" em base e mistura</td></tr>
+        <tr><td>Dosagem Marshall</td><td>DNER-ME 043</td><td>Teor de ligante, Vv, RBV, estabilidade, fluência</td><td>Define o traço do CBUQ</td></tr>
+        <tr><td>Extração de betume</td><td>DNER-ME 053</td><td>Teor real de ligante na massa da pista</td><td>Confere a usina contra o projeto (± 0,3%)</td></tr>
+        <tr><td>Resistência à tração por compressão diametral</td><td>DNIT 136/2018-ME</td><td>RT da mistura asfáltica</td><td>RT ≥ 0,65 MPa a 25 °C</td></tr>
+        <tr><td>Compressão diametral do tubo</td><td>NBR 8890</td><td>Classe de resistência PA-1 a PA-4</td><td>Recebimento do tubo de drenagem</td></tr>
+        <tr><td>Resistência do concreto</td><td>NBR 5738 / 5739</td><td>fck de guias, sarjetas, PVs</td><td>Aceita a peça de concreto executada</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="formulas">
+  <div class="h2row"><span class="hn">B</span><h2>Folha de fórmulas</h2></div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Grandeza</th><th>Expressão</th><th>Unidades</th></tr></thead>
+      <tbody>
+        <tr><td>Grau de compactação</td><td class="num">GC = γd campo / γd máx × 100</td><td class="num">%</td></tr>
+        <tr><td>Índice de plasticidade</td><td class="num">IP = LL − LP</td><td class="num">%</td></tr>
+        <tr><td>Número N (tráfego)</td><td class="num">N = 365 · V · P · FV · FR · FC</td><td class="num">repetições do eixo de 8,2 tf</td></tr>
+        <tr><td>Tempo de concentração (Kirpich)</td><td class="num">tc = 0,0195 · (L³/H)^0,385</td><td class="num">min · m · m</td></tr>
+        <tr><td>Intensidade de chuva (IDF)</td><td class="num">i = k·T^a / (t+b)^c</td><td class="num">mm/h</td></tr>
+        <tr><td>Vazão (Método Racional)</td><td class="num">Q = C · i · A / 360</td><td class="num">m³/s · mm/h · ha</td></tr>
+        <tr><td>Velocidade (Manning)</td><td class="num">V = (1/n) · Rh^(2/3) · I^(1/2)</td><td class="num">m/s · m · m/m</td></tr>
+        <tr><td>Vazão do conduto</td><td class="num">Q = V · A molhada</td><td class="num">m³/s</td></tr>
+        <tr><td>Raio hidráulico</td><td class="num">Rh = A molhada / P molhado</td><td class="num">m</td></tr>
+        <tr><td>Espessura equivalente</td><td class="num">H = Σ (espessura · K do material)</td><td class="num">cm</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="normas">
+  <div class="h2row"><span class="hn">C</span><h2>Normas de referência</h2></div>
+  <h4>Terraplenagem e subleito</h4>
+  <p>DNIT 106, 107 e 108/2009-ES (serviços preliminares, cortes, aterros) &middot;
+  DNIT 137/2010-ES (regularização do subleito) &middot; NBR 6457, 6459, 7180, 7181, 7182, 7185 e
+  9895 (caracterização, compactação, densidade in situ e CBR).</p>
+  <h4>Camadas granulares e pavimento asfáltico</h4>
+  <p>DNIT 139/2010-ES (sub-base granular) &middot; DNIT 141/2010-ES (base granular) &middot;
+  DNIT 143/2010-ES (base de solo-cimento) &middot; DNIT 144/2014-ES (imprimação) &middot;
+  DNIT 145/2012-ES (pintura de ligação) &middot; DNIT 031/2006-ES (concreto asfáltico) &middot;
+  NBR 15115 e 15116 (agregado reciclado de RCD em pavimentação) &middot; Manual de Pavimentação
+  IPR-719 e Manual de Restauração IPR-720 &middot; MeDiNa, para dimensionamento.</p>
+  <h4>Drenagem</h4>
+  <p>NBR 12266 (valas para tubulação de água, esgoto e drenagem urbana) &middot; NBR 15645 (execução
+  com tubos e aduelas de concreto) &middot; NBR 8890 (tubo de concreto) &middot; NBR 9649 (projeto de
+  redes coletoras) &middot; Manual de Drenagem de Rodovias IPR-724 e a série de especificações de
+  drenagem do DNIT &middot; manual de drenagem urbana do município, que é quem manda na
+  microdrenagem.</p>
+  <h4>Calçada, acessibilidade e sinalização</h4>
+  <p>NBR 9050 (acessibilidade) &middot; NBR 16537 (sinalização tátil) &middot; NBR 9781 (peças de
+  concreto para pavimentação) e NBR 15953 (execução de pavimento intertravado) &middot; NBR 16416
+  (pavimento permeável) &middot; Manual Brasileiro de Sinalização de Trânsito, do CONTRAN &middot;
+  NBR 15486 (dispositivos de contenção viária).</p>
+  <h4>Segurança e concreto</h4>
+  <p>NR-18, NR-6, NR-33 e NR-35 &middot; NBR 9061 (segurança de escavação a céu aberto) &middot;
+  NBR 7678 (segurança na execução de obras) &middot; NBR 6118, 12655, 7212, 5738 e 5739 (concreto).</p>
+  <p class="flag">A ABNT cancela e substitui normas com frequência, e as ES do DNIT têm revisões por
+  ano. Antes de citar qualquer uma em documento assinado — memorial, relatório, ART — confirme a
+  versão vigente na fonte.</p>
+</section>
+
+<section id="glossario">
+  <div class="h2row"><span class="hn">D</span><h2>Glossário de campo</h2></div>
+  <div class="tw">
+    <table>
+      <tbody>
+        <tr><td><strong>Greide</strong></td><td>A linha de cotas do projeto — o perfil que a rua tem que ter quando pronta.</td></tr>
+        <tr><td><strong>Off-set</strong></td><td>Piquete deslocado que marca no terreno onde o talude encontra o terreno natural.</td></tr>
+        <tr><td><strong>Empolamento</strong></td><td>Aumento de volume do solo ao ser escavado e solto.</td></tr>
+        <tr><td><strong>DMT</strong></td><td>Distância média de transporte do material movimentado.</td></tr>
+        <tr><td><strong>Bota-fora</strong></td><td>Destino do material excedente que não serve para aterro.</td></tr>
+        <tr><td><strong>Jazida / empréstimo</strong></td><td>Área de onde se tira material bom para aterro quando o corte não basta.</td></tr>
+        <tr><td><strong>Umidade ótima</strong></td><td>Teor de água que rende a maior densidade seca na energia de compactação usada.</td></tr>
+        <tr><td><strong>Borrachudo</strong></td><td>Camada que balança sob o rolo em vez de densificar — umidade alta, fino saturado ou matéria orgânica.</td></tr>
+        <tr><td><strong>Regularização</strong></td><td>Os 20 cm superiores do subleito, escarificados, conformados e recompactados.</td></tr>
+        <tr><td><strong>Reforço do subleito</strong></td><td>Camada extra quando o subleito é fraco demais para a espessura de projeto.</td></tr>
+        <tr><td><strong>Imprimação</strong></td><td>Asfalto diluído aplicado sobre a base granular, para impermeabilizar e amarrar o pó.</td></tr>
+        <tr><td><strong>Pintura de ligação</strong></td><td>Emulsão entre camadas asfálticas, para colar a nova na existente.</td></tr>
+        <tr><td><strong>Binder</strong></td><td>Camada asfáltica intermediária, entre a base e a capa.</td></tr>
+        <tr><td><strong>Capa de rolamento</strong></td><td>A camada asfáltica superior, a que recebe a roda.</td></tr>
+        <tr><td><strong>Fíler</strong></td><td>Material de enchimento (cal, pó de pedra, cimento) que completa a curva granulométrica da mistura.</td></tr>
+        <tr><td><strong>Exsudação</strong></td><td>Ligante subindo à superfície; mancha preta brilhante e escorregadia.</td></tr>
+        <tr><td><strong>Fresagem</strong></td><td>Remoção mecânica controlada de espessura do revestimento existente.</td></tr>
+        <tr><td><strong>IGG</strong></td><td>Índice de Gravidade Global — nota do estado do pavimento a partir do levantamento de defeitos.</td></tr>
+        <tr><td><strong>Sarjeta</strong></td><td>Canal raso junto ao meio-fio que conduz a água até a boca de lobo.</td></tr>
+        <tr><td><strong>Boca de lobo</strong></td><td>Abertura que engole a água da sarjeta e a entrega ao tubo de ligação.</td></tr>
+        <tr><td><strong>Poço de visita (PV)</strong></td><td>Câmara de inspeção da galeria, em toda mudança de direção, diâmetro ou declividade.</td></tr>
+        <tr><td><strong>Talvegue</strong></td><td>A linha de fundo de vale por onde a água naturalmente corre.</td></tr>
+        <tr><td><strong>Tempo de recorrência</strong></td><td>Período médio, em anos, entre chuvas iguais ou maiores que a de projeto.</td></tr>
+        <tr><td><strong>Bombeamento de finos</strong></td><td>Fino do subleito carregado para cima pela água sob a passagem das rodas.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="questoes">
+  <div class="h2row"><span class="hn">E</span><h2>Questões de fixação</h2></div>
+  <p class="lede">Responda antes de abrir. Se a resposta não sair em duas frases, o conceito ainda
+  não está firme — volte ao módulo.</p>
+  <div class="qz">
+    <details><summary>1. Por que a camada final do aterro tem exigência maior que o corpo?</summary>
+      <p>Porque ela vira o subleito: é a parte que recebe a maior tensão vinda do tráfego, logo abaixo
+      do pavimento. No corpo, mais fundo, a tensão já se dissipou. Daí GC ≥ 100% e CBR maior na
+      camada final, contra 95% e CBR ≥ 2% no corpo.</p></details>
+    <details><summary>2. Campo deu γd = 1,76 g/cm³; o Proctor de projeto deu γd máx = 1,86 g/cm³. Qual o GC e a camada é aceita no corpo do aterro?</summary>
+      <p>GC = 1,76 / 1,86 × 100 = 94,6%. Reprova: o mínimo no corpo do aterro é 95%. Falta pouco, o
+      que normalmente significa uma ou duas passadas de rolo a mais — ou umidade fora da faixa.</p></details>
+    <details><summary>3. Por que o CBR é medido depois de 4 dias de imersão?</summary>
+      <p>Porque o pavimento vai viver molhado muitas vezes na vida, e é saturado que o solo está no
+      seu pior. Dimensionar pelo CBR seco seria dimensionar para o dia bom.</p></details>
+    <details><summary>4. Imprimação e pintura de ligação: material, taxa e função.</summary>
+      <p>Imprimação: asfalto diluído CM-30, 0,8 a 1,6 L/m², sobre a base granular, para impermeabilizar
+      e amarrar o pó. Pintura de ligação: emulsão RR-1C ou RR-2C diluída 1:1, 0,3 a 0,4 L/m² de
+      ligante residual, entre camadas asfálticas, para colar uma na outra.</p></details>
+    <details><summary>5. A massa chegou à pista a 128 °C. O que fazer?</summary>
+      <p>Recusar a carga. Abaixo de ~140 °C não há janela de compactação: a massa esfria antes de o
+      rolo de pneus dar o grau, e a capa fica porosa, permeável e com vida curta.</p></details>
+    <details><summary>6. Couro de jacaré na trilha de roda, com erosão nas bordas. O que é e por que recapear por cima não resolve?</summary>
+      <p>É fadiga estrutural (FC-3), com água já entrando. A ruína está na estrutura abaixo, não na
+      capa: uma camada nova por cima trinca de novo em poucos meses, refletindo a malha existente.
+      Resolve remoção e reconstrução da estrutura naquele trecho.</p></details>
+    <details><summary>7. Afundamento de trilha de roda com bordas levantadas — qual a origem provável?</summary>
+      <p>A própria mistura asfáltica: ligante em excesso, vazios baixos, agregado arredondado ou
+      ligante mole demais para o tráfego. O material escoou lateralmente. Se afundasse sem levantar
+      bordas, a suspeita seria de camada inferior ou subleito.</p></details>
+    <details><summary>8. Bacia de 2,5 ha, C = 0,85, i = 90 mm/h. Qual a vazão de projeto?</summary>
+      <p>Q = C·i·A/360 = 0,85 × 90 × 2,5 / 360 = 0,53 m³/s, ou cerca de 531 L/s.</p></details>
+    <details><summary>9. Por que se exige velocidade mínima em galeria?</summary>
+      <p>Para ser autolimpante. Abaixo de 0,60 a 0,75 m/s a areia e o sedimento que entram pela boca
+      de lobo depositam dentro do tubo, reduzem a seção e a rede vai entupindo sozinha.</p></details>
+    <details><summary>10. Por que dimensionar a galeria com lâmina máxima de 0,80 do diâmetro?</summary>
+      <p>Para manter conduto livre, com ar acima da lâmina. Cheio, o escoamento passa a forçado, a
+      perda de carga dispara, a rede pressuriza e a água retorna pelas bocas de lobo.</p></details>
+    <details><summary>11. O que é bombeamento de finos e o que interrompe o ciclo?</summary>
+      <p>Água infiltrada pela trinca é pressurizada a cada passagem de roda e arrasta fino do subleito
+      para dentro da base; a base perde apoio e se contamina, o pavimento afunda e trinca mais.
+      Interrompem o ciclo: selar a trinca cedo e dar saída à água presa (dreno de base, camada
+      drenante com saída).</p></details>
+    <details><summary>12. Por que pavimentar uma rua piora o alagamento da rua de baixo?</summary>
+      <p>O coeficiente de escoamento sobe de 0,10–0,35 (solo com grama) para 0,80–0,95 (asfalto): quase
+      toda a chuva que antes infiltrava agora vira enxurrada, e chega mais rápido. Sem ampliar a rede
+      a jusante, a vazão de pico simplesmente muda de lugar.</p></details>
+    <details><summary>13. Por que o envolvimento lateral do tubo é compactado dos dois lados ao mesmo tempo?</summary>
+      <p>Porque a capacidade de carga do tubo enterrado depende do apoio lateral do solo. Compactar só
+      de um lado desalinha o tubo e o deixa trabalhar sozinho, sem o confinamento que o ensaio de
+      classe pressupõe.</p></details>
+    <details><summary>14. Vala de 1,60 m de profundidade: o que é obrigatório?</summary>
+      <p>Talude adequado ou escoramento dimensionado, escada ou rampa de saída, material escavado
+      afastado da borda, sinalização e proteção para pedestre. Acima de 1,25 m ninguém entra sem
+      isso (NR-18 e NBR 9061).</p></details>
+    <details><summary>15. A camada "borracha" sob o rolo. O que está acontecendo e o que fazer?</summary>
+      <p>Umidade acima da ótima, solo fino saturado ou matéria orgânica. Insistir com o rolo piora —
+      abrir, revolver e secar a camada; se não houver como secar, substituir o material.</p></details>
+    <details><summary>16. Por que compactar no ramo úmido não resolve mesmo com mais passadas?</summary>
+      <p>Porque a água ocupa o vazio que deveria ser fechado pelo grão. A partir da umidade ótima, mais
+      energia não aumenta a densidade seca — só amassa e desestrutura o solo.</p></details>
+    <details><summary>17. Por que capa em faixa C sai entre 3 e 5 cm?</summary>
+      <p>Porque a espessura da camada não pode ser menor que 2 a 3 vezes o diâmetro máximo do agregado.
+      Abaixo disso o agregado graúdo não se acomoda, e a camada segrega e desagrega.</p></details>
+    <details><summary>18. K do CBUQ é 2,00. Quanto de CBUQ substitui 5 cm de base granular?</summary>
+      <p>2,5 cm — porque 1 cm de concreto asfáltico equivale estruturalmente a 2 cm de base granular
+      (K da base = 1,00). É a lógica de repartição de espessuras do método do CBR.</p></details>
+    <details><summary>19. Por que reaterro de vala mal feito só aparece meses depois?</summary>
+      <p>Porque o solo fofo precisa de tempo, tráfego e chuva para acomodar. O recalque se forma
+      devagar e emerge como depressão ou trinca desenhando exatamente a linha da vala — quando a rua
+      já foi entregue.</p></details>
+    <details><summary>20. Subleito A-7, CBR 3%, lençol alto. Três caminhos possíveis.</summary>
+      <p>(1) Rebaixar o lençol com dreno profundo antes de tudo; (2) substituir 60 cm a 1,0 m por
+      material de jazida, com geotêxtil de separação; (3) estabilizar com cal, reduzindo plasticidade
+      e expansão. Em qualquer um deles, a drenagem vem primeiro: sem tirar a água, nenhuma das outras
+      soluções dura.</p></details>
+  </div>
+</section>
+
+<footer class="foot">
+  <p>Material de estudo montado para obra urbana de pavimentação asfáltica. Os números são os usuais
+  das especificações citadas — na medição, quem vale é a especificação do contrato.</p>
+  <p><button class="btn" id="reset-ck" type="button">Limpar marcações dos checklists</button></p>
+</footer>
+
+</main>
+</div>
+</div>
+
+<script>
+(function(){
+  var K = 'pav-estudo-v1', st = {};
+  try { st = JSON.parse(localStorage.getItem(K) || '{}') || {}; } catch (e) { st = {}; }
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.check input[type=checkbox]'));
+  boxes.forEach(function(b){
+    if (st[b.id]) { b.checked = true; }
+    b.addEventListener('change', function(){
+      st[b.id] = b.checked;
+      try { localStorage.setItem(K, JSON.stringify(st)); } catch (e) {}
+    });
+  });
+  var btn = document.getElementById('reset-ck');
+  if (btn) {
+    btn.addEventListener('click', function(){
+      boxes.forEach(function(b){ b.checked = false; });
+      st = {};
+      try { localStorage.removeItem(K); } catch (e) {}
+    });
+  }
+})();
+</script>

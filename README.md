@@ -146,6 +146,14 @@ no próprio aparelho. Sem servidor, sem senha, sem mensalidade.
    cheia**, que abre o aparelho inteiro para o funcionário assinar (vire na horizontal
    para ter ainda mais espaço). Depois, **Gerar PDF** monta a ficha completa.
 
+**Atualização.** Aberto pelo link, o aplicativo confere sozinho o arquivo `versao.json`
+publicado ao lado dele e, se houver versão mais nova, mostra o aviso **“Atualizar agora”** —
+o botão força o navegador a buscar a página nova em vez de usar a cópia guardada em cache.
+A versão que está rodando aparece no rodapé de **Configurações**. (Quem mexer no `epi.html`
+precisa mudar o `VERSAO_APP` dentro dele **e** o `versao.json` na raiz, com a mesma data.)
+Aberto como arquivo baixado no aparelho, não há atualização automática: é preciso baixar o
+arquivo de novo.
+
 **Os dados ficam só neste aparelho.** Não existe cópia em servidor: a única cópia fora do
 celular é o arquivo que sai em **Configurações → Exportar backup** (um `.json` com
 funcionários, entregas, assinaturas, lista de EPI e a logo). Guarde-o no Drive ou mande

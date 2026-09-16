@@ -2631,6 +2631,61 @@ function apagarTudo(){
     .catch(function(e){ mostrarMsg('Falha ao apagar: ' + msgErro(e), 'erro', true); });
 }
 
+/* ========================= AVISO DE VERSÃO NOVA =====================
+   Aberto pelo link (GitHub Pages ou outro servidor), o aplicativo compara
+   a sua versão com a do arquivo versao.json publicado ao lado dele. Se
+   houver uma mais nova, aparece o aviso com o botão de atualizar, que
+   força o navegador a buscar a página de novo em vez de usar a cópia
+   guardada. Aberto como arquivo no aparelho, não há o que verificar.
+   ==================================================================== */
+function verificarAtualizacao(){
+  if(location.protocol === 'file:') return;
+  var url = 'versao.json?cb=' + Date.now();
+  fetch(url, { cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(d && d.versao && maisNova(d.versao, VERSAO_APP)) avisarVersaoNova(d.versao);
+    })
+    .catch(function(){});            // sem internet ou sem o arquivo: segue a vida
+}
+
+/* Só avisa se a versão publicada for mesmo posterior à que está rodando:
+   um versao.json desatualizado no servidor não fica incomodando. */
+function maisNova(publicada, atual){
+  function emNumero(v){
+    var p = String(v || '').split('/');
+    return p.length === 3 ? Number(p[2] + p[1].padStart(2,'0') + p[0].padStart(2,'0')) : 0;
+  }
+  var a = emNumero(publicada), b = emNumero(atual);
+  return (a && b) ? a > b : publicada !== atual;
+}
+
+var avisoVersaoNaTela = false;
+
+function avisarVersaoNova(nova){
+  if(avisoVersaoNaTela) return;
+  avisoVersaoNaTela = true;
+  var d = mostrarMsg('Existe uma versão mais nova do aplicativo (' + nova + '). ' +
+                     'Os seus cadastros e assinaturas não são afetados pela atualização.', 'info', true);
+  if(!d) return;
+  var bt = document.createElement('button');
+  bt.type = 'button';
+  bt.className = 'btn pequeno primario';
+  bt.style.marginTop = '8px';
+  bt.textContent = 'Atualizar agora';
+  bt.addEventListener('click', atualizarAgora);
+  d.querySelector('.txt').appendChild(document.createElement('br'));
+  d.querySelector('.txt').appendChild(bt);
+}
+
+function atualizarAgora(){
+  processando(true, 'Baixando a versão nova…', 'não feche o aplicativo');
+  // busca a página ignorando a cópia guardada e só então recarrega
+  fetch(location.href, { cache: 'reload' })
+    .then(function(){ location.reload(); })
+    .catch(function(){ location.reload(); });
+}
+
 /* Fichas gravadas antes tinham uma assinatura para a entrega inteira.
    Aqui ela é copiada para cada material, que é como a ficha em papel exige. */
 function migrarAssinaturaParaItens(){
@@ -2755,6 +2810,10 @@ function iniciar(){
                  'Esses dados vão para o cabeçalho da ficha em PDF.', 'info', true);
     }
     avisarBackupAtrasado();
+    verificarAtualizacao();
+    document.addEventListener('visibilitychange', function(){
+      if(!document.hidden) verificarAtualizacao();     // ao voltar para o aplicativo
+    });
   }).catch(function(e){
     mostrarMsg('Falha ao iniciar o aplicativo: ' + msgErro(e), 'erro', true);
   });

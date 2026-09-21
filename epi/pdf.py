@@ -89,17 +89,21 @@ def _imagem(blob, largura_max, altura_max):
 
 
 def descricao_item(item):
-    """Descrição como na ficha em papel: uniforme com os tamanhos marcados entre
-    parênteses, calçado com a numeração, o resto só o nome."""
+    """Descrição como na ficha em papel: camisa, camisa polo, calça e jaleco saem
+    com os tamanhos entre parênteses; calçado sai com a numeração; os demais saem
+    só com o nome."""
     tamanho = (item.get("tamanho") or "").strip().upper()
-    pede_tamanho = bool(item.get("tem_tamanho"))
-    if tamanho in TAMANHOS or (pede_tamanho and not tamanho):
+    tipo = int(item.get("tem_tamanho") or 0)
+    if tipo not in (1, 2):
+        tipo = (1 if tamanho in TAMANHOS else 2) if tamanho else 0
+
+    if tipo == 1:
         marcas = "&nbsp;&nbsp;".join(
             f"{t} (&nbsp;{'<b>X</b>' if t == tamanho else '&nbsp;&nbsp;'}&nbsp;)" for t in TAMANHOS
         )
         return f"{item['nome']}:&nbsp; {marcas}"
-    if tamanho:
-        return f"{item['nome']} — Nº {tamanho}"
+    if tipo == 2:
+        return f"{item['nome']} — Nº {tamanho or '______'}"
     return item["nome"]
 
 

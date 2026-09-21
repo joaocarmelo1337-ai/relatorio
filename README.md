@@ -182,8 +182,10 @@ As instruções completas estão em [`epi/README.md`](epi/README.md).
   admissão.
 - **Lista de EPI** já carregada com os itens da ficha em papel e os CAs padrão (calçado
   28513, concha 14235, óculos 34653, vaqueta 16059, PU 48827, PFF1 38944, capacete 25883,
-  talabarte 46206); uniforme fica sem CA. Cada item marca se pede tamanho (P/M/G/GG/EXG ou
-  numeração, como 41 no calçado).
+  talabarte 46206); uniforme fica sem CA. O tamanho segue a planilha, com três opções por
+  item: **P/M/G/GG/EXG** (só camisa, camisa polo, calça e jaleco), **numeração** (só o
+  calçado) e **sem tamanho** (todo o resto — luva, colete, óculos, capacete e companhia).
+  O campo de tamanho só aparece na entrega quando o item pede.
 - **Item fora da lista** pode ser criado na tela da lista ou na hora da entrega, com a
   opção de guardá-lo para as próximas fichas.
 - **Entrega**: data de início da ficha, data de entrega e os materiais com

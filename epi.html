@@ -334,9 +334,13 @@ img.assin-mini{height:40px;max-width:150px;object-fit:contain}
           <input type="text" id="pCa" inputmode="numeric" placeholder="Ex.: 28513" autocomplete="off">
         </div>
       </div>
-      <div class="linha-check">
-        <input type="checkbox" id="pTamanho">
-        <label for="pTamanho">Este item pede tamanho (P/M/G/GG/EXG ou numeração)</label>
+      <div class="campo">
+        <label for="pTamanho">Tamanho</label>
+        <select id="pTamanho">
+          <option value="0" selected>Não pede tamanho</option>
+          <option value="1">Tamanho P / M / G / GG / EXG</option>
+          <option value="2">Numeração (calçado)</option>
+        </select>
       </div>
       <div class="acoes"><button type="button" class="btn primario" id="btAddEpi">Adicionar à lista</button></div>
     </div>
@@ -836,7 +840,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 (function(){
 'use strict';
 
-var VERSAO_APP = '16/09/2026';
+var VERSAO_APP = '21/09/2026';
 var AVISO_BACKUP_DIAS = 7;          // lembra de exportar backup a cada 7 dias
 
 var CHAVE_LS = {
@@ -849,29 +853,47 @@ var CHAVE_LS_META = 'epi_meta_v1';
 
 var TAMANHOS = ['P','M','G','GG','EXG'];
 
-/* Lista mestre que já vem pronta, com os CAs da ficha em papel.
-   Uniforme não tem CA: fica em branco. */
+/* Como o item pede tamanho, seguindo a ficha em papel:
+   0 = não pede · 1 = P/M/G/GG/EXG · 2 = numeração (calçado). */
+var SEM_TAMANHO = 0, TAM_LETRA = 1, TAM_NUMERO = 2;
+var ROTULO_TAMANHO = {
+  0: 'Não pede tamanho',
+  1: 'Tamanho P / M / G / GG / EXG',
+  2: 'Numeração (calçado)'
+};
+
+/* Lista mestre que já vem pronta, exatamente como a ficha em papel:
+   uniforme não tem CA, e só camisa, camisa polo, calça e jaleco têm
+   tamanho em letra; o calçado vai por numeração e o resto não tem tamanho. */
 var EPI_PADRAO = [
-  ['CAMISA','',1],
-  ['CAMISA POLO','',1],
-  ['CALÇA','',1],
-  ['JALECO','',1],
-  ['CALÇADO DE SEGURANÇA','28513',1],
-  ['PROTETOR AURICULAR PLUG','',0],
-  ['PROTETOR AURICULAR CONCHA','14235',0],
-  ['ÓCULOS DE SEGURANÇA','34653',0],
-  ['LUVA VAQUETA','16059',1],
-  ['LUVA PU','48827',1],
-  ['PROTETOR SOLAR','',0],
-  ['SORO REIDRATANTE','',0],
-  ['MÁSCARA PFF1 COM VÁLVULA','38944',0],
-  ['CAPACETE COM JUGULAR','25883',0],
-  ['TALABARTE EM Y COM OBSERVADOR','46206',0],
-  ['BONÉ ÁRABE','',0],
-  ['TOUCA ÁRABE','',0],
-  ['AVENTAL DE RASPA','',0],
-  ['COLETE REFLETIVO','',1]
+  ['CAMISA','',TAM_LETRA],
+  ['CAMISA POLO','',TAM_LETRA],
+  ['CALÇA','',TAM_LETRA],
+  ['JALECO','',TAM_LETRA],
+  ['CALÇADO DE SEGURANÇA','28513',TAM_NUMERO],
+  ['PROTETOR AURICULAR PLUG','',SEM_TAMANHO],
+  ['PROTETOR AURICULAR CONCHA','14235',SEM_TAMANHO],
+  ['ÓCULOS DE SEGURANÇA','34653',SEM_TAMANHO],
+  ['LUVA VAQUETA','16059',SEM_TAMANHO],
+  ['LUVA PU','48827',SEM_TAMANHO],
+  ['PROTETOR SOLAR','',SEM_TAMANHO],
+  ['SORO REIDRATANTE','',SEM_TAMANHO],
+  ['MÁSCARA PFF1 COM VÁLVULA','38944',SEM_TAMANHO],
+  ['CAPACETE COM JUGULAR','25883',SEM_TAMANHO],
+  ['TALABARTE EM Y COM OBSERVADOR','46206',SEM_TAMANHO],
+  ['BONÉ ÁRABE','',SEM_TAMANHO],
+  ['TOUCA ÁRABE','',SEM_TAMANHO],
+  ['AVENTAL DE RASPA','',SEM_TAMANHO],
+  ['COLETE REFLETIVO','',SEM_TAMANHO]
 ];
+
+/* Tipo de tamanho de um item, tolerante com o que foi gravado antes
+   (quando o campo era só sim/não). */
+function tipoTamanho(epi){
+  if(!epi) return SEM_TAMANHO;
+  var v = Number(epi.temTamanho);
+  return (v === TAM_LETRA || v === TAM_NUMERO) ? v : SEM_TAMANHO;
+}
 
 var DECLARACAO = [
   'A – Declaro haver recebido, nesta data, para o meu uso e proteção pessoal em serviço, os equipamentos abaixo ' +
@@ -1631,8 +1653,11 @@ function criarLinhaItem(dados){
         '<input type="text" class="inCa" inputmode="numeric" placeholder="opcional"></div>' +
       '<div class="campo"><label>Quantidade</label>' +
         '<input type="text" class="inQtde" inputmode="decimal" value="1"></div>' +
-      '<div class="campo campoTamanho"><label>Tamanho</label>' +
-        '<input type="text" class="inTamanho" list="listaTamanhos" placeholder="P, M, G, GG, EXG ou nº"></div>' +
+      '<div class="campo campoTamanho"><label class="rotuloTamanho">Tamanho</label>' +
+        '<select class="selTamanho"><option value="">—</option>' +
+        TAMANHOS.map(function(t){ return '<option value="' + t + '">' + t + '</option>'; }).join('') +
+        '</select>' +
+        '<input type="text" class="inTamanho" inputmode="numeric" placeholder="Ex.: 41" hidden></div>' +
     '</div>' +
     '<div class="assin-item">' +
       '<label>Assinatura de quem recebeu este material</label>' +
@@ -1650,7 +1675,24 @@ function criarLinhaItem(dados){
   var inCa = no.querySelector('.inCa');
   var inQtde = no.querySelector('.inQtde');
   var inTam = no.querySelector('.inTamanho');
+  var selTam = no.querySelector('.selTamanho');
   var campoTam = no.querySelector('.campoTamanho');
+  var rotuloTam = no.querySelector('.rotuloTamanho');
+
+  /* O campo de tamanho segue a ficha em papel: letra só para camisa, camisa
+     polo, calça e jaleco; numeração só para calçado; o resto não tem tamanho. */
+  function ajustarCampoTamanho(tipo){
+    campoTam.hidden = (tipo === SEM_TAMANHO);
+    selTam.hidden = (tipo !== TAM_LETRA);
+    inTam.hidden = (tipo !== TAM_NUMERO);
+    rotuloTam.textContent = (tipo === TAM_NUMERO) ? 'Numeração' : 'Tamanho';
+    if(tipo === SEM_TAMANHO){ selTam.value = ''; inTam.value = ''; }
+  }
+
+  function valorTamanho(){
+    if(campoTam.hidden) return '';
+    return maiuscula(selTam.hidden ? inTam.value : selTam.value);
+  }
 
   function nomeDaLinha(){
     if(sel.value === '__novo__') return maiuscula(inNome.value) || 'Item novo';
@@ -1664,13 +1706,16 @@ function criarLinhaItem(dados){
   function aplicar(preservar){
     var novo = sel.value === '__novo__';
     campoNome.hidden = !novo;
-    if(novo || !sel.value){
-      campoTam.hidden = false;
+    if(novo){
+      ajustarCampoTamanho(TAM_LETRA);       // item digitado na hora: deixa escolher
+      inTam.hidden = false;                 // e também aceita numeração
+      rotuloTam.textContent = 'Tamanho / numeração (se tiver)';
+    }else if(!sel.value){
+      ajustarCampoTamanho(SEM_TAMANHO);
     }else{
       var epi = epiPorId(sel.value);
       if(!preservar) inCa.value = (epi && epi.ca) || '';
-      campoTam.hidden = !(epi && epi.temTamanho);
-      if(campoTam.hidden && !preservar) inTam.value = '';
+      ajustarCampoTamanho(tipoTamanho(epi));
     }
     atualizarRotulo();
   }
@@ -1693,14 +1738,18 @@ function criarLinhaItem(dados){
   }
   inCa.value = dados.ca || '';
   inQtde.value = (dados.qtde != null && dados.qtde !== '') ? numeroBonito(dados.qtde) : '1';
-  inTam.value = dados.tamanho || '';
   aplicar(true);
+  if(dados.tamanho){                        // recoloca o tamanho já gravado
+    if(TAMANHOS.indexOf(maiuscula(dados.tamanho)) >= 0){ selTam.value = maiuscula(dados.tamanho); }
+    else { inTam.value = dados.tamanho; inTam.hidden = false; campoTam.hidden = false; }
+  }
 
   prepararAssinatura(chave, dados.assinatura || '', Assinaturas.rotulos[chave]);
   devolucaoDaLinha[chave] = {
     dataDevolucao: dados.dataDevolucao || '',
     assinaturaDevolucao: dados.assinaturaDevolucao || ''
   };
+  no._tamanho = valorTamanho;
   ligarBotoesAssinatura(no);
   return no;
 }
@@ -1728,7 +1777,7 @@ function lerItensDoFormulario(){
                     : (epiPorId(sel.value) ? epiPorId(sel.value).nome : '');
     if(!nome) return;
     var ca = (no.querySelector('.inCa').value || '').trim();
-    var tamanho = maiuscula(no.querySelector('.inTamanho').value);
+    var tamanho = no._tamanho ? no._tamanho() : '';
     var qtde = parseFloat(String(no.querySelector('.inQtde').value || '1').replace(',','.'));
     if(!isFinite(qtde) || qtde <= 0) qtde = 1;
     var dev = devolucaoDaLinha[chave] || {};
@@ -1743,7 +1792,9 @@ function lerItensDoFormulario(){
       assinaturaDevolucao: dev.assinaturaDevolucao || ''
     });
     if(novo && no.querySelector('.ckSalvar').checked){
-      novosParaLista.push({ nome: nome, ca: ca, temTamanho: tamanho ? 1 : 0 });
+      var tipo = SEM_TAMANHO;
+      if(tamanho) tipo = (TAMANHOS.indexOf(tamanho) >= 0) ? TAM_LETRA : TAM_NUMERO;
+      novosParaLista.push({ nome: nome, ca: ca, temTamanho: tipo });
     }
   });
   return { itens: itens, novosParaLista: novosParaLista };
@@ -1939,7 +1990,9 @@ function renderListaEpis(){
           '<span class="nome"' + (e.ativo === 0 ? ' style="text-decoration:line-through;opacity:.6"' : '') + '>' +
             esc(e.nome) + '</span>' +
           '<span class="meta">' + (e.ca ? 'CA ' + esc(e.ca) : 'sem CA') +
-            (e.temTamanho ? ' · pede tamanho' : '') + (e.ativo === 0 ? ' · inativo' : '') + '</span>' +
+            (tipoTamanho(e) === TAM_LETRA ? ' · tamanho P/M/G/GG/EXG' : '') +
+            (tipoTamanho(e) === TAM_NUMERO ? ' · numeração' : '') +
+            (e.ativo === 0 ? ' · inativo' : '') + '</span>' +
         '</span>' +
         '<span class="btn pequeno">Editar</span>' +
       '</div>' +
@@ -1983,11 +2036,11 @@ function adicionarEpi(){
   }
   var reg = {
     id: novoId('p'), nome: nome, ca: ($('pCa').value || '').trim(),
-    temTamanho: $('pTamanho').checked ? 1 : 0, ativo: 1
+    temTamanho: Number($('pTamanho').value) || 0, ativo: 1
   };
   estado.epis.push(reg);
   Armaz.salvar('epis', reg, estado.epis).then(function(){
-    $('pNome').value = ''; $('pCa').value = ''; $('pTamanho').checked = false;
+    $('pNome').value = ''; $('pCa').value = ''; $('pTamanho').value = '0';
     mostrarMsg(nome + ' adicionado à lista.', 'sucesso');
     renderListaEpis();
   }).catch(function(e){
@@ -2004,7 +2057,7 @@ function salvarEpi(id){
   if(!nome){ mostrarMsg('Informe o nome do EPI.', 'erro', true); return; }
   e.nome = nome;
   e.ca = (cx.querySelector('.eCa').value || '').trim();
-  e.temTamanho = cx.querySelector('.eTam').checked ? 1 : 0;
+  e.temTamanho = Number(cx.querySelector('.eTam').value) || 0;
   e.ativo = cx.querySelector('.eAtivo').checked ? 1 : 0;
   Armaz.salvar('epis', e, estado.epis).then(function(){
     mostrarMsg('Item atualizado.', 'sucesso');
@@ -2078,21 +2131,22 @@ function caixa(doc, x, y, l, a){
   doc.rect(x, y, l, a);
 }
 
-/* Descrição do item como na ficha em papel: uniforme com os tamanhos
-   marcados entre parênteses, calçado com a numeração, resto só o nome. */
+/* Descrição do item como na ficha em papel: camisa, camisa polo, calça e
+   jaleco saem com os tamanhos entre parênteses; calçado sai com a
+   numeração; os demais saem só com o nome. */
 function descricaoItem(item){
-  var pedeTamanho = false;
   var epi = item.epiId ? epiPorId(item.epiId) : null;
-  if(epi) pedeTamanho = !!epi.temTamanho;
   var tam = maiuscula(item.tamanho || '');
-  var letra = TAMANHOS.indexOf(tam) >= 0;
-  if(letra || (pedeTamanho && !tam)){
+  var tipo = epi ? tipoTamanho(epi) : (tam ? (TAMANHOS.indexOf(tam) >= 0 ? TAM_LETRA : TAM_NUMERO) : SEM_TAMANHO);
+
+  if(tipo === TAM_LETRA){
     var marcas = TAMANHOS.map(function(t){
       return t + ' (' + (t === tam ? ' X ' : '    ') + ')';
     }).join('  ');
     return item.nome + ':  ' + marcas;
   }
-  if(tam) return item.nome + ' — Nº ' + tam;
+  if(tipo === TAM_NUMERO && tam) return item.nome + ' — Nº ' + tam;
+  if(tipo === TAM_NUMERO) return item.nome + ' — Nº ______';
   return item.nome;
 }
 
@@ -2487,7 +2541,7 @@ function normalizarEpi(o){
     id: String(o.id || novoId('p')),
     nome: maiuscula(o.nome),
     ca: String(o.ca || '').trim(),
-    temTamanho: o.temTamanho ? 1 : 0,
+    temTamanho: (Number(o.temTamanho) === 2) ? 2 : (o.temTamanho ? 1 : 0),
     ativo: (o.ativo === 0) ? 0 : 1
   };
 }
@@ -2686,6 +2740,24 @@ function atualizarAgora(){
     .catch(function(){ location.reload(); });
 }
 
+/* A lista mestre saiu errada nas primeiras versões: luva, colete e outros
+   itens apareciam pedindo tamanho, o que não existe na ficha em papel. Isto
+   acerta os itens da lista padrão, sem tocar no que o usuário criou. */
+function corrigirTamanhosDaLista(){
+  var certo = {};
+  EPI_PADRAO.forEach(function(p){ certo[semAcento(p[0])] = p[2]; });
+  var mudados = estado.epis.filter(function(e){
+    var esperado = certo[semAcento(e.nome)];
+    if(esperado === undefined || tipoTamanho(e) === esperado) return false;
+    e.temTamanho = esperado;
+    return true;
+  });
+  if(!mudados.length) return Promise.resolve();
+  return mudados.reduce(function(p, e){
+    return p.then(function(){ return Armaz.salvar('epis', e, estado.epis); });
+  }, Promise.resolve());
+}
+
 /* Fichas gravadas antes tinham uma assinatura para a entrega inteira.
    Aqui ela é copiada para cada material, que é como a ficha em papel exige. */
 function migrarAssinaturaParaItens(){
@@ -2797,7 +2869,7 @@ function iniciar(){
       });
       return Armaz.trocarTudo('epis', estado.epis);
     }
-    return migrarAssinaturaParaItens();
+    return migrarAssinaturaParaItens().then(corrigirTamanhosDaLista);
   }).then(function(){
     aplicarCfgNaTela();
     renderListaFuncionarios();

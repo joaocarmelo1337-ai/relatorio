@@ -7,27 +7,39 @@ import unicodedata
 
 from flask import current_app, g
 
-# Lista mestre pré-carregada. (nome, CA padrão, pede tamanho?)
+# Como o item pede tamanho, seguindo a ficha em papel:
+# 0 = não pede · 1 = P/M/G/GG/EXG · 2 = numeração (calçado).
+SEM_TAMANHO, TAM_LETRA, TAM_NUMERO = 0, 1, 2
+
+ROTULO_TAMANHO = {
+    SEM_TAMANHO: "Não pede tamanho",
+    TAM_LETRA: "Tamanho P / M / G / GG / EXG",
+    TAM_NUMERO: "Numeração (calçado)",
+}
+
+# Lista mestre pré-carregada, exatamente como a ficha em papel: uniforme não tem
+# CA, e só camisa, camisa polo, calça e jaleco têm tamanho em letra; o calçado
+# vai por numeração e o restante não tem tamanho.
 EPI_PADRAO = [
-    ("CAMISA",                        "",      1),
-    ("CAMISA POLO",                   "",      1),
-    ("CALÇA",                         "",      1),
-    ("JALECO",                        "",      1),
-    ("CALÇADO DE SEGURANÇA",          "28513", 1),
-    ("PROTETOR AURICULAR PLUG",       "",      0),
-    ("PROTETOR AURICULAR CONCHA",     "14235", 0),
-    ("ÓCULOS DE SEGURANÇA",           "34653", 0),
-    ("LUVA VAQUETA",                  "16059", 1),
-    ("LUVA PU",                       "48827", 1),
-    ("PROTETOR SOLAR",                "",      0),
-    ("SORO REIDRATANTE",              "",      0),
-    ("MÁSCARA PFF1 COM VÁLVULA",      "38944", 0),
-    ("CAPACETE COM JUGULAR",          "25883", 0),
-    ("TALABARTE EM Y COM OBSERVADOR", "46206", 0),
-    ("BONÉ ÁRABE",                    "",      0),
-    ("TOUCA ÁRABE",                   "",      0),
-    ("AVENTAL DE RASPA",              "",      0),
-    ("COLETE REFLETIVO",              "",      1),
+    ("CAMISA",                        "",      TAM_LETRA),
+    ("CAMISA POLO",                   "",      TAM_LETRA),
+    ("CALÇA",                         "",      TAM_LETRA),
+    ("JALECO",                        "",      TAM_LETRA),
+    ("CALÇADO DE SEGURANÇA",          "28513", TAM_NUMERO),
+    ("PROTETOR AURICULAR PLUG",       "",      SEM_TAMANHO),
+    ("PROTETOR AURICULAR CONCHA",     "14235", SEM_TAMANHO),
+    ("ÓCULOS DE SEGURANÇA",           "34653", SEM_TAMANHO),
+    ("LUVA VAQUETA",                  "16059", SEM_TAMANHO),
+    ("LUVA PU",                       "48827", SEM_TAMANHO),
+    ("PROTETOR SOLAR",                "",      SEM_TAMANHO),
+    ("SORO REIDRATANTE",              "",      SEM_TAMANHO),
+    ("MÁSCARA PFF1 COM VÁLVULA",      "38944", SEM_TAMANHO),
+    ("CAPACETE COM JUGULAR",          "25883", SEM_TAMANHO),
+    ("TALABARTE EM Y COM OBSERVADOR", "46206", SEM_TAMANHO),
+    ("BONÉ ÁRABE",                    "",      SEM_TAMANHO),
+    ("TOUCA ÁRABE",                   "",      SEM_TAMANHO),
+    ("AVENTAL DE RASPA",              "",      SEM_TAMANHO),
+    ("COLETE REFLETIVO",              "",      SEM_TAMANHO),
 ]
 
 
@@ -75,7 +87,24 @@ def init_db():
         )
 
     migrar_assinatura_por_item(db)
+    corrigir_tamanhos_da_lista(db)
     db.commit()
+
+
+def corrigir_tamanhos_da_lista(db):
+    """A lista mestre saiu errada nas primeiras versões: luva, colete e outros
+    apareciam pedindo tamanho, o que não existe na ficha em papel. Isto acerta os
+    itens da lista padrão, sem tocar no que o usuário criou ou já ajustou à mão."""
+    marca = db.execute("SELECT valor FROM ajustes WHERE chave = 'tamanhos_corrigidos'").fetchone() \
+        if db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ajustes'").fetchone() \
+        else None
+    if marca:
+        return
+    db.execute("CREATE TABLE IF NOT EXISTS ajustes (chave TEXT PRIMARY KEY, valor TEXT NOT NULL)")
+    for nome, _ca, tamanho in EPI_PADRAO:
+        db.execute("UPDATE epi_master SET tem_tamanho = ? WHERE nome = ? AND tem_tamanho <> ?",
+                   (tamanho, nome, tamanho))
+    db.execute("INSERT OR REPLACE INTO ajustes (chave, valor) VALUES ('tamanhos_corrigidos', '1')")
 
 
 def migrar_assinatura_por_item(db):

@@ -9,7 +9,7 @@
     var html = '<option value="">— escolha o EPI/uniforme —</option>';
     EPIS.forEach(function (e) {
       html += '<option value="' + e.id + '"' + (String(selecionado) === String(e.id) ? ' selected' : '') +
-        ' data-ca="' + (e.ca || '') + '" data-tamanho="' + (e.tem_tamanho ? '1' : '0') + '">' +
+        ' data-ca="' + (e.ca || '') + '" data-tamanho="' + (Number(e.tem_tamanho) || 0) + '">' +
         e.nome + (e.ca ? ' (CA ' + e.ca + ')' : '') + '</option>';
     });
     html += '<option value="__novo__">+ Outro item (digitar agora)</option>';
@@ -40,9 +40,13 @@
           'inputmode="numeric" placeholder="opcional" value="' + (dados.ca || '') + '"></div>' +
         '<div class="campo"><label>Quantidade</label><input type="text" class="in-qtde" name="item_qtde[]" ' +
           'inputmode="decimal" value="' + (dados.quantidade != null ? dados.quantidade : '1') + '"></div>' +
-        '<div class="campo campo-tamanho"><label>Tamanho</label>' +
-          '<input type="text" class="in-tamanho" name="item_tamanho[]" list="lista-tamanhos" ' +
-          'placeholder="P, M, G, GG, EXG ou nº" value="' + (dados.tamanho || '') + '"></div>' +
+        '<div class="campo campo-tamanho"><label class="rotulo-tamanho">Tamanho</label>' +
+          '<select class="sel-tamanho"><option value="">—</option>' +
+          TAMANHOS.map(function (t) { return '<option value="' + t + '">' + t + '</option>'; }).join('') +
+          '</select>' +
+          '<input type="text" class="in-numero" placeholder="Ex.: 41" hidden>' +
+          '<input type="hidden" class="hd-tamanho" name="item_tamanho[]" value=""></div>' +
+        '<button type="button" class="btn pequeno link-tamanho" hidden>+ informar tamanho / numeração</button>' +
       '</div>' +
       '<div class="assin-item">' +
         '<label>Assinatura de quem recebeu este material</label>' +
@@ -72,18 +76,60 @@
     var inNome = no.querySelector('.in-nome');
     var inCa = no.querySelector('.in-ca');
     var campoTam = no.querySelector('.campo-tamanho');
+    var selTam = no.querySelector('.sel-tamanho');
+    var inNumero = no.querySelector('.in-numero');
+    var hdTam = no.querySelector('.hd-tamanho');
+    var rotuloTam = no.querySelector('.rotulo-tamanho');
+    var linkTam = no.querySelector('.link-tamanho');
+
+    /* O campo segue a ficha em papel: letra só para camisa, camisa polo, calça
+       e jaleco; numeração só para calçado; o resto não tem tamanho. */
+    function ajustarTamanho(tipo) {
+      campoTam.hidden = (tipo === 0);
+      selTam.hidden = (tipo !== 1);
+      inNumero.hidden = (tipo !== 2);
+      rotuloTam.textContent = (tipo === 2) ? 'Numeração' : 'Tamanho';
+      if (tipo === 2) {
+        inNumero.setAttribute('inputmode', 'numeric');
+        inNumero.removeAttribute('list');
+        inNumero.placeholder = 'Ex.: 41';
+      }
+      // item sem tamanho não mostra campo, mas deixa o atalho caso precise digitar
+      linkTam.hidden = (tipo !== 0);
+      if (tipo === 0) { selTam.value = ''; inNumero.value = ''; }
+      guardarTamanho();
+    }
+
+    /* Escape para qualquer item: campo livre, onde cabe tanto GG quanto 41. */
+    function liberarTamanho() {
+      campoTam.hidden = false;
+      selTam.hidden = true;
+      inNumero.hidden = false;
+      inNumero.setAttribute('list', 'lista-tamanhos');
+      inNumero.removeAttribute('inputmode');
+      inNumero.placeholder = 'Ex.: GG ou 41';
+      rotuloTam.textContent = 'Tamanho / numeração';
+      linkTam.hidden = true;
+      inNumero.focus();
+    }
+
+    function guardarTamanho() {
+      var v = campoTam.hidden ? '' : (selTam.hidden ? inNumero.value : selTam.value);
+      hdTam.value = (v || '').trim().toUpperCase();
+    }
 
     function aplicar(preservarCa) {
       var novo = sel.value === '__novo__';
       campoNome.style.display = novo ? '' : 'none';
       var op = sel.selectedOptions[0];
-      if (novo || !sel.value) {
-        campoTam.style.display = '';
+      if (novo) {
+        liberarTamanho();                     // item digitado na hora: campo livre
+        rotuloTam.textContent = 'Tamanho / numeração (se tiver)';
+      } else if (!sel.value) {
+        ajustarTamanho(0);
       } else {
         if (!preservarCa) { inCa.value = op.dataset.ca || ''; }
-        // o campo de tamanho só aparece nos itens que pedem tamanho (camisa, calça, calçado...)
-        campoTam.style.display = op.dataset.tamanho === '1' ? '' : 'none';
-        if (op.dataset.tamanho !== '1' && !preservarCa) { campoTam.querySelector('input').value = ''; }
+        ajustarTamanho(Number(op.dataset.tamanho) || 0);
       }
       sincronizar();
     }
@@ -102,6 +148,9 @@
     }
 
     sel.addEventListener('change', function () { aplicar(false); });
+    selTam.addEventListener('change', guardarTamanho);
+    inNumero.addEventListener('input', guardarTamanho);
+    linkTam.addEventListener('click', liberarTamanho);
     inNome.addEventListener('input', sincronizar);
     no.querySelector('.ck-salvar').addEventListener('change', sincronizar);
     no.querySelector('.remover').addEventListener('click', function () {
@@ -120,6 +169,15 @@
       no.querySelector('.ck-salvar').checked = false;
     }
     aplicar(true);
+    if (dados.tamanho) {                      // recoloca o tamanho já gravado
+      if (TAMANHOS.indexOf(String(dados.tamanho).toUpperCase()) >= 0 && !selTam.hidden) {
+        selTam.value = String(dados.tamanho).toUpperCase();
+      } else {
+        if (inNumero.hidden) { liberarTamanho(); }
+        inNumero.value = dados.tamanho;
+      }
+      guardarTamanho();
+    }
     return no;
   }
 

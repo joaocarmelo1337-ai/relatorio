@@ -1,5 +1,25 @@
 {% extends "base.html" %}
 {% block titulo %}Lista de EPI{% endblock %}
+
+{% block scripts %}
+<script>
+/* Ao digitar o nome de um calçado, a opção de numeração já vem marcada
+   (enquanto o usuário não escolher outra coisa à mão). */
+(function () {
+  var PALAVRAS = ['CALCADO','BOTINA','BOTA','SAPATO','TENIS','COTURNO','SANDALIA','CHINELO','GALOCHA','SAPATENIS'];
+  var nome = document.getElementById('nome');
+  var tipo = document.getElementById('tem_tamanho');
+  if (!nome || !tipo) { return; }
+  tipo.addEventListener('change', function () { tipo.dataset.escolhido = '1'; });
+  nome.addEventListener('input', function () {
+    if (tipo.dataset.escolhido === '1') { return; }
+    var limpo = nome.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+    var sugereCalcado = PALAVRAS.some(function (p) { return limpo.indexOf(p) >= 0; });
+    tipo.value = sugereCalcado ? '2' : '0';
+  });
+})();
+</script>
+{% endblock %}
 {% block conteudo %}
 <h1>Lista mestre de EPI / uniformes</h1>
 
@@ -16,9 +36,13 @@
         <input type="text" id="ca" name="ca" inputmode="numeric" placeholder="Ex.: 28513">
       </div>
     </div>
-    <div class="linha-check">
-      <input type="checkbox" id="tem_tamanho" name="tem_tamanho" value="1">
-      <label for="tem_tamanho">Este item pede tamanho (P/M/G/GG/EXG ou numeração)</label>
+    <div class="campo">
+      <label for="tem_tamanho">Tamanho</label>
+      <select id="tem_tamanho" name="tem_tamanho">
+        {% for valor, rotulo in TIPOS_TAMANHO.items() %}
+        <option value="{{ valor }}">{{ rotulo }}</option>
+        {% endfor %}
+      </select>
     </div>
     <div class="acoes"><button class="btn primario" type="submit">Adicionar à lista</button></div>
   </form>
@@ -35,7 +59,8 @@
           <span class="nome" style="{{ 'text-decoration:line-through;opacity:.6' if not e.ativo }}">{{ e.nome }}</span>
           <span class="meta">
             {% if e.ca %}CA {{ e.ca }}{% else %}sem CA{% endif %}
-            {% if e.tem_tamanho %} · pede tamanho{% endif %}
+            {% if e.tem_tamanho == 1 %} · tamanho P/M/G/GG/EXG{% endif %}
+            {% if e.tem_tamanho == 2 %} · numeração{% endif %}
             {% if not e.ativo %} · inativo{% endif %}
           </span>
         </span>
@@ -52,9 +77,13 @@
             <input type="text" id="c{{ e.id }}" name="ca" value="{{ e.ca }}" inputmode="numeric" placeholder="sem CA">
           </div>
         </div>
-        <div class="linha-check">
-          <input type="checkbox" id="tam{{ e.id }}" name="tem_tamanho" value="1" {{ 'checked' if e.tem_tamanho }}>
-          <label for="tam{{ e.id }}">Pede tamanho</label>
+        <div class="campo">
+          <label for="tam{{ e.id }}">Tamanho</label>
+          <select id="tam{{ e.id }}" name="tem_tamanho">
+            {% for valor, rotulo in TIPOS_TAMANHO.items() %}
+            <option value="{{ valor }}" {{ 'selected' if e.tem_tamanho == valor }}>{{ rotulo }}</option>
+            {% endfor %}
+          </select>
         </div>
         <div class="linha-check">
           <input type="checkbox" id="ativo{{ e.id }}" name="ativo" value="1" {{ 'checked' if e.ativo }}>

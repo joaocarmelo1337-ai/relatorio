@@ -146,6 +146,14 @@ no próprio aparelho. Sem servidor, sem senha, sem mensalidade.
    cheia**, que abre o aparelho inteiro para o funcionário assinar (vire na horizontal
    para ter ainda mais espaço). Depois, **Gerar PDF** monta a ficha completa.
 
+**Atualização.** Aberto pelo link, o aplicativo confere sozinho o arquivo `versao.json`
+publicado ao lado dele e, se houver versão mais nova, mostra o aviso **“Atualizar agora”** —
+o botão força o navegador a buscar a página nova em vez de usar a cópia guardada em cache.
+A versão que está rodando aparece no rodapé de **Configurações**. (Quem mexer no `epi.html`
+precisa mudar o `VERSAO_APP` dentro dele **e** o `versao.json` na raiz, com a mesma data.)
+Aberto como arquivo baixado no aparelho, não há atualização automática: é preciso baixar o
+arquivo de novo.
+
 **Os dados ficam só neste aparelho.** Não existe cópia em servidor: a única cópia fora do
 celular é o arquivo que sai em **Configurações → Exportar backup** (um `.json` com
 funcionários, entregas, assinaturas, lista de EPI e a logo). Guarde-o no Drive ou mande
@@ -174,8 +182,14 @@ As instruções completas estão em [`epi/README.md`](epi/README.md).
   admissão.
 - **Lista de EPI** já carregada com os itens da ficha em papel e os CAs padrão (calçado
   28513, concha 14235, óculos 34653, vaqueta 16059, PU 48827, PFF1 38944, capacete 25883,
-  talabarte 46206); uniforme fica sem CA. Cada item marca se pede tamanho (P/M/G/GG/EXG ou
-  numeração, como 41 no calçado).
+  talabarte 46206); uniforme fica sem CA. O tamanho segue a planilha, com três opções por
+  item: **P/M/G/GG/EXG** (só camisa, camisa polo, calça e jaleco), **numeração** (só o
+  calçado) e **sem tamanho** (todo o resto — luva, colete, óculos, capacete e companhia).
+  O campo de tamanho só aparece na entrega quando o item pede. **Calçado é sempre por
+  numeração digitada**: o da lista já vem assim, e qualquer outro que você cadastre
+  (botina, bota, sapato, tênis, coturno…) é reconhecido pelo nome e já nasce pedindo o
+  número. Em qualquer item, mesmo nos sem tamanho, há o atalho **“+ informar tamanho /
+  numeração”** para digitar quando precisar — e o que você digitar sai na ficha.
 - **Item fora da lista** pode ser criado na tela da lista ou na hora da entrega, com a
   opção de guardá-lo para as próximas fichas.
 - **Entrega**: data de início da ficha, data de entrega e os materiais com

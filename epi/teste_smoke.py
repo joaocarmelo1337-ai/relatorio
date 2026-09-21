@@ -71,6 +71,17 @@ def principal():
     calcado = next(e for e in epis if e["nome"].startswith("CALÇADO"))
     assert calcado["ca"] == "28513", "CA padrão do calçado não foi pré-carregado"
 
+    # a ficha em papel só tem tamanho em camisa, camisa polo, calça e jaleco;
+    # calçado vai por numeração e o resto não tem tamanho nenhum
+    por_nome = {e["nome"]: e["tem_tamanho"] for e in epis}
+    for nome in ("CAMISA", "CAMISA POLO", "CALÇA", "JALECO"):
+        assert por_nome[nome] == 1, f"{nome} deveria ter tamanho P/M/G/GG/EXG"
+    assert por_nome["CALÇADO DE SEGURANÇA"] == 2, "calçado deveria ir por numeração"
+    for nome in ("LUVA VAQUETA", "LUVA PU", "COLETE REFLETIVO", "ÓCULOS DE SEGURANÇA",
+                 "PROTETOR AURICULAR PLUG", "CAPACETE COM JUGULAR", "AVENTAL DE RASPA"):
+        assert por_nome[nome] == 0, f"{nome} não deveria pedir tamanho"
+    print("· tamanhos da lista mestre conferem com a planilha")
+
     # cada material vai com a SUA assinatura; o último fica sem, de propósito
     ok(c.post(f"/funcionarios/{fid}/entregas/nova", data={
         "data_inicio": "2026-03-01", "data_entrega": "2026-03-02",

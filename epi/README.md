@@ -59,9 +59,20 @@ existe (calçado de segurança 28513, protetor auricular concha 14235, óculos
 34653, luva vaqueta 16059, luva PU 48827, máscara PFF1 38944, capacete 25883,
 talabarte 46206) e em branco nos uniformes, que não têm CA.
 
-Cada item guarda **nome**, **CA** (opcional) e a marca de **pede tamanho**, que
-faz o campo de tamanho (P/M/G/GG/EXG ou numeração, como 41 no calçado) aparecer
-na hora da entrega.
+Cada item guarda **nome**, **CA** (opcional) e **como pede tamanho**, seguindo a
+planilha: `0` não pede (luva, colete, óculos, capacete, protetor…), `1` pede
+**P/M/G/GG/EXG** (camisa, camisa polo, calça e jaleco) e `2` pede **numeração**
+(calçado). É isso que decide o campo que aparece na hora da entrega e como o item
+sai impresso na ficha.
+
+Calçado sempre vai por numeração digitada: além do item da lista, qualquer nome que
+pareça calçado (botina, bota, sapato, tênis, coturno, sandália…) já entra como
+numeração, tanto no cadastro da lista quanto num item criado na hora da entrega. E
+todo item, mesmo os sem tamanho, tem o atalho **“+ informar tamanho / numeração”** no
+formulário de entrega, para os casos fora da regra — o que for digitado sai na ficha.
+
+Listas criadas antes desta regra são acertadas sozinhas na primeira execução —
+só os itens da lista padrão; o que você criou ou ajustou à mão não é tocado.
 
 Um EPI que não está na lista pode ser incluído de dois jeitos:
 

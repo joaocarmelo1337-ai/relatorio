@@ -11,6 +11,7 @@ import db as database
 import pdf as pdf_ficha
 
 TAMANHOS = ["P", "M", "G", "GG", "EXG"]
+TIPOS_TAMANHO = database.ROTULO_TAMANHO
 IMAGENS_OK = {"image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/svg+xml"}
 
 
@@ -36,6 +37,7 @@ def create_app(test_config=None):
             "tem_logo": bool(emp and emp["logo"]),
             "hoje": date.today().isoformat(),
             "TAMANHOS": TAMANHOS,
+            "TIPOS_TAMANHO": TIPOS_TAMANHO,
         }
 
     @app.template_filter("data_br")
@@ -128,7 +130,7 @@ def create_app(test_config=None):
                 else:
                     epi_id = con.execute(
                         "INSERT INTO epi_master (nome, ca, tem_tamanho) VALUES (?, ?, ?)",
-                        (item["nome"], item["ca"], 1 if item["tamanho"] else 0),
+                        (item["nome"], item["ca"], _tipo_pelo_tamanho(item["tamanho"], item["nome"])),
                     ).lastrowid
 
             assinatura_id = database.salvar_assinatura(item["assinatura_nova"])
@@ -397,7 +399,7 @@ def create_app(test_config=None):
             return redirect(url_for("epis"))
         con.execute(
             "INSERT INTO epi_master (nome, ca, tem_tamanho) VALUES (?, ?, ?)",
-            (nome, (request.form.get("ca") or "").strip(), 1 if request.form.get("tem_tamanho") else 0),
+            (nome, (request.form.get("ca") or "").strip(), _tipo_tamanho(request.form.get("tem_tamanho"))),
         )
         con.commit()
         flash(f"{nome} adicionado à lista mestre.", "ok")
@@ -413,7 +415,7 @@ def create_app(test_config=None):
         con.execute(
             "UPDATE epi_master SET nome = ?, ca = ?, tem_tamanho = ?, ativo = ? WHERE id = ?",
             (nome, (request.form.get("ca") or "").strip(),
-             1 if request.form.get("tem_tamanho") else 0,
+             _tipo_tamanho(request.form.get("tem_tamanho")),
              1 if request.form.get("ativo") else 0, pid),
         )
         con.commit()
@@ -506,6 +508,24 @@ def create_app(test_config=None):
         )
 
     return app
+
+
+def _tipo_tamanho(valor):
+    """Converte o que veio do formulário em 0 (nenhum), 1 (letra) ou 2 (numeração)."""
+    try:
+        v = int(valor)
+    except (TypeError, ValueError):
+        return database.SEM_TAMANHO
+    return v if v in (database.TAM_LETRA, database.TAM_NUMERO) else database.SEM_TAMANHO
+
+
+def _tipo_pelo_tamanho(tamanho, nome=""):
+    """Item criado na hora da entrega: deduz o tipo pelo tamanho digitado e,
+    quando nada foi digitado, pelo nome — calçado entra como numeração."""
+    tamanho = (tamanho or "").strip().upper()
+    if tamanho:
+        return database.TAM_LETRA if tamanho in TAMANHOS else database.TAM_NUMERO
+    return database.TAM_NUMERO if database.parece_calcado(nome) else database.SEM_TAMANHO
 
 
 def _blob_assinatura(con, aid):

@@ -1,5 +1,25 @@
 {% extends "base.html" %}
 {% block titulo %}Lista de EPI{% endblock %}
+
+{% block scripts %}
+<script>
+/* Ao digitar o nome de um calçado, a opção de numeração já vem marcada
+   (enquanto o usuário não escolher outra coisa à mão). */
+(function () {
+  var PALAVRAS = ['CALCADO','BOTINA','BOTA','SAPATO','TENIS','COTURNO','SANDALIA','CHINELO','GALOCHA','SAPATENIS'];
+  var nome = document.getElementById('nome');
+  var tipo = document.getElementById('tem_tamanho');
+  if (!nome || !tipo) { return; }
+  tipo.addEventListener('change', function () { tipo.dataset.escolhido = '1'; });
+  nome.addEventListener('input', function () {
+    if (tipo.dataset.escolhido === '1') { return; }
+    var limpo = nome.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+    var sugereCalcado = PALAVRAS.some(function (p) { return limpo.indexOf(p) >= 0; });
+    tipo.value = sugereCalcado ? '2' : '0';
+  });
+})();
+</script>
+{% endblock %}
 {% block conteudo %}
 <h1>Lista mestre de EPI / uniformes</h1>
 

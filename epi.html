@@ -887,6 +887,16 @@ var EPI_PADRAO = [
   ['COLETE REFLETIVO','',SEM_TAMANHO]
 ];
 
+/* Calçado vai por numeração, seja o da lista ou qualquer outro que o
+   usuário cadastre: botina, bota, sapato, tênis, coturno... */
+var PALAVRAS_CALCADO = ['CALCADO','BOTINA','BOTA','SAPATO','TENIS','COTURNO',
+                        'SANDALIA','CHINELO','GALOCHA','SAPATENIS','BOTE'];
+
+function pareceCalcado(nome){
+  var n = semAcento(nome || '');
+  return PALAVRAS_CALCADO.some(function(palavra){ return n.indexOf(palavra) >= 0; });
+}
+
 /* Tipo de tamanho de um item, tolerante com o que foi gravado antes
    (quando o campo era só sim/não). */
 function tipoTamanho(epi){
@@ -1657,7 +1667,8 @@ function criarLinhaItem(dados){
         '<select class="selTamanho"><option value="">—</option>' +
         TAMANHOS.map(function(t){ return '<option value="' + t + '">' + t + '</option>'; }).join('') +
         '</select>' +
-        '<input type="text" class="inTamanho" inputmode="numeric" placeholder="Ex.: 41" hidden></div>' +
+        '<input type="text" class="inTamanho" placeholder="Ex.: 41" hidden></div>' +
+      '<button type="button" class="btn pequeno linkTamanho" hidden>+ informar tamanho / numeração</button>' +
     '</div>' +
     '<div class="assin-item">' +
       '<label>Assinatura de quem recebeu este material</label>' +
@@ -1678,6 +1689,7 @@ function criarLinhaItem(dados){
   var selTam = no.querySelector('.selTamanho');
   var campoTam = no.querySelector('.campoTamanho');
   var rotuloTam = no.querySelector('.rotuloTamanho');
+  var linkTam = no.querySelector('.linkTamanho');
 
   /* O campo de tamanho segue a ficha em papel: letra só para camisa, camisa
      polo, calça e jaleco; numeração só para calçado; o resto não tem tamanho. */
@@ -1686,7 +1698,28 @@ function criarLinhaItem(dados){
     selTam.hidden = (tipo !== TAM_LETRA);
     inTam.hidden = (tipo !== TAM_NUMERO);
     rotuloTam.textContent = (tipo === TAM_NUMERO) ? 'Numeração' : 'Tamanho';
+    if(tipo === TAM_NUMERO){
+      inTam.setAttribute('inputmode', 'numeric');
+      inTam.removeAttribute('list');
+      inTam.placeholder = 'Ex.: 41';
+    }
+    // item sem tamanho não mostra campo, mas deixa o atalho caso precise digitar
+    linkTam.hidden = (tipo !== SEM_TAMANHO);
     if(tipo === SEM_TAMANHO){ selTam.value = ''; inTam.value = ''; }
+  }
+
+  /* Escape para qualquer item: revela um campo livre, onde cabe tanto GG
+     quanto 41 — serve para um calçado que ainda não está marcado assim. */
+  function liberarTamanho(){
+    campoTam.hidden = false;
+    selTam.hidden = true;
+    inTam.hidden = false;
+    inTam.setAttribute('list', 'listaTamanhos');
+    inTam.removeAttribute('inputmode');
+    inTam.placeholder = 'Ex.: GG ou 41';
+    rotuloTam.textContent = 'Tamanho / numeração';
+    linkTam.hidden = true;
+    inTam.focus();
   }
 
   function valorTamanho(){
@@ -1707,8 +1740,7 @@ function criarLinhaItem(dados){
     var novo = sel.value === '__novo__';
     campoNome.hidden = !novo;
     if(novo){
-      ajustarCampoTamanho(TAM_LETRA);       // item digitado na hora: deixa escolher
-      inTam.hidden = false;                 // e também aceita numeração
+      liberarTamanho();                     // item digitado na hora: campo livre
       rotuloTam.textContent = 'Tamanho / numeração (se tiver)';
     }else if(!sel.value){
       ajustarCampoTamanho(SEM_TAMANHO);
@@ -1721,6 +1753,7 @@ function criarLinhaItem(dados){
   }
 
   sel.addEventListener('change', function(){ aplicar(false); });
+  linkTam.addEventListener('click', liberarTamanho);
   inNome.addEventListener('input', atualizarRotulo);
   no.querySelector('.remover').addEventListener('click', function(){
     delete devolucaoDaLinha[chave];
@@ -1740,8 +1773,12 @@ function criarLinhaItem(dados){
   inQtde.value = (dados.qtde != null && dados.qtde !== '') ? numeroBonito(dados.qtde) : '1';
   aplicar(true);
   if(dados.tamanho){                        // recoloca o tamanho já gravado
-    if(TAMANHOS.indexOf(maiuscula(dados.tamanho)) >= 0){ selTam.value = maiuscula(dados.tamanho); }
-    else { inTam.value = dados.tamanho; inTam.hidden = false; campoTam.hidden = false; }
+    if(TAMANHOS.indexOf(maiuscula(dados.tamanho)) >= 0 && !selTam.hidden){
+      selTam.value = maiuscula(dados.tamanho);
+    }else{
+      if(inTam.hidden) liberarTamanho();
+      inTam.value = dados.tamanho;
+    }
   }
 
   prepararAssinatura(chave, dados.assinatura || '', Assinaturas.rotulos[chave]);
@@ -1794,6 +1831,7 @@ function lerItensDoFormulario(){
     if(novo && no.querySelector('.ckSalvar').checked){
       var tipo = SEM_TAMANHO;
       if(tamanho) tipo = (TAMANHOS.indexOf(tamanho) >= 0) ? TAM_LETRA : TAM_NUMERO;
+      else if(pareceCalcado(nome)) tipo = TAM_NUMERO;
       novosParaLista.push({ nome: nome, ca: ca, temTamanho: tipo });
     }
   });
@@ -2028,6 +2066,14 @@ function renderListaEpis(){
   });
 }
 
+/* Ao digitar o nome de um calçado, a opção de numeração já vem marcada
+   (enquanto o usuário não escolher outra coisa à mão). */
+function sugerirTipoTamanho(){
+  var campo = $('pTamanho');
+  if(campo.dataset.escolhido === '1') return;
+  campo.value = pareceCalcado($('pNome').value) ? String(TAM_NUMERO) : '0';
+}
+
 function adicionarEpi(){
   var nome = maiuscula($('pNome').value);
   if(!nome){ mostrarMsg('Informe o nome do EPI.', 'erro', true); return; }
@@ -2147,6 +2193,8 @@ function descricaoItem(item){
   }
   if(tipo === TAM_NUMERO && tam) return item.nome + ' — Nº ' + tam;
   if(tipo === TAM_NUMERO) return item.nome + ' — Nº ______';
+  // item sem tamanho na lista, mas com tamanho digitado na entrega: sai assim mesmo
+  if(tam) return item.nome + (TAMANHOS.indexOf(tam) >= 0 ? ' — ' + tam : ' — Nº ' + tam);
   return item.nome;
 }
 
@@ -2811,6 +2859,8 @@ function ligarEventos(){
   $('btSalvarDevolucao').addEventListener('click', salvarDevolucao);
 
   $('btAddEpi').addEventListener('click', adicionarEpi);
+  $('pNome').addEventListener('input', sugerirTipoTamanho);
+  $('pTamanho').addEventListener('change', function(){ this.dataset.escolhido = '1'; });
   $('pNome').addEventListener('keydown', function(ev){ if(ev.key === 'Enter') adicionarEpi(); });
 
   $('btSalvarCfg').addEventListener('click', salvarCfg);

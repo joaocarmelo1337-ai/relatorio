@@ -130,7 +130,7 @@ def create_app(test_config=None):
                 else:
                     epi_id = con.execute(
                         "INSERT INTO epi_master (nome, ca, tem_tamanho) VALUES (?, ?, ?)",
-                        (item["nome"], item["ca"], _tipo_pelo_tamanho(item["tamanho"])),
+                        (item["nome"], item["ca"], _tipo_pelo_tamanho(item["tamanho"], item["nome"])),
                     ).lastrowid
 
             assinatura_id = database.salvar_assinatura(item["assinatura_nova"])
@@ -519,12 +519,13 @@ def _tipo_tamanho(valor):
     return v if v in (database.TAM_LETRA, database.TAM_NUMERO) else database.SEM_TAMANHO
 
 
-def _tipo_pelo_tamanho(tamanho):
-    """Item criado na hora da entrega: deduz o tipo pelo tamanho digitado."""
+def _tipo_pelo_tamanho(tamanho, nome=""):
+    """Item criado na hora da entrega: deduz o tipo pelo tamanho digitado e,
+    quando nada foi digitado, pelo nome — calçado entra como numeração."""
     tamanho = (tamanho or "").strip().upper()
-    if not tamanho:
-        return database.SEM_TAMANHO
-    return database.TAM_LETRA if tamanho in TAMANHOS else database.TAM_NUMERO
+    if tamanho:
+        return database.TAM_LETRA if tamanho in TAMANHOS else database.TAM_NUMERO
+    return database.TAM_NUMERO if database.parece_calcado(nome) else database.SEM_TAMANHO
 
 
 def _blob_assinatura(con, aid):

@@ -185,7 +185,11 @@ As instruções completas estão em [`epi/README.md`](epi/README.md).
   talabarte 46206); uniforme fica sem CA. O tamanho segue a planilha, com três opções por
   item: **P/M/G/GG/EXG** (só camisa, camisa polo, calça e jaleco), **numeração** (só o
   calçado) e **sem tamanho** (todo o resto — luva, colete, óculos, capacete e companhia).
-  O campo de tamanho só aparece na entrega quando o item pede.
+  O campo de tamanho só aparece na entrega quando o item pede. **Calçado é sempre por
+  numeração digitada**: o da lista já vem assim, e qualquer outro que você cadastre
+  (botina, bota, sapato, tênis, coturno…) é reconhecido pelo nome e já nasce pedindo o
+  número. Em qualquer item, mesmo nos sem tamanho, há o atalho **“+ informar tamanho /
+  numeração”** para digitar quando precisar — e o que você digitar sai na ficha.
 - **Item fora da lista** pode ser criado na tela da lista ou na hora da entrega, com a
   opção de guardá-lo para as próximas fichas.
 - **Entrega**: data de início da ficha, data de entrega e os materiais com

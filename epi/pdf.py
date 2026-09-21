@@ -94,8 +94,10 @@ def descricao_item(item):
     só com o nome."""
     tamanho = (item.get("tamanho") or "").strip().upper()
     tipo = int(item.get("tem_tamanho") or 0)
-    if tipo not in (1, 2):
-        tipo = (1 if tamanho in TAMANHOS else 2) if tamanho else 0
+    # item digitado na hora (sem ficar na lista mestre): deduz pelo que foi escrito.
+    # Item da lista manda no formato, mesmo que alguém tenha digitado um tamanho.
+    if tipo not in (1, 2) and not item.get("epi_id") and tamanho:
+        tipo = 1 if tamanho in TAMANHOS else 2
 
     if tipo == 1:
         marcas = "&nbsp;&nbsp;".join(
@@ -104,6 +106,9 @@ def descricao_item(item):
         return f"{item['nome']}:&nbsp; {marcas}"
     if tipo == 2:
         return f"{item['nome']} — Nº {tamanho or '______'}"
+    # item sem tamanho na lista, mas com tamanho digitado na entrega: sai assim mesmo
+    if tamanho:
+        return f"{item['nome']} — {tamanho}" if tamanho in TAMANHOS else f"{item['nome']} — Nº {tamanho}"
     return item["nome"]
 
 

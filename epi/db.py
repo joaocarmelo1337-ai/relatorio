@@ -43,6 +43,17 @@ EPI_PADRAO = [
 ]
 
 
+# Calçado vai por numeração, seja o da lista ou qualquer outro que o usuário
+# cadastre: botina, bota, sapato, tênis, coturno...
+PALAVRAS_CALCADO = ("CALCADO", "BOTINA", "BOTA", "SAPATO", "TENIS", "COTURNO",
+                    "SANDALIA", "CHINELO", "GALOCHA", "SAPATENIS")
+
+
+def parece_calcado(nome):
+    sem_acento = _sem_acento(nome)
+    return any(palavra in sem_acento for palavra in PALAVRAS_CALCADO)
+
+
 def _sem_acento(texto):
     return unicodedata.normalize("NFKD", texto or "").encode("ascii", "ignore").decode().upper()
 

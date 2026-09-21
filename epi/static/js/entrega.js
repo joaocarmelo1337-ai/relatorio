@@ -44,8 +44,9 @@
           '<select class="sel-tamanho"><option value="">—</option>' +
           TAMANHOS.map(function (t) { return '<option value="' + t + '">' + t + '</option>'; }).join('') +
           '</select>' +
-          '<input type="text" class="in-numero" inputmode="numeric" placeholder="Ex.: 41" hidden>' +
+          '<input type="text" class="in-numero" placeholder="Ex.: 41" hidden>' +
           '<input type="hidden" class="hd-tamanho" name="item_tamanho[]" value=""></div>' +
+        '<button type="button" class="btn pequeno link-tamanho" hidden>+ informar tamanho / numeração</button>' +
       '</div>' +
       '<div class="assin-item">' +
         '<label>Assinatura de quem recebeu este material</label>' +
@@ -79,6 +80,7 @@
     var inNumero = no.querySelector('.in-numero');
     var hdTam = no.querySelector('.hd-tamanho');
     var rotuloTam = no.querySelector('.rotulo-tamanho');
+    var linkTam = no.querySelector('.link-tamanho');
 
     /* O campo segue a ficha em papel: letra só para camisa, camisa polo, calça
        e jaleco; numeração só para calçado; o resto não tem tamanho. */
@@ -87,8 +89,28 @@
       selTam.hidden = (tipo !== 1);
       inNumero.hidden = (tipo !== 2);
       rotuloTam.textContent = (tipo === 2) ? 'Numeração' : 'Tamanho';
+      if (tipo === 2) {
+        inNumero.setAttribute('inputmode', 'numeric');
+        inNumero.removeAttribute('list');
+        inNumero.placeholder = 'Ex.: 41';
+      }
+      // item sem tamanho não mostra campo, mas deixa o atalho caso precise digitar
+      linkTam.hidden = (tipo !== 0);
       if (tipo === 0) { selTam.value = ''; inNumero.value = ''; }
       guardarTamanho();
+    }
+
+    /* Escape para qualquer item: campo livre, onde cabe tanto GG quanto 41. */
+    function liberarTamanho() {
+      campoTam.hidden = false;
+      selTam.hidden = true;
+      inNumero.hidden = false;
+      inNumero.setAttribute('list', 'lista-tamanhos');
+      inNumero.removeAttribute('inputmode');
+      inNumero.placeholder = 'Ex.: GG ou 41';
+      rotuloTam.textContent = 'Tamanho / numeração';
+      linkTam.hidden = true;
+      inNumero.focus();
     }
 
     function guardarTamanho() {
@@ -101,8 +123,7 @@
       campoNome.style.display = novo ? '' : 'none';
       var op = sel.selectedOptions[0];
       if (novo) {
-        ajustarTamanho(1);
-        inNumero.hidden = false;              // item digitado na hora aceita os dois
+        liberarTamanho();                     // item digitado na hora: campo livre
         rotuloTam.textContent = 'Tamanho / numeração (se tiver)';
       } else if (!sel.value) {
         ajustarTamanho(0);
@@ -129,6 +150,7 @@
     sel.addEventListener('change', function () { aplicar(false); });
     selTam.addEventListener('change', guardarTamanho);
     inNumero.addEventListener('input', guardarTamanho);
+    linkTam.addEventListener('click', liberarTamanho);
     inNome.addEventListener('input', sincronizar);
     no.querySelector('.ck-salvar').addEventListener('change', sincronizar);
     no.querySelector('.remover').addEventListener('click', function () {
@@ -148,12 +170,11 @@
     }
     aplicar(true);
     if (dados.tamanho) {                      // recoloca o tamanho já gravado
-      if (TAMANHOS.indexOf(String(dados.tamanho).toUpperCase()) >= 0) {
+      if (TAMANHOS.indexOf(String(dados.tamanho).toUpperCase()) >= 0 && !selTam.hidden) {
         selTam.value = String(dados.tamanho).toUpperCase();
       } else {
+        if (inNumero.hidden) { liberarTamanho(); }
         inNumero.value = dados.tamanho;
-        inNumero.hidden = false;
-        campoTam.hidden = false;
       }
       guardarTamanho();
     }

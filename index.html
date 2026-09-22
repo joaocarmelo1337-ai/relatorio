@@ -723,8 +723,8 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
 
     <div class="secTit">Relatório fotográfico mensal</div>
     <div class="campo">
-      <label for="cMesRef">Mês de referência</label>
-      <input type="month" id="cMesRef">
+      <div class="ajuda">O mês do relatório fotográfico agora é escolhido na aba <b>Mensal</b>,
+        onde cada mês tem o seu próprio relatório.</div>
       <div class="ajuda">Vira o período no cabeçalho: 01/07/2026 - 31/07/2026.</div>
     </div>
     <div class="campo">
@@ -1204,10 +1204,11 @@ var COR_PDF = {'Mantido':[46,125,50],'A remanejar':[230,126,34],'Danificado':[19
                'Já remanejado':[127,140,141],'Não localizado':[142,68,173],'Não instalado':[52,73,94]};
 var LIMITE_FOTO = 900 * 1024;         // ~900 KB por foto
 var LIMITE_LOGO = 500 * 1024;         // ~500 KB para a logo
-var VERSAO_APP = '31/08/2026';       // atualizada a cada publicação
+var VERSAO_APP = '22/09/2026';       // atualizada a cada publicação
 var CHAVE_LS = 'aguasguariroba_registros_v1';
 var CHAVE_LS_ARV = 'aguasguariroba_arvores_v1';
 var CHAVE_LS_MEN = 'aguasguariroba_mensais_v1';
+var CHAVE_LS_MESES = 'aguasguariroba_meses_v1';
 var CHAVE_LS_RAM = 'aguasguariroba_ramais_v1';
 var CHAVE_LS_CFG = 'aguasguariroba_config_v1';
 
@@ -1216,6 +1217,7 @@ var COLECOES = {
   registros: { loja: 'registros', ls: CHAVE_LS },
   arvores:   { loja: 'arvores',   ls: CHAVE_LS_ARV },
   mensais:   { loja: 'mensais',   ls: CHAVE_LS_MEN },
+  meses:     { loja: 'meses',     ls: CHAVE_LS_MESES },
   ramais:    { loja: 'ramais',    ls: CHAVE_LS_RAM }
 };
 
@@ -1372,13 +1374,14 @@ var Armaz = {
         if(!pronto) rej(new Error('tempo esgotado ao abrir o banco de dados'));
       }, 8000);
       var req;
-      try{ req = indexedDB.open('aguasguariroba_db', 4); }
+      try{ req = indexedDB.open('aguasguariroba_db', 5); }
       catch(e){ clearTimeout(t); rej(e); return; }
       req.onupgradeneeded = function(ev){
         var db = ev.target.result;
         if(!db.objectStoreNames.contains('registros')) db.createObjectStore('registros', {keyPath:'id'});
         if(!db.objectStoreNames.contains('arvores')) db.createObjectStore('arvores', {keyPath:'id'});
         if(!db.objectStoreNames.contains('mensais')) db.createObjectStore('mensais', {keyPath:'id'});
+        if(!db.objectStoreNames.contains('meses')) db.createObjectStore('meses', {keyPath:'id'});
         if(!db.objectStoreNames.contains('ramais')) db.createObjectStore('ramais', {keyPath:'id'});
         if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
       };
@@ -1662,7 +1665,9 @@ var estado = {
   aba: 'esgoto',                     // 'esgoto' | 'arvore'
   registros: [],                     // ligações de esgoto / hidrômetros
   arvores: [],                       // árvores cortadas
-  mensais: [],                       // fotos do relatório mensal
+  mensais: [],                       // fotos do relatório mensal (de todos os meses)
+  meses: [],                         // registro de cada mês do relatório, inclusive os arquivados
+  mesAtivo: '',                      // mês aberto na aba Mensal ('' = lista de meses)
   ramais: [],                        // ramais de água
   config: JSON.parse(JSON.stringify(CFG_PADRAO)),
   logoPendente: null,
@@ -1690,11 +1695,85 @@ function itensDaAba(){
 
 var FOTOS_POR_PAGINA = 4;
 
+/* ===================== RELATÓRIO MENSAL, MÊS A MÊS ==================
+   Cada foto pertence a um mês (AAAA-MM) e cada mês é um relatório com
+   vida própria: abre, cadastra, gera o PDF e, passado o prazo, arquiva.
+   O registro do mês continua na lista mesmo depois de arquivado, para
+   ficar a memória do que foi entregue.
+   ===================================================================== */
+var MESES_NO_APARELHO = 3;      // depois disso o mês entra na fila de arquivamento
+
+function mesAtualISO(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function mesValido(m){ return /^\d{4}-(0[1-9]|1[0-2])$/.test(String(m || '')); }
+
+function fotosDoMes(mes){
+  return estado.mensais.filter(function(r){ return String(r.mes || '') === String(mes || ''); });
+}
+
+function registroDoMes(mes){
+  return estado.meses.filter(function(m){ return m.id === mes; })[0] || null;
+}
+
+/* Quantos meses separam dois meses AAAA-MM (positivo se o primeiro é mais novo). */
+function distanciaEmMeses(a, b){
+  var pa = String(a).split('-'), pb = String(b).split('-');
+  return (parseInt(pa[0],10) * 12 + parseInt(pa[1],10)) - (parseInt(pb[0],10) * 12 + parseInt(pb[1],10));
+}
+
+/* Lista de meses para a tela: junta o que está registrado com o que as
+   fotos indicam, do mais novo para o mais antigo. */
+function mesesDoRelatorio(){
+  var mapa = {};
+  estado.meses.forEach(function(m){
+    if(mesValido(m.id)) mapa[m.id] = { id: m.id, criadoEm: m.criadoEm || '', arquivadoEm: m.arquivadoEm || '',
+                                       fotosArquivadas: m.fotosArquivadas || 0, fotos: 0 };
+  });
+  estado.mensais.forEach(function(r){
+    var mes = String(r.mes || '');
+    if(!mesValido(mes)) return;
+    if(!mapa[mes]) mapa[mes] = { id: mes, criadoEm: r.criadoEm || '', arquivadoEm: '', fotosArquivadas: 0, fotos: 0 };
+    mapa[mes].fotos++;
+  });
+  return Object.keys(mapa).sort().reverse().map(function(k){ return mapa[k]; });
+}
+
+/* Meses que já passaram do prazo de permanência e ainda têm fotos no aparelho. */
+function mesesParaArquivar(){
+  var hoje = mesAtualISO();
+  return mesesDoRelatorio().filter(function(m){
+    return m.fotos > 0 && !m.arquivadoEm && distanciaEmMeses(hoje, m.id) >= MESES_NO_APARELHO;
+  });
+}
+
+function garantirRegistroMes(mes){
+  if(!mesValido(mes) || registroDoMes(mes)) return Promise.resolve();
+  var reg = { id: mes, criadoEm: new Date().toISOString(), arquivadoEm: '', fotosArquivadas: 0 };
+  estado.meses.push(reg);
+  return Armaz.salvar('meses', reg);
+}
+
+/* Fotos antigas não tinham mês: recebem o mês de referência da configuração
+   ou, na falta dele, o mês em que foram cadastradas. */
+function migrarFotosSemMes(){
+  var refConfig = estado.config && estado.config.mesRef;
+  var sem = estado.mensais.filter(function(r){ return !mesValido(r.mes); });
+  if(!sem.length) return Promise.resolve();
+  sem.forEach(function(r){
+    var doCadastro = String(r.criadoEm || '').slice(0, 7);
+    r.mes = mesValido(refConfig) ? refConfig : (mesValido(doCadastro) ? doCadastro : mesAtualISO());
+  });
+  return Armaz.salvarVarios('mensais', sem);
+}
+
+
 // Ordem do relatório: página, depois posição dentro da página. Registros antigos,
 // sem página definida, entram na sequência em que foram cadastrados.
 function mensaisOrdenadas(){
   var comPagina = [], semPagina = [];
-  estado.mensais.forEach(function(r){
+  fotosDoMes(estado.mesAtivo).forEach(function(r){
     if(r.pagina) comPagina.push(r); else semPagina.push(r);
   });
   comPagina.sort(function(a,b){
@@ -1970,16 +2049,72 @@ function cardMensal(r, indice, primeiro, ultimo){
   '</div>';
 }
 
+/* Cartão de um mês na lista: quantas fotos, quantas páginas e o que dá para fazer. */
+function cardMes(m){
+  var paginas = Math.ceil(m.fotos / FOTOS_POR_PAGINA) || 0;
+  var atrasado = !m.arquivadoEm && m.fotos > 0 && distanciaEmMeses(mesAtualISO(), m.id) >= MESES_NO_APARELHO;
+  var situacao;
+  if(m.arquivadoEm){
+    situacao = '<span class="badge b-ja">arquivado em ' + esc(dataBR(String(m.arquivadoEm).slice(0,10))) + '</span>';
+  }else if(atrasado){
+    situacao = '<span class="badge b-danificado">passou de ' + MESES_NO_APARELHO + ' meses — arquive</span>';
+  }else{
+    situacao = '<span class="badge b-mantido">no aparelho</span>';
+  }
+  var detalhe = m.arquivadoEm
+    ? (m.fotosArquivadas || 0) + ' foto(s) arquivadas — as imagens saíram do aparelho'
+    : m.fotos + ' foto(s) — ' + paginas + ' página(s) no PDF';
+
+  return '<div class="card">' +
+    '<div class="corpo">' +
+      '<div class="l1">' + esc(mesPorExtenso(m.id)) + '</div>' +
+      '<div class="l2">' + detalhe + '</div>' +
+      '<div class="badges">' + situacao + '</div>' +
+    '</div>' +
+    '<div class="acoes">' +
+      '<button type="button" data-abrir-mes="' + esc(m.id) + '">Abrir</button>' +
+      (m.fotos > 0 ? '<button type="button" data-arquivar-mes="' + esc(m.id) + '">Arquivar</button>' : '') +
+      '<button type="button" class="ex" data-excluir-mes="' + esc(m.id) + '">Excluir</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderizarMeses(){
+  var meses = mesesDoRelatorio();
+  var totalFotos = estado.mensais.length;
+  var atrasados = mesesParaArquivar();
+  $('resumoTopo').textContent = meses.length + ' mês(es) no relatório — ' + totalFotos +
+    ' foto(s) no aparelho' + (atrasados.length ? ' — ' + atrasados.length + ' mês(es) para arquivar.' : '.');
+  var cx = $('lista');
+  if(!meses.length){
+    cx.innerHTML = '<div class="vazio">Nenhum mês criado ainda.<br>' +
+      'Toque no botão <b>+</b> para começar o relatório de um mês.</div>';
+    return;
+  }
+  var html = '';
+  if(atrasados.length){
+    html += '<div class="grupoRua"><div class="tituloRua"><span class="nome">Para arquivar</span>' +
+            '<span class="cont">passaram de ' + MESES_NO_APARELHO + ' meses</span></div>' +
+            '<div class="vazio" style="text-align:left">Arquivar gera o PDF e o backup do mês e tira as fotos ' +
+            'do aparelho, liberando espaço. O mês continua na lista.</div></div>';
+  }
+  meses.forEach(function(m){ html += cardMes(m); });
+  cx.innerHTML = html;
+}
+
 function renderizarListaMensal(){
+  if(!estado.mesAtivo){ renderizarMeses(); return; }
   var paginas = paginasMensais();
-  var total = estado.mensais.length;
-  var cfg = estado.config;
-  $('resumoTopo').textContent = total + ' foto(s) — ' + paginas.length + ' página(s) no PDF' +
-    (cfg.mesRef ? ' — mês de referência: ' + mesPorExtenso(cfg.mesRef) + '.' : ' — mês de referência não informado.');
+  var total = fotosDoMes(estado.mesAtivo).length;
+  var reg = registroDoMes(estado.mesAtivo);
+  $('resumoTopo').innerHTML = '<b>' + esc(mesPorExtenso(estado.mesAtivo)) + '</b> — ' + total +
+    ' foto(s), ' + paginas.length + ' página(s) no PDF. ' +
+    '<a href="#" id="voltarMeses">ver todos os meses</a>' +
+    (reg && reg.arquivadoEm ? ' — <b>mês arquivado</b>' : '');
   var cx = $('lista');
   if(!total){
-    cx.innerHTML = '<div class="vazio">Nenhuma foto cadastrada ainda.<br>' +
-      'Toque no botão <b>+</b> para adicionar a primeira foto do mês.</div>';
+    cx.innerHTML = '<div class="vazio">Nenhuma foto neste mês ainda.<br>' +
+      'Toque no botão <b>+</b> para adicionar a primeira foto de ' + esc(mesPorExtenso(estado.mesAtivo)) + '.</div>';
     return;
   }
   var html = '';
@@ -1996,6 +2131,61 @@ function renderizarListaMensal(){
     html += '</div>';
   });
   cx.innerHTML = html;
+}
+
+/* ------------------------- ações sobre um mês ------------------------ */
+function abrirMes(mes){
+  estado.mesAtivo = mes;
+  limparMsgs();
+  renderizar();
+  try{ window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0,0); }
+}
+
+function voltarParaMeses(){
+  estado.mesAtivo = '';
+  limparMsgs();
+  renderizar();
+}
+
+function novoMes(){
+  var sugerido = mesAtualISO();
+  var mes = prompt('Mês do relatório (no formato AAAA-MM):', sugerido);
+  if(mes === null) return;
+  mes = String(mes).trim();
+  if(!mesValido(mes)){
+    mostrarMsg('Mês inválido. Use o formato AAAA-MM, por exemplo ' + sugerido + '.', 'erro', true);
+    return;
+  }
+  garantirRegistroMes(mes).then(function(){
+    abrirMes(mes);
+    mostrarMsg('Relatório de ' + mesPorExtenso(mes) + ' criado. Agora é só adicionar as fotos.', 'sucesso');
+  }).catch(function(e){
+    mostrarMsg('Não foi possível criar o mês: ' + msgErro(e), 'erro', true);
+  });
+}
+
+function excluirMes(mes){
+  var fotos = fotosDoMes(mes);
+  var texto = fotos.length
+    ? 'Excluir ' + mesPorExtenso(mes) + ' e as ' + fotos.length + ' foto(s) dele?\n\n' +
+      'Isso apaga as fotos do aparelho e não pode ser desfeito. Se quiser guardar, use Arquivar.'
+    : 'Excluir o registro de ' + mesPorExtenso(mes) + ' da lista?';
+  if(!confirm(texto)) return;
+  var passos = fotos.reduce(function(p, r){
+    return p.then(function(){ return Armaz.remover('mensais', r.id); });
+  }, Promise.resolve());
+  passos.then(function(){
+    var reg = registroDoMes(mes);
+    estado.meses = estado.meses.filter(function(m){ return m.id !== mes; });
+    return reg ? Armaz.remover('meses', mes) : null;
+  }).then(function(){
+    if(estado.mesAtivo === mes) estado.mesAtivo = '';
+    return recarregar();
+  }).then(function(){
+    mostrarMsg(mesPorExtenso(mes) + ' foi excluído.', 'sucesso');
+  }).catch(function(e){
+    mostrarMsg('Não foi possível excluir o mês: ' + msgErro(e), 'erro', true);
+  });
 }
 
 function cardRamal(r){
@@ -2109,11 +2299,15 @@ function trocarAba(aba){
 
 function recarregar(){
   return Promise.all([Armaz.listar('registros'), Armaz.listar('arvores'),
-                      Armaz.listar('mensais'), Armaz.listar('ramais')]).then(function(r){
+                      Armaz.listar('mensais'), Armaz.listar('ramais'),
+                      Armaz.listar('meses')]).then(function(r){
     estado.registros = Array.isArray(r[0]) ? r[0] : [];
     estado.arvores = Array.isArray(r[1]) ? r[1] : [];
     estado.mensais = Array.isArray(r[2]) ? r[2] : [];
     estado.ramais = Array.isArray(r[3]) ? r[3] : [];
+    estado.meses = Array.isArray(r[4]) ? r[4] : [];
+    return migrarFotosSemMes();
+  }).then(function(){
     marcarSalvo();
     renderizar();
   }).catch(function(e){
@@ -2603,6 +2797,7 @@ function salvarFotoMensal(){
       id: estado.editandoMenId || novoId(),
       foto: estado.fotos.men.dataUrl,
       dim: { w: estado.fotos.men.w || null, h: estado.fotos.men.h || null },
+      mes: estado.mesAtivo,
       descricao: desc,
       pagina: pagAlvo,
       // entra no fim da página escolhida quando muda de página
@@ -2859,7 +3054,6 @@ function abrirConfig(aviso){
     $('cDonoCrea').value = c.donoCrea || '';
     $('cFiscal').value = c.fiscal || '';
     $('cFiscalCrea').value = c.fiscalCrea || '';
-    $('cMesRef').value = c.mesRef || '';
     estado.brasaoPendente = c.brasao ? { dataUrl: c.brasao, tipo: c.brasaoTipo, w: (c.brasaoDim||{}).w, h: (c.brasaoDim||{}).h, bytes: tamanhoDataUrl(c.brasao) } : null;
     if(estado.brasaoPendente) pintarBrasao(c.brasao, 'Imagem salva (' + kb(estado.brasaoPendente.bytes) + '). Escolha outra para substituir.', 'pronta');
     else pintarBrasao(null, 'Nenhuma imagem selecionada.', '');
@@ -2917,7 +3111,7 @@ function salvarConfig(){
       municipio: $('cMunicipio').value.trim() || CFG_PADRAO.municipio,
       concessionaria: $('cConcessionaria').value.trim() || CFG_PADRAO.concessionaria,
       destArv: $('cDestArv').value.trim(),
-      mesRef: $('cMesRef').value || '',
+      mesRef: estado.config.mesRef || '',        // mantido só para converter dados antigos
       brasao: estado.brasaoPendente ? estado.brasaoPendente.dataUrl : '',
       brasaoTipo: estado.brasaoPendente ? estado.brasaoPendente.tipo : 'PNG',
       brasaoDim: estado.brasaoPendente ? { w: estado.brasaoPendente.w, h: estado.brasaoPendente.h } : null,
@@ -3084,6 +3278,117 @@ function publicarArquivo(nome, blob, dica){
   }catch(e){ auto = false; }
   try{ cx.scrollIntoView({ block:'nearest', behavior:'smooth' }); }catch(e){}
   return auto;
+}
+
+/* Mostra vários arquivos prontos de uma vez (usado ao arquivar um mês,
+   que gera o PDF e o backup no mesmo passo). */
+function publicarVarios(arquivos){
+  estado.urlsTemp.forEach(function(u){ try{ URL.revokeObjectURL(u); }catch(e){} });
+  estado.urlsTemp = [];
+  var html = '';
+  arquivos.forEach(function(a){
+    var url = URL.createObjectURL(a.blob);
+    estado.urlsTemp.push(url);
+    html += '<div class="blocoArq">' +
+      '<div class="nome">' + esc(a.nome) + '</div>' +
+      '<div class="dica">' + esc(a.dica || '') + '</div>' +
+      '<div class="links">' +
+        '<a href="' + url + '" download="' + esc(a.nome) + '">Baixar arquivo</a>' +
+        '<a class="sec" href="' + url + '" target="_blank" rel="noopener">Abrir em nova aba</a>' +
+      '</div>' +
+    '</div>';
+  });
+  var cx = $('areaDownloads');
+  cx.innerHTML = html;
+  try{
+    var a0 = document.createElement('a');
+    a0.href = estado.urlsTemp[0]; a0.download = arquivos[0].nome; a0.style.display = 'none';
+    document.body.appendChild(a0); a0.click(); a0.remove();
+  }catch(e){}
+  try{ cx.scrollIntoView({ block:'nearest', behavior:'smooth' }); }catch(e){}
+}
+
+/* ====================== ARQUIVAMENTO DE UM MÊS ======================
+   Gera o PDF e o backup do mês e, só depois de ter os dois arquivos na
+   mão, tira as fotos do aparelho. O mês continua na lista, marcado como
+   arquivado, com a contagem do que foi entregue.
+   ===================================================================== */
+function arquivarMes(mes){
+  var fotos = fotosDoMes(mes);
+  if(!fotos.length){ mostrarMsg('Este mês não tem fotos no aparelho.', 'erro', true); return; }
+  var cfg = estado.config;
+  if(!cfg.obra || !cfg.empresa){
+    mostrarMsg('Antes de arquivar, informe o nome da obra e o nome da empresa — eles vão no PDF.', 'erro', true);
+    abrirConfig('Preencha estes dados para poder arquivar o mês.');
+    return;
+  }
+  var Ctor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+  if(!Ctor){ mostrarMsg('A biblioteca de PDF não carregou. Recarregue a página.', 'erro', true); return; }
+
+  if(!confirm('Arquivar ' + mesPorExtenso(mes) + ' com ' + fotos.length + ' foto(s)?\n\n' +
+              'O aplicativo vai:\n' +
+              '1) gerar o PDF do mês;\n' +
+              '2) gerar o backup do mês (.json, com as fotos);\n' +
+              '3) apagar as fotos deste mês do aparelho, liberando espaço.\n\n' +
+              'Guarde os dois arquivos. Para ter o mês de volta, basta importar o backup.')) return;
+
+  processando(true, 'Arquivando ' + mesPorExtenso(mes) + '…', 'Gerando o PDF do mês.');
+  var mesAnterior = estado.mesAtivo;
+  estado.mesAtivo = mes;                      // o PDF é sempre do mês aberto
+
+  var pendentes = [];
+  fotos.forEach(function(r){
+    if(!r.dim || !r.dim.w) pendentes.push(medirImagem(r.foto).then(function(d){ r.dim = d; }));
+  });
+  if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)) pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
+  if(cfg.brasao && (!cfg.brasaoDim || !cfg.brasaoDim.w)) pendentes.push(medirImagem(cfg.brasao).then(function(d){ cfg.brasaoDim = d; }));
+
+  var arquivos = [];
+  Promise.all(pendentes).then(function(){
+    return montarPDFMensal(Ctor, paginasMensais());
+  }).then(function(res){
+    arquivos.push({ blob: res.blob, nome: res.nome,
+                    dica: 'Relatório de ' + mesPorExtenso(mes) + ' com ' + res.paginas + ' página(s).' });
+    var pacote = {
+      aplicativo: 'registro-interferencias-aguas-guariroba',
+      versao: 5,
+      exportadoEm: new Date().toISOString(),
+      tipo: 'mes-arquivado',
+      mes: mes,
+      config: estado.config,
+      registros: [], arvores: [], ramais: [],
+      meses: [registroDoMes(mes) || { id: mes }],
+      mensais: mensaisOrdenadas()
+    };
+    var texto = JSON.stringify(pacote);
+    arquivos.push({ blob: new Blob([texto], { type:'application/json' }),
+                    nome: 'backup-mensal-' + mes + '.json',
+                    dica: 'Backup de ' + mesPorExtenso(mes) + ' com as ' + fotos.length +
+                          ' foto(s) (' + kb(texto.length) + '). Guarde: é com ele que o mês volta.' });
+    // só agora as fotos saem do aparelho
+    return fotos.reduce(function(pr, r){
+      return pr.then(function(){ return Armaz.remover('mensais', r.id); });
+    }, Promise.resolve());
+  }).then(function(){
+    var reg = registroDoMes(mes) || { id: mes, criadoEm: new Date().toISOString() };
+    reg.arquivadoEm = new Date().toISOString();
+    reg.fotosArquivadas = fotos.length;
+    if(!registroDoMes(mes)) estado.meses.push(reg);
+    return Armaz.salvar('meses', reg);
+  }).then(function(){
+    estado.mesAtivo = '';
+    return recarregar();
+  }).then(function(){
+    processando(false);
+    publicarVarios(arquivos);
+    mostrarMsg(mesPorExtenso(mes) + ' arquivado: o PDF e o backup estão abaixo, e as fotos saíram do aparelho. ' +
+               'Guarde os dois arquivos.', 'sucesso', true);
+  }).catch(function(e){
+    processando(false);
+    estado.mesAtivo = mesAnterior;
+    renderizar();
+    mostrarMsg('Não foi possível arquivar o mês: ' + msgErro(e) + ' Nada foi apagado.', 'erro', true);
+  });
 }
 
 /* ============================ GERAÇÃO DO PDF =========================
@@ -3810,10 +4115,14 @@ var CINZA_TARJA = [217,217,217];
 
 function gerarPDFMensal(Ctor){
   var cfg = estado.config;
+  if(!estado.mesAtivo){
+    mostrarMsg('Abra o mês que você quer imprimir — cada mês tem o seu relatório.', 'erro', true);
+    return;
+  }
   var itens = mensaisOrdenadas();
   var paginasFotos = paginasMensais();
   if(!itens.length){
-    mostrarMsg('Não há nada para gerar: nenhuma foto cadastrada na aba Mensal.', 'erro', true);
+    mostrarMsg('Não há nada para gerar: ' + mesPorExtenso(estado.mesAtivo) + ' está sem fotos.', 'erro', true);
     return;
   }
   if(!cfg.obra || !cfg.empresa){
@@ -3821,12 +4130,6 @@ function gerarPDFMensal(Ctor){
     abrirConfig('Preencha estes dados para poder gerar o PDF.');
     return;
   }
-  if(!cfg.mesRef){
-    mostrarMsg('Informe o mês de referência do relatório mensal — ele vira o período no cabeçalho.', 'erro', true);
-    abrirConfig('Escolha o mês de referência para poder gerar o relatório mensal.');
-    return;
-  }
-
   processando(true, 'Gerando o PDF…', 'Preparando as fotos.');
   $('btPdf').disabled = true;
 
@@ -3842,7 +4145,8 @@ function gerarPDFMensal(Ctor){
   }).then(function(res){
     processando(false);
     var auto = publicarArquivo(res.nome, res.blob,
-      'Relatório fotográfico mensal com ' + res.paginas + ' página(s) e ' + itens.length + ' foto(s). ' +
+      'Relatório de ' + mesPorExtenso(estado.mesAtivo) + ' com ' + res.paginas + ' página(s) e ' +
+      itens.length + ' foto(s). ' +
       'Se o download automático não abrir, use os botões abaixo.');
     mostrarMsg('PDF gerado com sucesso.' + (auto ? ' O download automático foi disparado.' : '') +
                (res.fotosComFalha ? ' Atenção: ' + res.fotosComFalha + ' foto(s) não puderam ser desenhadas.' : ''),
@@ -3941,7 +4245,7 @@ function montarPDFMensal(Ctor, paginasFotos){
     txt(doc.splitTextToSize(cfg.empresa, 26)[0], XI + WI - 29, yTexto);
 
     fonte('bold', 6.5, [0,0,0]);
-    txt('PERÍODO: ' + periodoDoMes(cfg.mesRef), XI + 3, Y_CAB + 24.7);
+    txt('PERÍODO: ' + periodoDoMes(estado.mesAtivo || cfg.mesRef), XI + 3, Y_CAB + 24.7);
 
     // fio fino separando o cabeçalho das fotos
     doc.setDrawColor(120,120,120); doc.setLineWidth(0.2);
@@ -4036,7 +4340,7 @@ function montarPDFMensal(Ctor, paginasFotos){
 
   var blob = doc.output('blob');
   if(!blob || !blob.size) throw new Error('o arquivo gerado ficou vazio');
-  return { blob: blob, nome: 'relatorio-fotografico-mensal-' + (cfg.mesRef || hojeISO()) + '.pdf',
+  return { blob: blob, nome: 'relatorio-fotografico-mensal-' + (estado.mesAtivo || cfg.mesRef || hojeISO()) + '.pdf',
            paginas: paginas, fotosComFalha: fotosComFalha };
 }
 
@@ -4234,10 +4538,14 @@ function abasDaPlanilha(){
   }
 
   if(estado.mensais.length){
-    var lm = [['Página','Posição','Descrição do serviço']];
-    var pags = paginasMensais();
-    pags.forEach(function(fotos, iP){
-      fotos.forEach(function(r, iF){ lm.push([iP + 1, iF + 1, r.descricao || '']); });
+    var lm = [['Mês','Página','Posição','Descrição do serviço']];
+    mesesDoRelatorio().forEach(function(m){
+      var guardado = estado.mesAtivo;
+      estado.mesAtivo = m.id;                        // agrupa por mês, um relatório de cada vez
+      paginasMensais().forEach(function(fotos, iP){
+        fotos.forEach(function(r, iF){ lm.push([mesPorExtenso(m.id), iP + 1, iF + 1, r.descricao || '']); });
+      });
+      estado.mesAtivo = guardado;
     });
     abas.push({ nome:'Relatório mensal', linhas: lm });
   }
@@ -4294,7 +4602,8 @@ function exportarBackup(){
       config: estado.config,
       registros: registrosOrdenados(),
       arvores: ordenarRegistros(estado.arvores),
-      mensais: mensaisOrdenadas(),
+      meses: estado.meses,
+      mensais: estado.mensais,
       ramais: ordenarRegistros(estado.ramais)
     };
     var texto = JSON.stringify(pacote);
@@ -4369,8 +4678,14 @@ function normalizarRamal(o){
 
 function normalizarMensal(o){
   if(!o || typeof o !== 'object') throw new Error('registro do relatório mensal inválido');
+  var mes = mesValido(o.mes) ? o.mes : '';
+  if(!mes){                                   // backup antigo: o mês vinha na configuração
+    var doCadastro = String(o.criadoEm || '').slice(0, 7);
+    mes = mesValido(doCadastro) ? doCadastro : mesAtualISO();
+  }
   return {
     id: String(o.id || novoId()),
+    mes: mes,
     foto: String(o.foto || ''),
     dim: o.dim && o.dim.w ? { w: o.dim.w, h: o.dim.h } : null,
     descricao: String(o.descricao || '').trim(),
@@ -4402,6 +4717,24 @@ function importarBackup(arq){
       var regs = (lista || []).map(normalizarRegistro);
       var arvs = listaArv.map(normalizarArvore);
       var mens = listaMen.map(normalizarMensal);
+      // registro dos meses: o mês cujas fotos voltam deixa de estar arquivado
+      var mesesVoltando = {};
+      mens.forEach(function(r){ mesesVoltando[r.mes] = true; });
+      var meses = ((dados && Array.isArray(dados.meses)) ? dados.meses : [])
+        .filter(function(m){ return m && mesValido(m.id); })
+        .map(function(m){
+          return {
+            id: m.id,
+            criadoEm: String(m.criadoEm || new Date().toISOString()),
+            arquivadoEm: mesesVoltando[m.id] ? '' : String(m.arquivadoEm || ''),
+            fotosArquivadas: mesesVoltando[m.id] ? 0 : (parseInt(m.fotosArquivadas, 10) || 0)
+          };
+        });
+      Object.keys(mesesVoltando).forEach(function(mes){        // mês sem registro no arquivo
+        if(!meses.some(function(m){ return m.id === mes; })){
+          meses.push({ id: mes, criadoEm: new Date().toISOString(), arquivadoEm: '', fotosArquivadas: 0 });
+        }
+      });
       var rams = listaRam.map(normalizarRamal);
       if(!regs.length && !arvs.length && !mens.length && !rams.length) throw new Error('o arquivo de backup está vazio');
 
@@ -4436,6 +4769,8 @@ function importarBackup(arq){
       }).then(function(){
         return Armaz.salvarVarios('mensais', mens);
       }).then(function(){
+        return meses.length ? Armaz.salvarVarios('meses', meses) : null;
+      }).then(function(){
         return Armaz.salvarVarios('ramais', rams);
       }).then(function(){
         if(!trocaCfg) return;
@@ -4464,7 +4799,7 @@ function importarBackup(arq){
 function ligarEventos(){
   $('fab').addEventListener('click', function(){
     if(estado.aba === 'arvore') abrirSheetArv(null);
-    else if(estado.aba === 'mensal') abrirSheetMensal(null);
+    else if(estado.aba === 'mensal'){ if(estado.mesAtivo) abrirSheetMensal(null); else novoMes(); }
     else if(estado.aba === 'ramal') abrirSheetRamal(null);
     else abrirSheet(null);
   });
@@ -4568,11 +4903,15 @@ function ligarEventos(){
     }
   });
 
+  $('resumoTopo').addEventListener('click', function(ev){
+    if(ev.target && ev.target.id === 'voltarMeses'){ ev.preventDefault(); voltarParaMeses(); }
+  });
+
   $('lista').addEventListener('click', function(ev){
     var cab = ev.target.closest ? ev.target.closest('.tituloRua') : null;
     if(cab){ alternarRua(cab.getAttribute('data-rua')); return; }
     var alvo = ev.target.closest ?
-      ev.target.closest('[data-editar],[data-excluir],[data-editar-arv],[data-excluir-arv],[data-editar-men],[data-excluir-men],[data-subir-men],[data-descer-men],[data-editar-ram],[data-excluir-ram]') : null;
+      ev.target.closest('[data-editar],[data-excluir],[data-editar-arv],[data-excluir-arv],[data-editar-men],[data-excluir-men],[data-subir-men],[data-descer-men],[data-editar-ram],[data-excluir-ram],[data-abrir-mes],[data-arquivar-mes],[data-excluir-mes]') : null;
     if(!alvo) return;
     var idEdR = alvo.getAttribute('data-editar-ram');
     var idExR = alvo.getAttribute('data-excluir-ram');
@@ -4587,6 +4926,12 @@ function ligarEventos(){
     var idDesce = alvo.getAttribute('data-descer-men');
     if(idSobe){ moverFotoMensal(idSobe, -1); return; }
     if(idDesce){ moverFotoMensal(idDesce, 1); return; }
+    var mesAbrir = alvo.getAttribute('data-abrir-mes');
+    if(mesAbrir){ abrirMes(mesAbrir); return; }
+    var mesArquivar = alvo.getAttribute('data-arquivar-mes');
+    if(mesArquivar){ arquivarMes(mesArquivar); return; }
+    var mesExcluir = alvo.getAttribute('data-excluir-mes');
+    if(mesExcluir){ excluirMes(mesExcluir); return; }
     var idEdM = alvo.getAttribute('data-editar-men');
     var idExM = alvo.getAttribute('data-excluir-men');
     if(idEdM){
@@ -4650,6 +4995,49 @@ function ligarEventos(){
 }
 
 /* ============================== INÍCIO =============================== */
+/* ========================= AVISO DE VERSÃO NOVA =====================
+   Aberto pelo link, o aplicativo compara a sua versão com a do arquivo
+   versao-campo.json publicado ao lado e oferece o botão de atualizar,
+   que busca a página nova em vez de usar a cópia guardada no cache.
+   ===================================================================== */
+function versaoMaisNova(publicada, atual){
+  function emNumero(v){
+    var p = String(v || '').split('/');
+    return p.length === 3 ? Number(p[2] + p[1].padStart(2,'0') + p[0].padStart(2,'0')) : 0;
+  }
+  var a = emNumero(publicada), b = emNumero(atual);
+  return (a && b) ? a > b : publicada !== atual;
+}
+
+var avisoVersaoNaTela = false;
+
+function verificarAtualizacao(){
+  if(location.protocol === 'file:') return;
+  fetch('versao-campo.json?cb=' + Date.now(), { cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if(!d || !d.versao || !versaoMaisNova(d.versao, VERSAO_APP) || avisoVersaoNaTela) return;
+      avisoVersaoNaTela = true;
+      var aviso = mostrarMsg('Existe uma versão mais nova do aplicativo (' + d.versao + '). ' +
+                             'Os seus cadastros e fotos não são afetados pela atualização.', 'info', true);
+      if(!aviso) return;
+      var bt = document.createElement('button');
+      bt.type = 'button';
+      bt.className = 'bt';
+      bt.style.marginTop = '8px';
+      bt.textContent = 'Atualizar agora';
+      bt.addEventListener('click', function(){
+        processando(true, 'Baixando a versão nova…', 'não feche o aplicativo');
+        fetch(location.href, { cache: 'reload' })
+          .then(function(){ location.reload(); })
+          .catch(function(){ location.reload(); });
+      });
+      var txt = aviso.querySelector('.txt');
+      if(txt){ txt.appendChild(document.createElement('br')); txt.appendChild(bt); }
+    })
+    .catch(function(){});            // sem internet ou sem o arquivo: segue a vida
+}
+
 function iniciar(){
   try{
     $('cData').value = hojeISO();
@@ -4681,6 +5069,10 @@ function iniciar(){
     };
     renderizarChips();
     marcarSalvo();
+    verificarAtualizacao();
+    document.addEventListener('visibilitychange', function(){
+      if(!document.hidden) verificarAtualizacao();     // ao voltar para o aplicativo
+    });
     return recarregar();
   }).catch(function(e){
     renderizarFaixaStatus();

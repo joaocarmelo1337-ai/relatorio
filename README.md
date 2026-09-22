@@ -10,7 +10,12 @@ Aplicativo web de campo com duas abas, cada uma com o seu relatório em PDF:
   etiqueta de identificação. Identidade em marrom, e o destinatário é você quem
   escreve em "Dados da obra".
 
-- **Mensal** — relatório fotográfico mensal de obra, no formato entregue à Prefeitura:
+- **Mensal** — relatório fotográfico mensal de obra, **um relatório por mês**: a aba abre
+  com a lista dos meses (setembro/2026 — 24 fotos, outubro/2026 — 8 fotos…), você entra no
+  mês para cadastrar as fotos e o PDF sai daquele mês. Mês entregue há mais de 3 meses
+  entra na fila de **Arquivar**, que gera o PDF e o backup do mês e tira as fotos do
+  aparelho, liberando espaço — o mês continua na lista, marcado como arquivado, e volta
+  inteiro se você importar o backup dele. No formato entregue à Prefeitura:
   A4 **paisagem**, 4 fotos por página com a descrição do serviço em tarja cinza, moldura
   verde, cabeçalho com brasão de quem recebe, logo da empresa, obra, empresa e período,
   e assinaturas no rodapé de todas as páginas. Aqui **não se pede rua nem data** — elas já

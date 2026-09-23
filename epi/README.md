@@ -45,6 +45,13 @@ Variáveis de ambiente: `SECRET_KEY`, `EPI_DATABASE` (caminho do arquivo do banc
 | `/epis` | Lista mestre de EPI/uniformes (adicionar, editar, ativar/desativar, excluir) |
 | `/configuracoes` | Nome da empresa, CNPJ e logo |
 
+## Onde isto se encaixa
+
+Esta é a versão com servidor do controle de EPI. A versão de campo (arquivo único) vive na
+raiz do repositório, em `epi.html`, e faz parte do aplicativo de campo: a tela inicial
+(`index.html`) reúne as obras (`campo.html`) e o EPI, com o cadastro da empresa num lugar
+só, compartilhado pelos dois.
+
 ## Configuração da empresa
 
 Nada de nome ou logo fixos no código: em **Configurações** você define o nome da

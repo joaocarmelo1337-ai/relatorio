@@ -1,6 +1,18 @@
-# Registro de Campo — Obra de pavimentação asfáltica
+# Registro de Campo e EPI
 
-Aplicativo web de campo com duas abas, cada uma com o seu relatório em PDF:
+Um aplicativo só, com duas áreas, para usar no celular em campo — sem instalar nada de
+loja, funcionando offline e com os dados gravados no próprio aparelho.
+
+- **`index.html`** — a tela de entrada: lista das obras, o atalho para o controle de EPI e
+  o cadastro da empresa (nome, CNPJ e logo), que vale para tudo.
+- **`campo.html`** — o aplicativo da obra aberta: esgoto, árvores, ramal e o relatório
+  mensal, cada obra no seu espaço.
+- **`epi.html`** — o controle de entrega de EPI, da empresa inteira.
+
+Dá para **instalar como aplicativo** (no menu do navegador, "Instalar aplicativo" ou
+"Adicionar à tela inicial"): as três telas ficam disponíveis mesmo sem sinal, porque um
+service worker guarda a última versão de cada uma. Com internet, a versão nova é buscada
+sozinha.
 
 - **Esgoto** — registro fotográfico de **hidrômetros** e **ligações de esgoto** que serão
   modificados pela obra, para entrega à concessionária **Águas Guariroba** (Campo Grande/MS).
@@ -52,15 +64,20 @@ arquivamento dos meses.
 
 ## Como usar
 
-1. Baixe o arquivo `index.html` para o celular (ou envie por e-mail/WhatsApp para você mesmo).
-2. Abra o arquivo no navegador. Depois de aberto, **funciona totalmente offline** —
-   não há nenhuma requisição externa (a biblioteca jsPDF está embutida no próprio arquivo).
-3. Toque em **Dados da obra e da empresa** e preencha o nome da obra, o nome da empresa e a logo
-   (uma vez só — fica salvo no aparelho).
-4. Escolha a aba (**Esgoto** ou **Árvores**) e toque no botão **+** para cadastrar.
-5. Ao final do levantamento, toque em **Gerar PDF** — cada aba gera o seu próprio relatório.
+1. Abra o endereço do aplicativo no celular (com o GitHub Pages ligado, é
+   `https://<usuário>.github.io/<repositório>/`).
+2. No menu do navegador, toque em **Instalar aplicativo** (ou **Adicionar à tela inicial**).
+   A partir daí ele abre pelo ícone e funciona mesmo sem sinal.
+3. Na tela de entrada, preencha os **dados da empresa** (nome, CNPJ e logo) — uma vez só,
+   valem para todas as obras e para o EPI.
+4. Crie a obra, entre nela e escolha a aba: **Esgoto**, **Árvores**, **Mensal** ou **Ramal**.
+   O botão **+** cadastra; **Gerar PDF** monta o relatório daquela aba.
+5. Para o controle de EPI, volte ao início e toque em **Controle de entrega de EPI**.
 
-Dica: no Android/iOS, use "Adicionar à tela de início" para abrir como um aplicativo.
+Também dá para usar sem servidor nenhum: baixe os arquivos `index.html`, `campo.html` e
+`epi.html` na mesma pasta do celular e abra o `index.html`. Nesse modo não há instalação
+como aplicativo nem aviso de versão nova, mas tudo o mais funciona — as bibliotecas estão
+embutidas nos próprios arquivos.
 
 ## O que o aplicativo faz
 

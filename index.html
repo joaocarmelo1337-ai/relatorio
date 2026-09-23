@@ -230,21 +230,21 @@ main#lista{padding:4px 10px}
   opacity:0;pointer-events:none;transition:opacity .22s ease;
 }
 #fundoEscuro.aberto{opacity:1;pointer-events:auto}
-#sheet, #sheetConfig, #sheetArv, #sheetMensal, #sheetRamal{
+#sheet, #sheetConfig, #sheetArv, #sheetMensal, #sheetRamal, #sheetObras{
   position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--fundo);
   border-radius:16px 16px 0 0;box-shadow:0 -6px 22px rgba(0,0,0,.25);
   max-height:94vh;display:flex;flex-direction:column;
   transform:translateY(100%);transition:transform .28s cubic-bezier(.22,.68,.36,1);
 }
-#sheet.aberto, #sheetConfig.aberto, #sheetArv.aberto, #sheetMensal.aberto, #sheetRamal.aberto{transform:translateY(0)}
-#sheet .puxador, #sheetConfig .puxador, #sheetArv .puxador, #sheetMensal .puxador, #sheetRamal .puxador{width:42px;height:4px;background:#c8cfc9;border-radius:4px;margin:8px auto 2px}
-#sheet .topo, #sheetConfig .topo, #sheetArv .topo, #sheetMensal .topo, #sheetRamal .topo{
+#sheet.aberto, #sheetConfig.aberto, #sheetArv.aberto, #sheetMensal.aberto, #sheetRamal.aberto, #sheetObras.aberto{transform:translateY(0)}
+#sheet .puxador, #sheetConfig .puxador, #sheetArv .puxador, #sheetMensal .puxador, #sheetRamal .puxador, #sheetObras .puxador{width:42px;height:4px;background:#c8cfc9;border-radius:4px;margin:8px auto 2px}
+#sheet .topo, #sheetConfig .topo, #sheetArv .topo, #sheetMensal .topo, #sheetRamal .topo, #sheetObras .topo{
   display:flex;justify-content:space-between;align-items:center;
   padding:6px 14px 10px;border-bottom:1px solid var(--borda);
 }
-#sheet .topo h2, #sheetConfig .topo h2, #sheetArv .topo h2, #sheetMensal .topo h2, #sheetRamal .topo h2{margin:0;font-size:16px;color:var(--escuro)}
-#sheet .topo button, #sheetConfig .topo button, #sheetArv .topo button, #sheetMensal .topo button, #sheetRamal .topo button{background:none;border:none;font-size:24px;color:var(--suave);font-family:inherit;padding:0 4px}
-#sheet .conteudo, #sheetConfig .conteudo, #sheetArv .conteudo, #sheetMensal .conteudo, #sheetRamal .conteudo{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 16px}
+#sheet .topo h2, #sheetConfig .topo h2, #sheetArv .topo h2, #sheetMensal .topo h2, #sheetRamal .topo h2, #sheetObras .topo h2{margin:0;font-size:16px;color:var(--escuro)}
+#sheet .topo button, #sheetConfig .topo button, #sheetArv .topo button, #sheetMensal .topo button, #sheetRamal .topo button, #sheetObras .topo button{background:none;border:none;font-size:24px;color:var(--suave);font-family:inherit;padding:0 4px}
+#sheet .conteudo, #sheetConfig .conteudo, #sheetArv .conteudo, #sheetMensal .conteudo, #sheetRamal .conteudo, #sheetObras .conteudo{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 16px}
 #sheet .rodape, #sheetConfig .rodape, #sheetArv .rodape, #sheetMensal .rodape, #sheetRamal .rodape{
   padding:10px 14px;padding-bottom:calc(10px + env(safe-area-inset-bottom));
   border-top:1px solid var(--borda);background:#fff;display:flex;gap:8px;
@@ -306,6 +306,28 @@ main#lista{padding:4px 10px}
 @keyframes girar{to{transform:rotate(360deg)}}
 #overlayProc .txt{font-weight:700;color:var(--escuro);font-size:14.5px}
 #overlayProc .sub{font-size:12.5px;color:var(--suave)}
+.btObra{
+  display:inline-flex;align-items:center;gap:6px;margin:3px 0 2px;padding:4px 10px;
+  background:rgba(255,255,255,.16);border:none;border-radius:999px;color:#fff;
+  font-family:inherit;font-size:12.5px;font-weight:700;max-width:100%;
+}
+.btObra span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btObra .seta{opacity:.8;font-size:11px}
+.cardObra{border:1px solid var(--borda);border-radius:12px;padding:12px;margin-bottom:10px;background:#fff}
+.cardObra.ativa{border-color:var(--azul);box-shadow:0 0 0 2px rgba(47,111,143,.15)}
+.cardObra .nomeObra{font-weight:700;color:var(--escuro)}
+.cardObra .detObra{font-size:12px;color:var(--suave);margin-top:2px}
+.cardObra .btsObra{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.cardObra .btsObra button{
+  flex:1 1 auto;padding:9px 12px;border-radius:9px;border:1px solid var(--borda);
+  background:#fff;font-family:inherit;font-size:13px;font-weight:600;color:var(--texto);
+}
+.cardObra .btsObra button.principal{background:var(--azul);border-color:var(--azul);color:#fff}
+.cardObra .btsObra button.ex{color:var(--vermelho);border-color:#f0c4bf}
+.linkObra{
+  display:block;width:100%;margin-top:8px;padding:8px;border:1px dashed var(--borda);
+  border-radius:9px;font-size:11.5px;color:var(--suave);word-break:break-all;background:#fafbfa;
+}
 footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:var(--suave)}
 .versaoApp{margin-top:6px;font-size:10.5px;opacity:.8}
 </style>
@@ -316,6 +338,9 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
   <div class="cabTopo">
     <div class="cabTxt">
       <div class="tit">Registro de Campo</div>
+      <button type="button" id="btObra" class="btObra">
+        <span id="nomeObraCab">Obra</span><span class="seta">&#9662;</span>
+      </button>
       <div class="sub" id="subCab">Hidrômetros e ligações de esgoto &mdash; Águas Guariroba (Campo Grande/MS)</div>
     </div>
     <button type="button" id="estadoSalvo" class="estadoSalvo" aria-live="polite">
@@ -661,6 +686,30 @@ footer.rodapeApp{padding:18px 14px 6px;text-align:center;font-size:11px;color:va
   <div class="rodape">
     <button type="button" class="bt" id="btCancelarMen">Cancelar</button>
     <button type="button" class="bt bt-prim" id="btSalvarMen">Salvar foto</button>
+  </div>
+</section>
+
+<section id="sheetObras" aria-hidden="true">
+  <div class="puxador"></div>
+  <div class="topo">
+    <h2>Obras</h2>
+    <button type="button" id="btFecharObras" aria-label="Fechar">&times;</button>
+  </div>
+  <div class="conteudo">
+    <div class="ajuda" style="margin-bottom:10px">
+      Cada obra tem o seu próprio espaço no aparelho: casas, árvores, ramais e os meses do
+      relatório ficam separados. Você pode deixar um ícone para cada obra na tela do celular.
+    </div>
+    <div id="listaObras"></div>
+    <div class="campo" style="margin-top:14px">
+      <label for="cNovaObra">Nova obra</label>
+      <input type="text" id="cNovaObra" autocomplete="off" placeholder="Ex.: Pavimentação Jardim Aeroporto">
+    </div>
+    <button type="button" class="bt bt-escuro" id="btCriarObra" style="width:100%">Criar obra</button>
+    <div class="ajuda" style="margin-top:10px">
+      A nova obra já começa com os dados da empresa preenchidos (nome, CNPJ, logo e
+      responsáveis). O que muda é o nome da obra, o contrato e os registros.
+    </div>
   </div>
 </section>
 
@@ -1204,13 +1253,110 @@ var COR_PDF = {'Mantido':[46,125,50],'A remanejar':[230,126,34],'Danificado':[19
                'Já remanejado':[127,140,141],'Não localizado':[142,68,173],'Não instalado':[52,73,94]};
 var LIMITE_FOTO = 900 * 1024;         // ~900 KB por foto
 var LIMITE_LOGO = 500 * 1024;         // ~500 KB para a logo
-var VERSAO_APP = '22/09/2026';       // atualizada a cada publicação
+var VERSAO_APP = '23/09/2026';       // atualizada a cada publicação
 var CHAVE_LS = 'aguasguariroba_registros_v1';
 var CHAVE_LS_ARV = 'aguasguariroba_arvores_v1';
 var CHAVE_LS_MEN = 'aguasguariroba_mensais_v1';
 var CHAVE_LS_MESES = 'aguasguariroba_meses_v1';
 var CHAVE_LS_RAM = 'aguasguariroba_ramais_v1';
 var CHAVE_LS_CFG = 'aguasguariroba_config_v1';
+var CHAVE_LS_OBRAS = 'campo_obras_v1';
+var CHAVE_LS_EMPRESA = 'campo_empresa_v1';
+
+/* =============================== OBRAS ==============================
+   Cada obra é um espaço separado: tem o seu próprio banco no aparelho,
+   e o aplicativo carrega só a obra aberta. No celular, cada obra pode
+   ganhar o seu ícone (o mesmo endereço com ?obra=… no fim).
+   A obra que já existia entra como "principal", sem mexer nos dados.
+   ===================================================================== */
+var Obras = {
+  lista: [],
+  ativaId: '',
+  gravou: true,        // false quando o navegador não deixou guardar a lista
+
+  padrao: function(){
+    return { id:'principal', nome:'', banco:'aguasguariroba_db', prefixo:'', criadoEm:'' };
+  },
+
+  carregar: function(){
+    var dados = null;
+    try{ dados = JSON.parse(localStorage.getItem(CHAVE_LS_OBRAS) || 'null'); }
+    catch(e){ dados = null; }
+    if(!dados || !Array.isArray(dados.lista) || !dados.lista.length){
+      this.lista = [this.padrao()];
+      this.ativaId = 'principal';
+      this.gravar();
+    }else{
+      this.lista = dados.lista;
+      this.ativaId = dados.ativa || this.lista[0].id;
+    }
+    // a obra pedida no endereço manda (é assim que cada ícone abre a sua)
+    var pedida = (location.search.match(/[?&]obra=([^&]+)/) || [])[1];
+    if(pedida){
+      pedida = decodeURIComponent(pedida);
+      if(this.lista.some(function(o){ return o.id === pedida; })) this.ativaId = pedida;
+    }
+    if(!this.lista.some(function(o){ return o.id === this.ativaId; }, this)) this.ativaId = this.lista[0].id;
+    this.gravar();
+    return this.ativa();
+  },
+
+  gravar: function(){
+    try{
+      localStorage.setItem(CHAVE_LS_OBRAS, JSON.stringify({ ativa: this.ativaId, lista: this.lista }));
+      this.gravou = true;
+    }catch(e){ this.gravou = false; }
+  },
+
+  ativa: function(){
+    var id = this.ativaId;
+    return this.lista.filter(function(o){ return o.id === id; })[0] || this.lista[0] || this.padrao();
+  },
+
+  nomeDa: function(o){
+    return (o && o.nome) || 'Obra sem nome';
+  },
+
+  criar: function(nome){
+    var id = 'obra_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+    var nova = { id: id, nome: String(nome || '').trim(), banco: 'campo_' + id,
+                 prefixo: id + '_', criadoEm: new Date().toISOString() };
+    this.lista.push(nova);
+    this.gravar();
+    return nova;
+  },
+
+  renomear: function(id, nome){
+    this.lista.forEach(function(o){ if(o.id === id) o.nome = String(nome || '').trim(); });
+    this.gravar();
+  },
+
+  remover: function(id){
+    var obra = this.lista.filter(function(o){ return o.id === id; })[0];
+    this.lista = this.lista.filter(function(o){ return o.id !== id; });
+    if(!this.lista.length) this.lista = [this.padrao()];
+    if(this.ativaId === id) this.ativaId = this.lista[0].id;
+    this.gravar();
+    if(!obra) return;
+    // apaga o banco e as chaves daquela obra
+    try{ if(window.indexedDB && obra.banco) indexedDB.deleteDatabase(obra.banco); }catch(e){}
+    if(obra.prefixo){
+      try{
+        Object.keys(localStorage).forEach(function(k){
+          if(k.indexOf(obra.prefixo) === 0) localStorage.removeItem(k);
+        });
+      }catch(e){}
+    }
+  },
+
+  enderecoDa: function(id){
+    return location.origin + location.pathname + '?obra=' + encodeURIComponent(id);
+  }
+};
+
+/* Chave de armazenamento da obra aberta (a obra principal mantém as chaves
+   antigas, para os dados já gravados continuarem no lugar). */
+function chaveLS(base){ return Obras.ativa().prefixo + base; }
 
 // As duas coleções: ligações de esgoto/hidrômetros e árvores cortadas.
 var COLECOES = {
@@ -1374,7 +1520,7 @@ var Armaz = {
         if(!pronto) rej(new Error('tempo esgotado ao abrir o banco de dados'));
       }, 8000);
       var req;
-      try{ req = indexedDB.open('aguasguariroba_db', 5); }
+      try{ req = indexedDB.open(Obras.ativa().banco || 'aguasguariroba_db', 5); }
       catch(e){ clearTimeout(t); rej(e); return; }
       req.onupgradeneeded = function(ev){
         var db = ev.target.result;
@@ -1429,8 +1575,8 @@ var Armaz = {
         localStorage.setItem('__teste__', valor);
         if(localStorage.getItem('__teste__') !== valor) throw new Error('o valor gravado não foi lido de volta');
         localStorage.removeItem('__teste__');
-        if(!localStorage.getItem(CHAVE_LS)) localStorage.setItem(CHAVE_LS, '[]');
-        JSON.parse(localStorage.getItem(CHAVE_LS));
+        if(!localStorage.getItem(chaveLS(CHAVE_LS))) localStorage.setItem(chaveLS(CHAVE_LS), '[]');
+        JSON.parse(localStorage.getItem(chaveLS(CHAVE_LS)));
         self.db = null;
         self.modo = 'localstorage';
         self.detalhe = 'Armazenamento alternativo (localStorage) — espaço limitado (~5 MB). ' +
@@ -1453,7 +1599,7 @@ var Armaz = {
     }
     if(self.modo === 'localstorage'){
       return new Promise(function(res, rej){
-        try{ res(JSON.parse(localStorage.getItem(d.ls) || '[]') || []); }
+        try{ res(JSON.parse(localStorage.getItem(chaveLS(d.ls)) || '[]') || []); }
         catch(e){ rej(new Error('backup local corrompido: ' + msgErro(e))); }
       });
     }
@@ -1464,7 +1610,7 @@ var Armaz = {
   gravarLS: function(col, lista){
     var d = COLECOES[col || 'registros'];
     try{
-      localStorage.setItem(d.ls, JSON.stringify(lista));
+      localStorage.setItem(chaveLS(d.ls), JSON.stringify(lista));
     }catch(e){
       var nome = (e && e.name) || '';
       if(nome === 'QuotaExceededError' || nome === 'NS_ERROR_DOM_QUOTA_REACHED' || /quota/i.test(msgErro(e))){
@@ -1516,7 +1662,7 @@ var Armaz = {
     }
     if(self.modo === 'localstorage'){
       return new Promise(function(res){
-        try{ res(JSON.parse(localStorage.getItem(CHAVE_LS_CFG) || 'null')); }
+        try{ res(JSON.parse(localStorage.getItem(chaveLS(CHAVE_LS_CFG)) || 'null')); }
         catch(e){ res(null); }
       });
     }
@@ -1531,7 +1677,7 @@ var Armaz = {
     }
     if(self.modo === 'localstorage'){
       return new Promise(function(res, rej){
-        try{ localStorage.setItem(CHAVE_LS_CFG, JSON.stringify(cfg)); res(); }
+        try{ localStorage.setItem(chaveLS(CHAVE_LS_CFG), JSON.stringify(cfg)); res(); }
         catch(e){
           rej(new Error('não coube no armazenamento alternativo. Tente uma logo menor. (' + msgErro(e) + ')'));
         }
@@ -1598,7 +1744,7 @@ function lerTextosGravados(){
   }
   if(self.modo === 'localstorage'){
     return new Promise(function(res){
-      try{ res(JSON.parse(localStorage.getItem(CHAVE_LS_TXT) || 'null')); }catch(e){ res(null); }
+      try{ res(JSON.parse(localStorage.getItem(chaveLS(CHAVE_LS_TXT)) || 'null')); }catch(e){ res(null); }
     });
   }
   return Promise.resolve(Armaz.memTextos || null);
@@ -1611,7 +1757,7 @@ function gravarTextos(t){
   }
   if(self.modo === 'localstorage'){
     return new Promise(function(res){
-      try{ localStorage.setItem(CHAVE_LS_TXT, JSON.stringify(t)); }catch(e){}
+      try{ localStorage.setItem(chaveLS(CHAVE_LS_TXT), JSON.stringify(t)); }catch(e){}
       res();
     });
   }
@@ -2131,6 +2277,141 @@ function renderizarListaMensal(){
     html += '</div>';
   });
   cx.innerHTML = html;
+}
+
+/* ---------------------------- tela das obras ------------------------- */
+function nomeDaObraAtiva(){
+  var o = Obras.ativa();
+  return o.nome || (estado.config && estado.config.obra) || 'Obra sem nome';
+}
+
+function renderizarCabecalhoObra(){
+  try{
+    $('nomeObraCab').textContent = nomeDaObraAtiva();
+    $('btObra').title = 'Obra aberta: ' + nomeDaObraAtiva() + ' — toque para trocar';
+  }catch(e){}
+}
+
+function abrirObras(){
+  renderizarListaObras();
+  $('cNovaObra').value = '';
+  $('sheetObras').classList.add('aberto');
+  $('sheetObras').setAttribute('aria-hidden','false');
+}
+
+function fecharObras(){
+  $('sheetObras').classList.remove('aberto');
+  $('sheetObras').setAttribute('aria-hidden','true');
+}
+
+function renderizarListaObras(){
+  var ativa = Obras.ativa();
+  var html = Obras.lista.map(function(o){
+    var eAtiva = o.id === ativa.id;
+    var nome = o.nome || (eAtiva ? (estado.config.obra || 'Obra sem nome') : 'Obra sem nome');
+    return '<div class="cardObra' + (eAtiva ? ' ativa' : '') + '">' +
+      '<div class="nomeObra">' + esc(nome) + (eAtiva ? ' — aberta agora' : '') + '</div>' +
+      '<div class="detObra">' + (o.id === 'principal' ? 'Obra original deste aparelho' :
+        'Criada em ' + esc(dataBR(String(o.criadoEm || '').slice(0,10)))) + '</div>' +
+      '<div class="btsObra">' +
+        (eAtiva ? '' : '<button type="button" class="principal" data-abrir-obra="' + esc(o.id) + '">Abrir</button>') +
+        '<button type="button" data-renomear-obra="' + esc(o.id) + '">Renomear</button>' +
+        '<button type="button" data-link-obra="' + esc(o.id) + '">Ícone no celular</button>' +
+        (Obras.lista.length > 1 ? '<button type="button" class="ex" data-excluir-obra="' + esc(o.id) + '">Excluir</button>' : '') +
+      '</div>' +
+      '<div class="linkObra" id="link_' + esc(o.id) + '" style="display:none"></div>' +
+    '</div>';
+  }).join('');
+  $('listaObras').innerHTML = html;
+  if(!Obras.gravou){
+    $('listaObras').innerHTML += '<div class="ajuda" style="color:var(--vermelho)">' +
+      'Este navegador não deixou guardar a lista de obras — ela pode se perder ao fechar.</div>';
+  }
+}
+
+/* Trocar de obra recarrega a página com a obra no endereço: assim o
+   aplicativo abre o banco certo, sem sobra de dados da obra anterior. */
+function abrirObra(id){
+  if(id === Obras.ativa().id){ fecharObras(); return; }
+  Obras.ativaId = id;
+  Obras.gravar();
+  location.href = location.pathname + '?obra=' + encodeURIComponent(id);
+}
+
+function criarObra(){
+  var nome = ($('cNovaObra').value || '').trim();
+  if(!nome){
+    mostrarMsg('Dê um nome para a obra nova.', 'erro', true);
+    $('cNovaObra').focus();
+    return;
+  }
+  var nova = Obras.criar(nome);
+  guardarDadosDaEmpresa(estado.config);          // a nova obra herda a empresa
+  abrirObra(nova.id);
+}
+
+function renomearObra(id){
+  var o = Obras.lista.filter(function(x){ return x.id === id; })[0];
+  if(!o) return;
+  var atual = o.nome || (id === Obras.ativa().id ? estado.config.obra : '');
+  var novo = prompt('Nome da obra:', atual || '');
+  if(novo === null) return;
+  novo = String(novo).trim();
+  if(!novo){ mostrarMsg('O nome não pode ficar vazio.', 'erro', true); return; }
+  Obras.renomear(id, novo);
+  renderizarListaObras();
+  renderizarCabecalhoObra();
+  mostrarMsg('Obra renomeada para ' + novo + '.', 'sucesso');
+}
+
+function mostrarLinkObra(id){
+  var caixa = $('link_' + id);
+  if(!caixa) return;
+  if(caixa.style.display !== 'none'){ caixa.style.display = 'none'; return; }
+  var endereco = Obras.enderecoDa(id);
+  caixa.innerHTML = 'Abra este endereço no celular e use <b>Adicionar à tela inicial</b>. ' +
+    'O ícone abre direto nesta obra.<br><br>' + esc(endereco);
+  caixa.style.display = 'block';
+  try{
+    if(navigator.clipboard && location.protocol !== 'file:') navigator.clipboard.writeText(endereco);
+  }catch(e){}
+}
+
+function excluirObra(id){
+  var o = Obras.lista.filter(function(x){ return x.id === id; })[0];
+  if(!o) return;
+  var nome = o.nome || 'esta obra';
+  if(!confirm('Excluir ' + nome + '?\n\nTodos os registros dela neste aparelho serão apagados: ' +
+              'casas, árvores, ramais e os meses do relatório.\n\nExporte o backup antes se houver dúvida. ' +
+              'Isso não pode ser desfeito.')) return;
+  if(!confirm('Tem certeza? ' + nome + ' será apagada deste aparelho.')) return;
+  var eraAtiva = id === Obras.ativa().id;
+  Obras.remover(id);
+  if(eraAtiva){
+    location.href = location.pathname + '?obra=' + encodeURIComponent(Obras.ativa().id);
+    return;
+  }
+  renderizarListaObras();
+  mostrarMsg(nome + ' foi excluída deste aparelho.', 'sucesso');
+}
+
+/* Os dados da empresa são os mesmos em todas as obras: ficam guardados à
+   parte e entram prontos quando uma obra nova é criada. */
+var CAMPOS_DA_EMPRESA = ['empresa','cnpj','logo','logoTipo','logoDim','resp','crea',
+                         'dono','donoCrea','fiscal','fiscalCrea','brasao','brasaoTipo','brasaoDim',
+                         'municipio','concessionaria'];
+
+function guardarDadosDaEmpresa(cfg){
+  try{
+    var dados = {};
+    CAMPOS_DA_EMPRESA.forEach(function(k){ if(cfg[k]) dados[k] = cfg[k]; });
+    localStorage.setItem(CHAVE_LS_EMPRESA, JSON.stringify(dados));
+  }catch(e){}
+}
+
+function dadosDaEmpresaGuardados(){
+  try{ return JSON.parse(localStorage.getItem(CHAVE_LS_EMPRESA) || 'null'); }
+  catch(e){ return null; }
 }
 
 /* ------------------------- ações sobre um mês ------------------------ */
@@ -3131,7 +3412,10 @@ function salvarConfig(){
     Armaz.salvarConfig(cfg).then(function(){
       marcarSalvo();
       estado.config = cfg;
-      renderizar();          // o resumo do topo depende do mês de referência
+      if(cfg.obra) Obras.renomear(Obras.ativa().id, cfg.obra);   // a lista de obras acompanha
+      guardarDadosDaEmpresa(cfg);                                // a empresa vale para todas
+      renderizarCabecalhoObra();
+      renderizar();
       fecharConfig();
       mostrarMsg('Dados da obra salvos.', 'sucesso');
     }).catch(function(e){
@@ -4588,6 +4872,10 @@ function gerarPlanilha(){
 }
 
 /* =========================== BACKUP JSON ============================ */
+function semAcentoSimples(t){
+  return String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
 function exportarBackup(){
   try{
     if(!estado.registros.length && !estado.arvores.length && !estado.mensais.length && !estado.ramais.length){
@@ -4598,6 +4886,7 @@ function exportarBackup(){
       aplicativo: 'registro-interferencias-aguas-guariroba',
       versao: 5,
       exportadoEm: new Date().toISOString(),
+      obra: { id: Obras.ativa().id, nome: nomeDaObraAtiva() },
       total: estado.registros.length + estado.arvores.length + estado.mensais.length + estado.ramais.length,
       config: estado.config,
       registros: registrosOrdenados(),
@@ -4608,7 +4897,9 @@ function exportarBackup(){
     };
     var texto = JSON.stringify(pacote);
     var blob = new Blob([texto], { type: 'application/json' });
-    var nome = 'backup-interferencias-' + hojeISO() + '.json';
+    var apelido = semAcentoSimples(nomeDaObraAtiva()).toLowerCase()
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40) || 'obra';
+    var nome = 'backup-' + apelido + '-' + hojeISO() + '.json';
     var auto = publicarArquivo(nome, blob,
       'Backup com ' + estado.registros.length + ' casa(s), ' + estado.arvores.length +
       ' árvore(s), ' + estado.mensais.length + ' foto(s) do mensal, ' + estado.ramais.length +
@@ -4803,6 +5094,24 @@ function ligarEventos(){
     else if(estado.aba === 'ramal') abrirSheetRamal(null);
     else abrirSheet(null);
   });
+  $('btObra').addEventListener('click', abrirObras);
+  $('btFecharObras').addEventListener('click', fecharObras);
+  $('btCriarObra').addEventListener('click', criarObra);
+  $('cNovaObra').addEventListener('keydown', function(ev){ if(ev.key === 'Enter') criarObra(); });
+  $('listaObras').addEventListener('click', function(ev){
+    var alvo = ev.target.closest ?
+      ev.target.closest('[data-abrir-obra],[data-renomear-obra],[data-link-obra],[data-excluir-obra]') : null;
+    if(!alvo) return;
+    var abrir = alvo.getAttribute('data-abrir-obra');
+    if(abrir){ abrirObra(abrir); return; }
+    var renomear = alvo.getAttribute('data-renomear-obra');
+    if(renomear){ renomearObra(renomear); return; }
+    var link = alvo.getAttribute('data-link-obra');
+    if(link){ mostrarLinkObra(link); return; }
+    var excluir = alvo.getAttribute('data-excluir-obra');
+    if(excluir){ excluirObra(excluir); return; }
+  });
+
   var abas = document.querySelectorAll('#abas .aba');
   for(var i=0;i<abas.length;i++){
     abas[i].addEventListener('click', function(){ trocarAba(this.getAttribute('data-aba')); });
@@ -5048,6 +5357,9 @@ function iniciar(){
     try{ alert('Falha ao iniciar a interface: ' + msgErro(e)); }catch(e2){}
     return;
   }
+  try{ Obras.carregar(); renderizarCabecalhoObra(); }
+  catch(e){ mostrarMsg('Não foi possível ler a lista de obras: ' + msgErro(e), 'erro', true); }
+
   Armaz.iniciar().then(function(){
     renderizarFaixaStatus();
     if(Armaz.modo === 'memoria'){
@@ -5060,7 +5372,21 @@ function iniciar(){
     }
     return Armaz.lerConfig();
   }).then(function(cfg){
-    if(cfg) estado.config = Object.assign({}, CFG_PADRAO, cfg);
+    if(cfg){
+      estado.config = Object.assign({}, CFG_PADRAO, cfg);
+    }else{
+      // obra nova: já entra com os dados da empresa que valem para todas
+      var empresa = dadosDaEmpresaGuardados();
+      if(empresa){
+        estado.config = Object.assign({}, CFG_PADRAO, empresa, { obra: Obras.ativa().nome || '' });
+      }else if(Obras.ativa().nome){
+        estado.config = Object.assign({}, CFG_PADRAO, { obra: Obras.ativa().nome });
+      }
+    }
+    if(!Obras.ativa().nome && estado.config.obra){
+      Obras.renomear(Obras.ativa().id, estado.config.obra);      // obra que já existia
+    }
+    renderizarCabecalhoObra();
     return lerTextosGravados();
   }).then(function(txt){
     estado.textos = {

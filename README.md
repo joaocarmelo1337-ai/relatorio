@@ -30,6 +30,26 @@ Aplicativo web de campo com duas abas, cada uma com o seu relatório em PDF:
 A cor da tela inteira muda conforme a aba, para não haver dúvida sobre onde se está
 cadastrando.
 
+## Obras
+
+O aplicativo guarda **uma obra de cada vez**, e cada obra tem o seu próprio espaço no
+aparelho: casas, árvores, ramais e os meses do relatório ficam separados, e o app carrega
+só a obra aberta. O nome da obra aberta aparece no cabeçalho — toque nele para ver a lista,
+criar outra obra, renomear ou excluir.
+
+Cada obra tem o seu endereço (`index.html?obra=…`), então dá para deixar **um ícone por obra**
+na tela do celular: abra o endereço da obra, use "Adicionar à tela inicial" e aquele ícone
+sempre abre naquela obra. O botão **Ícone no celular**, na lista de obras, mostra e copia
+o endereço certo.
+
+Os **dados da empresa** (nome, CNPJ, logo, responsáveis) valem para todas as obras: são
+preenchidos uma vez e entram prontos em cada obra nova. O que muda de obra para obra é o
+nome da obra, o contrato e os registros.
+
+Um aviso honesto sobre espaço: separar por obra deixa o aplicativo mais leve e organizado,
+mas o celular tem uma cota só para o endereço todo. Quem controla o espaço de verdade é o
+arquivamento dos meses.
+
 ## Como usar
 
 1. Baixe o arquivo `index.html` para o celular (ou envie por e-mail/WhatsApp para você mesmo).

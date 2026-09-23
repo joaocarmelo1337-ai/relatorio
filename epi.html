@@ -2944,7 +2944,13 @@ function iniciar(){
   }).then(function(r){
     if(r[0]) estado.cfg = Object.assign({}, CFG_PADRAO, r[0]);
     var empresa = lerEmpresaCompartilhada();
-    if(empresa) estado.cfg = Object.assign({}, estado.cfg, empresa);   // cadastro único da empresa
+    if(empresa && empresa.empresa){
+      estado.cfg = Object.assign({}, estado.cfg, empresa);       // cadastro único da empresa
+    }else if(estado.cfg.empresa){
+      // primeira abertura depois da atualização: a empresa que já estava cadastrada
+      // aqui passa a valer para a tela inicial e para os relatórios de obra
+      gravarEmpresaCompartilhada(estado.cfg);
+    }
     if(r[1]) estado.meta = Object.assign({ ultimoBackup:'' }, r[1]);
     estado.funcionarios = r[2] || [];
     estado.epis = r[3] || [];

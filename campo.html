@@ -5404,9 +5404,13 @@ function iniciar(){
       }
     }
     var empresaGuardada = dadosDaEmpresaGuardados();
-    if(empresaGuardada){
+    if(empresaGuardada && empresaGuardada.empresa){
       // a empresa é cadastrada num lugar só (tela inicial) e vale para todas as obras
       estado.config = Object.assign({}, estado.config, empresaGuardada);
+    }else if(estado.config.empresa){
+      // primeira abertura depois da atualização: a empresa que já estava cadastrada
+      // aqui passa a valer para a tela inicial, para as outras obras e para o EPI
+      guardarDadosDaEmpresa(estado.config);
     }
     if(!Obras.ativa().nome && estado.config.obra){
       Obras.renomear(Obras.ativa().id, estado.config.obra);      // obra que já existia

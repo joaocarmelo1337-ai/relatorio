@@ -1265,7 +1265,7 @@ var COR_PDF = {'Mantido':[46,125,50],'A remanejar':[230,126,34],'Danificado':[19
                'Já remanejado':[127,140,141],'Não localizado':[142,68,173],'Não instalado':[52,73,94]};
 var LIMITE_FOTO = 900 * 1024;         // ~900 KB por foto
 var LIMITE_LOGO = 500 * 1024;         // ~500 KB para a logo
-var VERSAO_APP = '23/09/2026';       // atualizada a cada publicação
+var VERSAO_APP = '27/09/2026';       // atualizada a cada publicação
 var CHAVE_LS = 'aguasguariroba_registros_v1';
 var CHAVE_LS_ARV = 'aguasguariroba_arvores_v1';
 var CHAVE_LS_MEN = 'aguasguariroba_mensais_v1';
@@ -4076,14 +4076,59 @@ function montarPDF(Ctor, grupos, todos, perfil){
     });
     yy += 24;
 
-    var yData = Math.min(268, Math.max(252, yy + 26));
-    fonte('normal', 10, C_TEXTO);
-    txtC(cfg.municipio + ', ' + dataExtenso() + '.', yData);
+    /* Faixa de fecho: fica presa ao pé da capa, para a página não terminar
+       com um vazio grande embaixo do quadro de números. */
+    var yFaixa = 249, altFaixa = 34;
+    setF([248,249,247]); setD(C_LINHA);
+    doc.rect(M, yFaixa, UTIL, altFaixa, 'FD');
+    setF(COR); doc.rect(M, yFaixa, 2.6, altFaixa, 'F');
+
+    var xf = M + 8;
+    fonte('bold', 7.2, C_CINZA);
+    txt('RESPONSÁVEL TÉCNICO', xf, yFaixa + 7);
+    fonte('bold', 10, C_ESCURO);
+    txt(corta(cfg.resp || cfg.empresa, UTIL - 80), xf, yFaixa + 13.4);
+    if(cfg.crea){
+      fonte('normal', 8.6, C_CINZA);
+      txt(cfg.crea, xf, yFaixa + 18.6);
+    }
+    fonte('normal', 9.2, C_TEXTO);
+    txt(cfg.municipio + ', ' + dataExtenso() + '.', xf, yFaixa + 27.6);
+
+    fonte('bold', 7.2, C_CINZA);
+    txt('EXECUÇÃO', M + UTIL - 8, yFaixa + 7, {align:'right'});
+    fonte('bold', 9.4, C_ESCURO);
+    txt(corta(cfg.empresa, 74), M + UTIL - 8, yFaixa + 13.4, {align:'right'});
+    if(cfg.cnpj){
+      fonte('normal', 8.6, C_CINZA);
+      txt('CNPJ ' + cfg.cnpj, M + UTIL - 8, yFaixa + 18.6, {align:'right'});
+    }
   }
 
-  /* --------------------------- BLOCO DO ITEM -------------------------- */
+  /* ------------------------- FICHA DE CADA REGISTRO --------------------
+     Cada registro sai num cartão: cabeçalho com a identificação, as fotos
+     em molduras do mesmo tamanho, a legenda de cada foto e, embaixo, a
+     situação em etiquetas coloridas. Cartões iguais deixam a página
+     alinhada — é o que separa um relatório de uma colagem de fotos.
+     ===================================================================== */
+  var C_BORDA_CARTAO = [214,221,216], C_CAB_CARTAO = [245,247,245];
+  var ALT_CAB_CARTAO = 8.6, ALT_LEGENDA = 4.6, ALT_ESTADO = 7.6;
+  var COL_DADOS = 38;              // coluna de situação e observações, nas fichas largas
+
+  /* Moldura na proporção da foto (3:4), para a imagem preencher sem sobrar
+     tarja branca dos lados. */
+  function alturaFoto(wFoto){ return Math.min(wFoto * 0.75, H_MOLD); }
+
+  function medidasFicha(r, W){
+    var f = perfil.fotos(r).length;
+    var comColuna = W > 120;                       // ficha larga ganha coluna de dados
+    var larguraFotos = W - 8 - (comColuna ? COL_DADOS + 5 : 0);
+    var wf = (larguraFotos - 4 * (f - 1)) / f;
+    return { fotos: f, comColuna: comColuna, wf: wf, hf: alturaFoto(wf) };
+  }
+
   function desenhaFoto(dataUrl, dim, x, yy, w, h){
-    setD([203,211,206]); setF([251,251,250]);
+    setD([206,213,208]); setF([250,250,249]);
     doc.rect(x, yy, w, h, 'FD');
     if(!dataUrl){
       fonte('italic', 8, [150,155,158]);
@@ -4091,7 +4136,7 @@ function montarPDF(Ctor, grupos, todos, perfil){
       fotosComFalha++;
       return;
     }
-    var pad = 2;
+    var pad = 1.6;
     var mw = w - pad*2, mh = h - pad*2;
     var dw = (dim && dim.w) || 4, dh = (dim && dim.h) || 3;
     var asp = dw / dh;
@@ -4106,92 +4151,184 @@ function montarPDF(Ctor, grupos, todos, perfil){
     }
   }
 
-  function linhaInfo(info, x, yy, W){
-    fonte('normal', 9, [80,90,98]);
-    txt(info.rot + ': ', x, yy);
-    var lw = doc.getTextWidth(info.rot + ': ');
-    var c = info.cor || [80,90,98];
-    fonte('bold', 9, c);
-    txt(corta(info.val || '—', (W || COL) - lw), x + lw, yy);
+  function legendaFoto(texto, x, yy, w){
+    setF([237,240,237]);
+    doc.rect(x, yy, w, ALT_LEGENDA, 'F');
+    fonte('bold', 6.4, [88,99,106]);
+    txt(corta(String(texto || '').toLocaleUpperCase('pt-BR'), w - 3), x + w/2, yy + 3.1, {align:'center'});
+  }
+
+  /* Situação do registro: valor curto vira etiqueta colorida; valor longo
+     (um motivo, por exemplo) sai como texto, para não ficar cortado. */
+  function linhasDoEstado(val, largura){
+    fonte('bold', 7.6);
+    return doc.splitTextToSize(String(val || '—'), largura);
+  }
+
+  function estadoCabeEtiqueta(val, largura){
+    fonte('bold', 7.2);
+    return doc.getTextWidth(String(val || '—').toLocaleUpperCase('pt-BR')) + 6 <= largura;
+  }
+
+  function alturaEstado(info, largura){
+    if(estadoCabeEtiqueta(info.val, largura)) return 9.4;
+    return 5.4 + linhasDoEstado(info.val, largura).length * 3.6;
+  }
+
+  /* Desenha rótulo + valor a partir de (x, yy) e devolve a altura usada. */
+  function desenhaEstado(info, x, yy, largura){
+    fonte('bold', 6.5, C_CINZA);
+    txt(String(info.rot || '').toLocaleUpperCase('pt-BR'), x, yy + 2.6);
+    if(estadoCabeEtiqueta(info.val, largura)){
+      var valor = String(info.val || '—').toLocaleUpperCase('pt-BR');
+      fonte('bold', 7.2, [255,255,255]);
+      var w = doc.getTextWidth(valor) + 6;
+      setF(info.cor || C_CINZA);
+      doc.roundedRect(x, yy + 3.6, w, 5.6, 1.3, 1.3, 'F');
+      txt(valor, x + w/2, yy + 7.45, {align:'center'});
+      return 9.4;
+    }
+    fonte('bold', 7.6, info.cor || C_ESCURO);
+    var linhas = linhasDoEstado(info.val, largura);
+    linhas.forEach(function(l, i){ txt(l, x, yy + 6.6 + i * 3.6); });
+    return 5.4 + linhas.length * 3.6;
   }
 
   function alturaObs(obs, W){
     if(!obs) return 0;
-    fonte('italic', 8.5);
-    return 1.5 + doc.splitTextToSize('Observações: ' + obs, W || UTIL).length * 4;
+    fonte('italic', 8);
+    return doc.splitTextToSize('Obs.: ' + obs, W).length * 3.9 + 1.4;
   }
 
-  // Altura de uma ficha, sem a linha separadora que o chamador acrescenta.
   function alturaItem(r, W){
     W = W || UTIL;
-    var h = perfil.tituloItem(r) ? 7 : 0;
-    return h + 4.2 + H_MOLD + 3 + 5 + alturaObs(r.obs, W);
+    var m = medidasFicha(r, W);
+    var h = perfil.tituloItem(r) ? ALT_CAB_CARTAO : 0;
+    var blocoFotos = m.hf + ALT_LEGENDA;
+    if(m.comColuna){
+      var blocoDados = perfil.infos(r).reduce(function(soma, info){
+        return soma + alturaEstado(info, COL_DADOS);
+      }, 0) + alturaObs(r.obs, COL_DADOS);
+      h += 3 + Math.max(blocoFotos, blocoDados) + 3.2;
+    }else{
+      h += 3 + blocoFotos;
+      var wi = (W - 8) / Math.max(1, perfil.infos(r).length);
+      h += perfil.infos(r).reduce(function(maior, info){
+        return Math.max(maior, alturaEstado(info, wi - 4));
+      }, 0);
+      h += alturaObs(r.obs, W - 8) + 3.2;
+    }
+    return h;
   }
 
-  // Desenha uma ficha a partir de (x, yy) e devolve a altura usada, sem mexer no y global.
-  function desenhaItem(r, x, W, yy){
-    var y0 = yy;
+  function desenhaItem(r, x, W, yy, alturaFixa){
+    var h = alturaFixa || alturaItem(r, W);
+    setD(C_BORDA_CARTAO); setF([255,255,255]); doc.setLineWidth(0.25);
+    doc.rect(x, yy, W, h, 'FD');
+
+    var cy = yy;
     var titulo = perfil.tituloItem(r);
     if(titulo){
-      fonte('bold', W > 120 ? 10.5 : 9.5, C_ESCURO);
-      txt(corta(titulo, W - (perfil.semData ? 4 : 34)), x, yy + 4);
+      setF(C_CAB_CARTAO);
+      doc.rect(x + 0.25, yy + 0.25, W - 0.5, ALT_CAB_CARTAO - 0.25, 'F');
+      setF(COR);
+      doc.rect(x + 0.25, yy + 0.25, 1.8, ALT_CAB_CARTAO - 0.25, 'F');
+      fonte('bold', W > 120 ? 9.4 : 8.6, C_ESCURO);
+      txt(corta(titulo, W - (perfil.semData ? 8 : 32)), x + 4.8, yy + 5.9);
       if(!perfil.semData){
-        fonte('normal', 9, C_CINZA);
-        txt(dataBR(r.data), x + W, yy + 4, {align:'right'});
+        fonte('normal', 8.2, C_CINZA);
+        txt(dataBR(r.data), x + W - 3.5, yy + 5.9, {align:'right'});
       }
-      yy += 7;
+      setD(C_BORDA_CARTAO);
+      doc.line(x, yy + ALT_CAB_CARTAO, x + W, yy + ALT_CAB_CARTAO);
+      cy += ALT_CAB_CARTAO;
     }
+    cy += 3;
 
     var f = perfil.fotos(r);
     var legendas = perfil.legendasDe ? perfil.legendasDe(r) : perfil.legendas;
-    var gap = W > 120 ? 6 : 4;
-    var wf = f.length > 1 ? (W - gap) / f.length : W;
-
-    fonte('bold', W > 120 ? 8 : 7, COR);
-    for(var i=0;i<f.length;i++){
-      txt(legendas[i] || '', x + (wf + gap)*i + wf/2, yy + 3, {align:'center'});
-    }
-    yy += 4.2;
-
-    for(var j=0;j<f.length;j++){
-      desenhaFoto(f[j][0], f[j][1], x + (wf + gap)*j, yy, wf, H_MOLD);
-    }
-    yy += H_MOLD + 3;
-
+    var m = medidasFicha(r, W);
     var infos = perfil.infos(r);
-    var wi = infos.length > 1 ? (W - gap) / infos.length : W;
-    for(var k=0;k<infos.length;k++){
-      linhaInfo(infos[k], x + (wi + gap)*k, yy + 3.4, wi);
+    for(var j = 0; j < f.length; j++){
+      var fx = x + 4 + (m.wf + 4) * j;
+      desenhaFoto(f[j][0], f[j][1], fx, cy, m.wf, m.hf);
+      legendaFoto(legendas[j] || '', fx, cy + m.hf, m.wf);
     }
-    yy += 5;
 
-    if(r.obs){
-      fonte('italic', 8.5, [90,100,108]);
-      var linhas = doc.splitTextToSize('Observações: ' + r.obs, W);
-      yy += 1.5;
-      for(var m=0;m<linhas.length;m++){ txt(linhas[m], x, yy + 3); yy += 4; }
+    if(m.comColuna){
+      // coluna da direita: situação em etiquetas e, abaixo, as observações
+      var xd = x + 4 + (m.wf + 4) * f.length + 1;
+      var yd = cy + 1;
+      setD([232,236,232]); doc.setLineWidth(0.2);
+      doc.line(xd - 3, cy, xd - 3, cy + m.hf + ALT_LEGENDA);
+      infos.forEach(function(info){
+        yd += desenhaEstado(info, xd, yd, COL_DADOS);
+      });
+      if(r.obs){
+        fonte('italic', 7.4, [102,112,118]);
+        doc.splitTextToSize('Obs.: ' + r.obs, COL_DADOS).forEach(function(l){
+          yd += 3.4;
+          txt(l, xd, yd);
+        });
+      }
+      return h;
     }
-    return yy - y0;
+
+    cy += m.hf + ALT_LEGENDA;
+    if(infos.length){
+      var wi = (W - 8) / infos.length;
+      var usado = 0;
+      infos.forEach(function(info, k){
+        usado = Math.max(usado, desenhaEstado(info, x + 4 + wi * k, cy, wi - 4));
+      });
+      cy += usado;
+    }
+    if(r.obs){
+      fonte('italic', 8, [102,112,118]);
+      doc.splitTextToSize('Obs.: ' + r.obs, W - 8).forEach(function(l){
+        cy += 3.9;
+        txt(l, x + 4, cy);
+      });
+    }
+    return h;
   }
 
-  function barraRua(rotulo, continuacao){
+  /* Cabeçalho de rua: um filete de cor, o nome e, do lado, a contagem. */
+  function barraRua(rotulo, contagem, continuacao){
     setF(COR);
-    doc.rect(M, y, UTIL, 9, 'F');
-    fonte('bold', 11, [255,255,255]);
-    txt(corta(rotulo + (continuacao ? ' (continuação)' : ''), UTIL - 6), M + 3, y + 6.1);
-    y += 9 + 2;
+    doc.rect(M, y + 0.8, 2.6, 7.6, 'F');
+    fonte('bold', 10.8, C_ESCURO);
+    txt(corta(rotulo + (continuacao ? '  (continuação)' : ''), UTIL - 62), M + 5.4, y + 6.6);
+    if(contagem){
+      fonte('normal', 8.4, C_CINZA);
+      txt(corta(contagem, 58), M + UTIL, y + 6.6, {align:'right'});
+    }
+    setD(C_LINHA); doc.setLineWidth(0.5);
+    doc.line(M, y + 10, M + UTIL, y + 10);
+    doc.setLineWidth(0.2);
+    y += 13.6;
   }
 
   /* ------------------------------ MONTAGEM ---------------------------- */
+  var sumario = [];                       // seções e ruas, com a página onde começam
+  function anotarSumario(rotulo, nivel){
+    // a numeração impressa desconta a capa e soma a página do próprio sumário
+    sumario.push({ rotulo: rotulo, nivel: nivel || 1, pagina: doc.getNumberOfPages() });
+  }
+
   capa();
 
   novaPag();
   var n = 1;
-  secao(String(n++), 'APRESENTAÇÃO');
+  var nApresentacao = n++;
+  secao(String(nApresentacao), 'APRESENTAÇÃO');
+  anotarSumario(nApresentacao + '.  APRESENTAÇÃO', 1);
   paragrafo(perfil.apresentacao(cfg));
 
   if(perfil.classificacao){
-    secao(String(n++), 'CLASSIFICAÇÃO ADOTADA');
+    var nClass = n++;
+    secao(String(nClass), 'CLASSIFICAÇÃO ADOTADA');
+    anotarSumario(nClass + '.  CLASSIFICAÇÃO ADOTADA', 1);
     SITUACOES_HID.forEach(function(sit){
       if(!cabe(9)) novaPag();
       chip(sit, COR_PDF[sit], M, y, 34);
@@ -4202,138 +4339,156 @@ function montarPDF(Ctor, grupos, todos, perfil){
     y += 4;
   }
 
-  secao(String(n++), 'CRITÉRIO DE QUANTIFICAÇÃO');
+  var nCriterio = n++;
+  secao(String(nCriterio), 'CRITÉRIO DE QUANTIFICAÇÃO');
+  anotarSumario(nCriterio + '.  CRITÉRIO DE QUANTIFICAÇÃO', 1);
   paragrafo(perfil.criterio);
 
   var nRegistro = n++;
+  var larguraFicha = perfil.itensPorLinha === 2 ? COL : UTIL;
   var primeiroBloco = grupos.length
-    ? 12.5 + 9 + 2 + 8 + 3 + alturaItem(grupos[0].itens[0], perfil.itensPorLinha === 2 ? COL : UTIL)
+    ? 12.5 + 13.6 + alturaItem(grupos[0].itens[0], larguraFicha)
     : 18;
   secao(String(nRegistro), 'REGISTRO FOTOGRÁFICO POR RUA', primeiroBloco);
+  anotarSumario(nRegistro + '.  REGISTRO FOTOGRÁFICO POR RUA', 1);
 
   grupos.forEach(function(g, iRua){
     var itens = g.itens;
     var nConta = itens.filter(perfil.conta).length;
     var rotulo = nRegistro + '.' + (iRua + 1) + '  ' + String(g.nome).toLocaleUpperCase('pt-BR');
+    var contagem = (perfil.itensRua ? perfil.itensRua(itens.length) : itens.length + ' registro(s)') +
+                   (perfil.conta ? '  ·  ' + nConta + ' a intervir' : '');
 
-    if(!cabe(9 + 2 + 8 + 3 + alturaItem(itens[0], perfil.itensPorLinha === 2 ? COL : UTIL))) novaPag();
-    barraRua(rotulo, false);
-
-    setF(C_SUAVE); setD(C_LINHA);
-    doc.rect(M, y, UTIL, 8, 'FD');
-    fonte('bold', 9, C_ESCURO);
-    txt(perfil.totalRua(nConta), M + 3, y + 5.3);
-    if(perfil.itensRua){
-      fonte('normal', 8.5, C_CINZA);
-      txt(perfil.itensRua(itens.length), M + UTIL - 3, y + 5.3, {align:'right'});
-    }
-    y += 8 + 3;
+    if(!cabe(13.6 + alturaItem(itens[0], larguraFicha))) novaPag();
+    anotarSumario(rotulo, 2);
+    barraRua(rotulo, contagem, false);
 
     if(perfil.itensPorLinha === 2){
-      // Duas fichas por linha só quando cada uma tem uma foto; a ficha com duas fotos
-      // ocupa a linha inteira, para que toda foto saia com a mesma largura. As de uma
-      // foto vêm primeiro, em pares, senão sobrariam meias linhas vazias entre elas.
+      // Duas fichas por linha quando cada uma tem uma foto; a de duas fotos ocupa
+      // a linha inteira, para toda foto sair do mesmo tamanho.
       var simples = [], duplas = [];
       itens.forEach(function(r){
         if(perfil.fotos(r).length > 1) duplas.push(r); else simples.push(r);
       });
       var linhas = [];
-      for(var i=0; i<simples.length; i+=2){
+      for(var i = 0; i < simples.length; i += 2){
         linhas.push({ itens: simples.slice(i, i+2), larg: COL });
       }
       duplas.forEach(function(r){ linhas.push({ itens:[r], larg: UTIL }); });
       linhas.forEach(function(ln){
         var h = Math.max.apply(null, ln.itens.map(function(r){ return alturaItem(r, ln.larg); }));
-        if(!cabe(h + 5)){ novaPag(); barraRua(rotulo, true); }
-        desenhaItem(ln.itens[0], M, ln.larg, y);
-        if(ln.itens[1]) desenhaItem(ln.itens[1], M + COL + 6, ln.larg, y);
-        y += h;
-        setD(C_LINHA);
-        doc.line(M, y + 2, M + UTIL, y + 2);
-        y += 5;
+        if(!cabe(h + 6)){ novaPag(); barraRua(rotulo, contagem, true); }
+        desenhaItem(ln.itens[0], M, ln.larg, y, h);
+        if(ln.itens[1]) desenhaItem(ln.itens[1], M + COL + 6, ln.larg, y, h);
+        y += h + 6;
       });
     }else{
       itens.forEach(function(r){
         var h = alturaItem(r, UTIL);
-        if(!cabe(h + 5)){ novaPag(); barraRua(rotulo, true); }
-        desenhaItem(r, M, UTIL, y);
-        y += h;
-        setD(C_LINHA);
-        doc.line(M, y + 2, M + UTIL, y + 2);
-        y += 5;
+        if(!cabe(h + 6)){ novaPag(); barraRua(rotulo, contagem, true); }
+        desenhaItem(r, M, UTIL, y, h);
+        y += h + 6;
       });
     }
-    y += 4;
+    y += 2;
   });
 
-  /* --------------------------- RESUMO GERAL --------------------------- */
-  novaPag();
-  secao(String(n++), 'RESUMO GERAL');
+  /* --------------------------- RESUMO GERAL ---------------------------
+     Tabela de verdade: cabeçalho em cor, linhas alternadas e os números
+     alinhados à direita, para conferência rápida em obra.
+     ===================================================================== */
+  var ALT_LINHA_TAB = 7.6, ALT_CAB_TAB = 8.4;
 
-  var cols = perfil.colunasResumo;
-  function xCol(i){ return M + UTIL - (cols.length - 1 - i) * 42; }
+  function cabecalhoTabela(titulos, larguras){
+    setF(COR);
+    doc.rect(M, y, UTIL, ALT_CAB_TAB, 'F');
+    fonte('bold', 8.2, [255,255,255]);
+    var x = M;
+    titulos.forEach(function(t, i){
+      if(i === 0) txt(corta(t, larguras[i] - 6), x + 3, y + 5.6);
+      else txt(t, x + larguras[i] - 3, y + 5.6, {align:'right'});
+      x += larguras[i];
+    });
+    y += ALT_CAB_TAB;
+  }
+
+  function linhaTabela(celulas, larguras, indice, destaque){
+    if(indice % 2 === 1){
+      setF([247,248,247]);
+      doc.rect(M, y, UTIL, ALT_LINHA_TAB, 'F');
+    }
+    var x = M;
+    celulas.forEach(function(c, i){
+      if(i === 0){
+        fonte('normal', 9, C_TEXTO);
+        txt(corta(String(c), larguras[i] - 6), x + 3, y + 5.2);
+      }else{
+        fonte(destaque && destaque[i] ? 'bold' : 'normal', 9, destaque && destaque[i] ? C_ESCURO : C_TEXTO);
+        txt(String(c), x + larguras[i] - 3, y + 5.2, {align:'right'});
+      }
+      x += larguras[i];
+    });
+    setD([226,231,227]);
+    doc.line(M, y + ALT_LINHA_TAB, M + UTIL, y + ALT_LINHA_TAB);
+    y += ALT_LINHA_TAB;
+  }
+
+  novaPag();
+  var nResumo = n++;
+  secao(String(nResumo), 'RESUMO GERAL');
+  anotarSumario(nResumo + '.  RESUMO GERAL', 1);
 
   fonte('normal', 9, C_CINZA);
-  txt(perfil.resumoNota, M, y + 3);
-  y += 8;
+  txt(corta(perfil.resumoNota, UTIL), M, y + 3);
+  y += 9;
 
-  fonte('bold', 8.5, COR);
-  txt('RUA', M, y);
-  cols.forEach(function(c, i){ txt(c.tit, xCol(i), y, {align:'right'}); });
-  y += 2;
-  setD(COR); doc.line(M, y, M + UTIL, y);
-  y += 5;
+  var cols = perfil.colunasResumo;
+  var largCol = 34;
+  var largs = [UTIL - largCol * cols.length].concat(cols.map(function(){ return largCol; }));
 
-  grupos.forEach(function(g){
-    if(!cabe(7)){
+  cabecalhoTabela(['RUA'].concat(cols.map(function(c){ return c.tit; })), largs);
+  grupos.forEach(function(g, i){
+    if(!cabe(ALT_LINHA_TAB + 4)){
       novaPag();
-      fonte('bold', 9, COR);
-      txt('RESUMO GERAL (continuação)', M, y + 3);
-      y += 8;
+      cabecalhoTabela(['RUA (continuação)'].concat(cols.map(function(c){ return c.tit; })), largs);
     }
-    fonte('normal', 9.5, C_TEXTO);
-    txt(corta(g.nome, UTIL - 42 * cols.length - 8), M, y + 3);
-    cols.forEach(function(c, i){
-      fonte(c.forte ? 'bold' : 'normal', 9.5, c.forte ? C_ESCURO : C_TEXTO);
-      txt(String(c.val(g, perfil)), xCol(i), y + 3, {align:'right'});
-    });
-    setD([228,232,229]); doc.line(M, y + 5, M + UTIL, y + 5);
-    y += 7;
+    linhaTabela([g.nome].concat(cols.map(function(c){ return String(c.val(g, perfil)); })),
+                largs, i, [false].concat(cols.map(function(c){ return !!c.forte; })));
   });
 
-  y += 4;
-  if(!cabe(14)) novaPag();
-  setF(COR);
-  doc.rect(M, y, UTIL, 13, 'F');
-  fonte('bold', 10.5, [255,255,255]);
-  txt(perfil.totalGeralRot, M + 4, y + 8.4);
-  fonte('bold', 13, [255,255,255]);
-  txt(String(totalGeral), M + UTIL - 4, y + 8.8, {align:'right'});
-  y += 13 + 10;
+  // linha de total, fechando a tabela
+  if(!cabe(11)) novaPag();
+  setF(C_ESCURO);
+  doc.rect(M, y, UTIL, 10.4, 'F');
+  fonte('bold', 9.6, [255,255,255]);
+  txt(corta(perfil.totalGeralRot, UTIL - 40), M + 3, y + 6.9);
+  fonte('bold', 12, [255,255,255]);
+  txt(String(totalGeral), M + UTIL - 3, y + 7.2, {align:'right'});
+  y += 10.4 + 10;
 
   var qf = perfil.quadroFinal;
   if(qf){
-    if(!cabe(14 + qf.valores.length * 8)) novaPag();
-    fonte('bold', 9.5, C_ESCURO);
+    if(!cabe(16 + qf.valores.length * 8)) novaPag();
+    fonte('bold', 9.8, C_ESCURO);
     txt(qf.titulo, M, y + 3);
-    y += 8;
-    var xq = function(i){ return M + UTIL - (qf.colunas.length - 1 - i) * 42; };
-    fonte('bold', 8.5, COR);
-    txt('SITUAÇÃO', M, y);
-    qf.colunas.forEach(function(c, i){ txt(c.tit, xq(i), y, {align:'right'}); });
-    y += 2;
-    setD(COR); doc.line(M, y, M + UTIL, y);
-    y += 5;
-    qf.valores.forEach(function(v){
-      chip(v, qf.cor(v), M, y - 1.4, 34);
-      fonte('normal', 9.5, C_TEXTO);
-      qf.colunas.forEach(function(c, i){
-        txt(String(todos.filter(function(r){ return c.val(r, v); }).length), xq(i), y + 3, {align:'right'});
+    y += 8.5;
+    var largsQ = [UTIL - largCol * qf.colunas.length].concat(qf.colunas.map(function(){ return largCol; }));
+    cabecalhoTabela(['SITUAÇÃO'].concat(qf.colunas.map(function(c){ return c.tit; })), largsQ);
+    qf.valores.forEach(function(v, i){
+      if(i % 2 === 1){ setF([247,248,247]); doc.rect(M, y, UTIL, ALT_LINHA_TAB, 'F'); }
+      chip(v, qf.cor(v), M + 3, y + 1, 34);
+      var x = M + largsQ[0];
+      qf.colunas.forEach(function(c, k){
+        fonte('normal', 9, C_TEXTO);
+        txt(String(todos.filter(function(r){ return c.val(r, v); }).length),
+            x + largsQ[k+1] - 3, y + 5.2, {align:'right'});
+        x += largsQ[k+1];
       });
-      setD([228,232,229]); doc.line(M, y + 5, M + UTIL, y + 5);
-      y += 7.5;
+      setD([226,231,227]);
+      doc.line(M, y + ALT_LINHA_TAB, M + UTIL, y + ALT_LINHA_TAB);
+      y += ALT_LINHA_TAB;
     });
-    y += 8;
+    y += 10;
   }
 
   /* ---------------------------- assinaturas --------------------------- */
@@ -4359,14 +4514,53 @@ function montarPDF(Ctor, grupos, todos, perfil){
     var cx = M + largAss * i + largAss / 2;
     setD([120,130,138]);
     doc.line(cx - meia, y, cx + meia, y);
-    fonte('bold', nAss > 2 ? 9 : 10, C_ESCURO);
-    txt(corta(a.nome || a.cargo, largAss - 5), cx, y + 5.5, {align:'center'});
-    var yb = y + 10.2;
+    fonte('bold', nAss > 2 ? 8.6 : 9.6, C_ESCURO);
+    var nomeLinhas = doc.splitTextToSize(a.nome || a.cargo, largAss - 6).slice(0, 2);
+    nomeLinhas.forEach(function(l, k){ txt(l, cx, y + 5.2 + k * 4.4, {align:'center'}); });
+    var yb = y + 5.2 + nomeLinhas.length * 4.4 + 0.8;
     fonte('normal', nAss > 2 ? 7.8 : 8.8, C_CINZA);
     if(a.nome){ txt(a.cargo, cx, yb, {align:'center'}); yb += 4.4; }
     if(a.crea){ txt(corta(a.crea, largAss - 5), cx, yb, {align:'center'}); yb += 4.4; }
     if(nAss === 1){ txt(corta(cfg.empresa, largAss - 5), cx, yb, {align:'center'}); }
   });
+
+  /* ------------------------------- SUMÁRIO ----------------------------
+     Montado no fim, quando já se sabe em que página cada parte começou, e
+     movido para logo depois da capa.
+     ===================================================================== */
+  if(sumario.length){
+    doc.addPage();
+    var paginaSumario = doc.getNumberOfPages();
+    y = TOPO;
+    fonte('bold', 11.5, C_ESCURO);
+    txt('SUMÁRIO', M, y + 5);
+    setD(COR); doc.setLineWidth(0.6);
+    doc.line(M, y + 7.4, M + UTIL, y + 7.4);
+    doc.setLineWidth(0.2);
+    y += 15;
+
+    sumario.forEach(function(item){
+      if(y > LIM - 8) return;                       // sumário cabe em uma página
+      var ePrincipal = item.nivel === 1;
+      fonte(ePrincipal ? 'bold' : 'normal', ePrincipal ? 9.6 : 9, ePrincipal ? C_ESCURO : C_TEXTO);
+      var x = M + (ePrincipal ? 0 : 7);
+      var rotulo = corta(item.rotulo, UTIL - 26 - (ePrincipal ? 0 : 7));
+      txt(rotulo, x, y + 3.4);
+      var largura = doc.getTextWidth(rotulo);
+      var pagina = String(item.pagina);             // a numeração impressa já desconta a capa
+      fonte('normal', 9, C_CINZA);
+      var xNum = M + UTIL;
+      // pontilhado ligando o título ao número
+      setD([205,212,206]); doc.setLineWidth(0.2);
+      var inicio = x + largura + 2.5, fimPonto = xNum - doc.getTextWidth(pagina) - 2.5;
+      for(var px = inicio; px < fimPonto; px += 2.2){ doc.line(px, y + 2.9, px + 0.7, y + 2.9); }
+      fonte(ePrincipal ? 'bold' : 'normal', 9, ePrincipal ? C_ESCURO : C_CINZA);
+      txt(pagina, xNum, y + 3.4, {align:'right'});
+      y += ePrincipal ? 7.6 : 6.2;
+    });
+
+    doc.movePage(paginaSumario, 2);                 // logo depois da capa
+  }
 
   /* --------------------- cabeçalho e rodapé de todas -------------------- */
   var nPag = doc.getNumberOfPages();
@@ -4385,11 +4579,15 @@ function montarPDF(Ctor, grupos, todos, perfil){
     txt(corta(cfg.obra, UTIL - 72 - (xTexto - M)), xTexto, 12.8);
     fonte('normal', 7.6, C_CINZA);
     txt(corta(cfg.empresa, 68), M + UTIL, 12.8, {align:'right'});
+    setF(COR); doc.rect(M, 15.5, 16, 0.9, 'F');          // filete de cor no cabeçalho
 
     setD(C_LINHA); doc.line(M, ALT - 12, M + UTIL, ALT - 12);
     fonte('normal', 7.5, C_CINZA);
-    txt(corta(perfil.rodape(cfg) + ' — emitido em ' + dataBR(hojeISO()), UTIL - 30), M, ALT - 8);
-    txt('Página ' + (p - 1) + ' de ' + (nPag - 1), M + UTIL, ALT - 8, {align:'right'});
+    txt(corta(perfil.rodape(cfg) + ' — emitido em ' + dataBR(hojeISO()), UTIL - 34), M, ALT - 8);
+    fonte('bold', 7.5, C_ESCURO);
+    txt(String(p - 1), M + UTIL - 9, ALT - 8, {align:'right'});
+    fonte('normal', 7.5, C_CINZA);
+    txt(' / ' + (nPag - 1), M + UTIL, ALT - 8, {align:'right'});
   }
 
   var blob = doc.output('blob');

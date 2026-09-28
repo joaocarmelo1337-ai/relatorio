@@ -151,7 +151,7 @@ details p{margin:8px 0 0; color:var(--ink-2)}
   <div class="meta">
     <span>4 módulos + anexos</span>
     <span>Parâmetros DNIT / ABNT</span>
-    <span>20 questões de fixação</span>
+    <span>26 questões de fixação</span>
   </div>
 </header>
 
@@ -306,6 +306,99 @@ details p{margin:8px 0 0; color:var(--ink-2)}
       natural; é o piquete que o topógrafo deixa para o operador.</li>
   </ul>
 
+  <h3>Off-set: a estaca que sobrevive à máquina</h3>
+  <p>O ponto que interessa marcar no terreno é justamente o ponto que a máquina vai apagar. A crista
+  do talude, o pé do aterro, o eixo da vala, o bordo da plataforma — em todos eles a primeira
+  passada da lâmina leva o piquete embora. O <em class="term">off-set</em> é a solução para isso:
+  em vez de cravar a estaca no ponto, o topógrafo crava um piquete <strong>deslocado</strong>, a uma
+  distância medida e anotada, fora da área de trabalho, carregando escrita nele a informação para
+  reconstruir o ponto verdadeiro a qualquer momento.</p>
+
+  <figure>
+    <div class="fw">
+      <svg viewBox="0 0 760 330" role="img" aria-label="Seção de um corte mostrando o terreno natural, o talude de projeto, a plataforma, a crista do talude que a máquina destrói e o piquete de off-set cravado dois metros fora da área de trabalho, com a anotação de estaca, afastamento e altura de corte">
+        <defs>
+          <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+          </marker>
+          <pattern id="hatch2" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="9" stroke="currentColor" stroke-width="1" opacity=".2"></line>
+          </pattern>
+        </defs>
+
+        <polygon points="330,152 430,170 730,182 730,240 430,240" fill="url(#hatch2)"></polygon>
+        <polyline points="30,108 150,118 240,130 330,152 430,170 730,182" fill="none" stroke="currentColor" stroke-width="2"></polyline>
+        <line x1="430" y1="240" x2="330" y2="152" stroke="currentColor" stroke-width="2"></line>
+        <line x1="430" y1="240" x2="730" y2="240" stroke="currentColor" stroke-width="2"></line>
+        <text x="700" y="172" font-size="12" fill="currentColor" text-anchor="end">terreno natural</text>
+        <text x="580" y="258" font-size="12" fill="currentColor" text-anchor="middle">plataforma — greide de projeto</text>
+
+        <circle cx="330" cy="152" r="4.5" style="fill:var(--signal)"></circle>
+        <text x="344" y="150" font-size="11.5" fill="currentColor">crista do talude — o ponto que a máquina apaga</text>
+
+        <line x1="430" y1="170" x2="430" y2="240" stroke="currentColor" stroke-width="1"></line>
+        <line x1="424" y1="170" x2="436" y2="170" stroke="currentColor" stroke-width="1"></line>
+        <line x1="424" y1="240" x2="436" y2="240" stroke="currentColor" stroke-width="1"></line>
+        <text x="442" y="212" font-size="11.5" fill="currentColor">corte 1,25 m</text>
+
+        <line x1="270" y1="137" x2="270" y2="84" style="stroke:var(--signal)" stroke-width="3.5"></line>
+        <line x1="270" y1="100" x2="330" y2="100" stroke="currentColor" stroke-width="1" marker-start="url(#ar3)" marker-end="url(#ar3)"></line>
+        <text x="300" y="93" font-size="11.5" fill="currentColor" text-anchor="middle">afastamento 2,00 m</text>
+
+        <rect x="40" y="36" width="178" height="76" style="fill:var(--surface);stroke:var(--signal)" stroke-width="1.5"></rect>
+        <text x="54" y="54" font-size="9.5" fill="currentColor" letter-spacing="1.4" opacity=".7">O QUE VAI ESCRITO NO PIQUETE</text>
+        <text x="54" y="73" font-size="13" fill="currentColor" font-weight="600">E 12 + 10,00</text>
+        <text x="54" y="91" font-size="13" fill="currentColor" font-weight="600">OS 2,00 m</text>
+        <text x="54" y="107" font-size="13" fill="currentColor" font-weight="600">C 1,25</text>
+        <line x1="218" y1="84" x2="266" y2="86" stroke="currentColor" stroke-width="1"></line>
+
+        <line x1="330" y1="278" x2="730" y2="278" stroke="currentColor" stroke-width="1" stroke-dasharray="5 4" marker-start="url(#ar3)" marker-end="url(#ar3)"></line>
+        <text x="530" y="298" font-size="11.5" fill="currentColor" text-anchor="middle">área revolvida pela máquina — nenhuma estaca sobrevive aqui</text>
+        <line x1="270" y1="137" x2="270" y2="270" stroke="currentColor" stroke-width="1" stroke-dasharray="3 4" opacity=".6"></line>
+        <text x="262" y="298" font-size="11.5" fill="currentColor" text-anchor="end">piquete de off-set, fora dela</text>
+
+        <line x1="580" y1="60" x2="580" y2="250" stroke="currentColor" stroke-width="1" stroke-dasharray="8 4 2 4" opacity=".7"></line>
+        <text x="588" y="72" font-size="11.5" fill="currentColor">eixo da via</text>
+      </svg>
+    </div>
+    <figcaption><b>Figura 2 — a lógica do off-set.</b> O piquete não marca o ponto: marca a
+    <em>distância até</em> o ponto. Por isso ele pode ficar fora da área de trabalho e continuar
+    servindo depois que a máquina passou. A altura anotada segue a convenção combinada — do topo do
+    piquete ou do terreno —, e essa convenção precisa estar escrita na caderneta, não na memória de
+    quem cravou.</figcaption>
+  </figure>
+
+  <h4>O que a estaca carrega</h4>
+  <ul>
+    <li><strong>A posição no estaqueamento</strong> — <span class="mono">E 12 + 10,00</span> significa
+      12 estacas inteiras (de 20 m) mais 10,00 m, ou seja, 250 m do início do trecho.</li>
+    <li><strong>O afastamento</strong> — <span class="mono">OS 2,00</span>: a distância horizontal,
+      medida perpendicular ao eixo, entre o piquete e o ponto verdadeiro.</li>
+    <li><strong>A altura</strong> — <span class="mono">C 1,25</span> (corte de 1,25 m) ou
+      <span class="mono">A 0,80</span> (aterro de 0,80 m) naquele ponto, ou a cota de projeto
+      diretamente.</li>
+  </ul>
+
+  <h4>Como se usa</h4>
+  <ol>
+    <li>Estica-se a trena do piquete, perpendicular ao eixo, até a distância anotada — ali está o
+      ponto.</li>
+    <li>Do piquete se transfere a altura, com nível ou mangueira de nível, para conferir quanto falta
+      cortar ou aterrar.</li>
+    <li>Entre dois piquetes se arma o <strong>cavalete com linha</strong> (a nivelette): a linha
+      materializa o greide continuamente, e não só de estaca em estaca.</li>
+  </ol>
+
+  <div class="note">
+    <span class="lbl">Na obra urbana</span>
+    <p>Em rua, o off-set costuma ser amarrado ao que já existe e não vai sair do lugar: guia
+    existente, muro, poste, tampão de PV, marco. O essencial é o mesmo — pelo menos duas referências
+    de nível (RN) fora da área de trabalho e um croqui de amarração na caderneta. Se um piquete for
+    derrubado, ele se replanta a partir do RN, <strong>nunca "no olho"</strong>. E confira o off-set
+    antes de todo serviço que não admite erro: fundo de vala, greide de regularização, cota de guia
+    e cota do cruzamento.</p>
+  </div>
+
   <h3>Compactação: o coração do serviço</h3>
   <p>Compactar é expulsar ar do solo com energia mecânica, aproximando os grãos. Não se expulsa
   água — água em excesso atrapalha, porque ocupa o vazio e não deixa o grão acomodar. Existe, para
@@ -359,7 +452,7 @@ details p{margin:8px 0 0; color:var(--ink-2)}
         <text x="323" y="34" font-size="11" fill="currentColor" text-anchor="middle" opacity=".85">faixa de trabalho: w ót ± 2%</text>
       </svg>
     </div>
-    <figcaption><b>Figura 2 — curva de compactação</b>. Onde a linha dos 95% corta a curva estão os
+    <figcaption><b>Figura 3 — curva de compactação</b>. Onde a linha dos 95% corta a curva estão os
     dois extremos de umidade que ainda entregam o grau exigido: é essa a faixa de trabalho do campo.
     No ramo seco falta água para o grão acomodar; no ramo úmido a água ocupa o vazio e a densidade
     cai, além de o material "borrachar" sob o rolo.</figcaption>
@@ -587,6 +680,97 @@ details p{margin:8px 0 0; color:var(--ink-2)}
   ligação tem que <strong>romper antes</strong> de receber a massa, e não pode ser carregada pelo
   pneu do caminhão: por isso se pinta na frente do serviço, não a rua inteira de manhã.</p>
 
+  <h3>Quando a imprimação vira cola</h3>
+  <p>Imprimação bem feita <strong>desaparece dentro da base</strong>: o CM-30 penetra de 3 a 8 mm,
+  escurece o material, e em 24 horas a superfície está firme, sem grudar na bota. Quando, em vez
+  disso, sobra um filme preto e brilhante que continua pegajoso dias depois, que puxa em fio no pneu
+  e levanta com a sola do sapato, a imprimação <strong>não penetrou</strong>. É esse quadro que o
+  fiscal descreve como cola — e a descrição está certa, mesmo que a acusação não esteja: ninguém
+  precisa ter usado cola para o resultado parecer cola. Um ligante não curado sobre a base é,
+  literalmente, um adesivo.</p>
+
+  <div class="tw">
+    <table>
+      <caption>Por que a imprimação fica pegajosa na superfície</caption>
+      <thead><tr><th>Causa</th><th>Como reconhecer</th><th>O que fazer</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Base úmida ou chuva depois da aplicação</strong> — a mais comum</td>
+          <td>Choveu antes, durante ou nas horas seguintes; base saturada, poça, ou aplicação em dia frio e abafado</td>
+          <td>Esperar sol e vento; não liberar tráfego; salgar se precisar passar por cima</td></tr>
+        <tr><td><strong>Taxa alta demais</strong></td>
+          <td>Ligante empoçado, brilho uniforme de verniz, marca de pneu afundando no filme</td>
+          <td>Absorver o excesso e corrigir a taxa no trecho seguinte</td></tr>
+        <tr><td><strong>Base selada ou "espelhada"</strong></td>
+          <td>Superfície polida pela lâmina da patrol ou pelo rolo liso; excesso de fino e IP alto fecham o poro</td>
+          <td>Escarificar levemente a superfície da base, revarrer e reimprimar com a taxa certa</td></tr>
+        <tr><td><strong>Base suja de pó</strong></td>
+          <td>O ligante molha o pó e forma uma pasta que não penetra</td>
+          <td>Varrer bem antes — vassoura mecânica ou manual, não só sopro</td></tr>
+        <tr><td><strong>Tempo frio e úmido</strong></td>
+          <td>Cura do diluído travada: o solvente não evapora</td>
+          <td>Só tempo. O CM-30 é de cura média: 24 h no tempo bom, vários dias no tempo ruim</td></tr>
+        <tr><td><strong>Material errado</strong></td>
+          <td>Emulsão usada no lugar do diluído, ou CAP cortado na obra sem controle de viscosidade</td>
+          <td>Emulsão forma película e não penetra; conferir a nota fiscal e o ensaio do lote</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Como confirmar, e não discutir no achismo</h4>
+  <ul>
+    <li><strong>Abra uma cava</strong> num ponto qualquer, 24 h depois da aplicação, e meça a
+      penetração: a faixa escurecida deve ter 3 a 8 mm. Filme por cima e base clara logo abaixo é a
+      prova de que não penetrou.</li>
+    <li><strong>Procure empoçamento</strong>: ligante acumulado em depressão é excesso de taxa, não
+      falta de cura.</li>
+    <li><strong>Confira o material recebido</strong>: nota fiscal, tipo (CM-30), lote e taxa
+      aplicada por metro quadrado — taxa se calcula por área e consumo do caminhão, não por
+      impressão visual.</li>
+    <li><strong>Registre com foto e data</strong>, junto com a chuva do dia. Boletim de chuva é
+      defesa: a imprimação que tomou chuva é um fato do tempo, não da execução.</li>
+  </ul>
+
+  <h4>Como resolver</h4>
+  <ol>
+    <li><strong>Não asfaltar por cima.</strong> Capa sobre imprimação não curada escorrega e
+    descola — o defeito depois é bem pior que o atraso agora.</li>
+    <li><strong>Dar tempo, sol e vento</strong>, mantendo o tráfego fora. É o que resolve a maioria
+    dos casos de chuva.</li>
+    <li><strong>Salgar</strong> quando não dá para esperar ou é preciso liberar passagem: espalhar
+    uma camada fina de material miúdo, seco e limpo, que absorve o excesso e permite pisar e
+    trafegar sem arrancar a imprimação. É o que a própria especificação manda fazer diante de
+    excesso de ligante.</li>
+    <li><strong>Remover e refazer</strong> nos casos graves: varrer o excesso, escarificar a
+    superfície da base, recompactar e reimprimar na taxa correta.</li>
+  </ol>
+
+  <h4>O nome do que se joga por cima</h4>
+  <p>A prática chama-se <em class="term">areamento</em> — "salgar" ou "jogar salga" é o nome de
+  campo da mesma coisa. O material padrão é <strong>areia limpa e seca</strong> ou
+  <strong>pó de pedra</strong>. Quando o que está à mão é a fração miúda do CBUQ, funciona pelo
+  mesmo princípio, com uma diferença que vale entender: o grão do CBUQ já vem envolto em ligante,
+  então ele não <em>absorve</em> o excesso como a areia limpa — ele <em>cobre</em>, formando uma
+  camada de sacrifício sobre a qual se pode pisar. Em compensação, por ser grão betuminoso, ele se
+  incorpora à capa depois, enquanto o excesso de areia solta vira quebra-aderência e
+  <strong>tem que ser varrido antes do CBUQ</strong>.</p>
+
+  <div class="tw">
+    <table>
+      <caption>Os nomes dos grãos — o que é cada fração</caption>
+      <thead><tr><th>Nome de campo</th><th class="num">Faixa</th><th>Onde entra</th></tr></thead>
+      <tbody>
+        <tr><td>Pó de pedra (pó de brita, finos)</td><td class="num">0 – 4,8 mm</td><td>Areamento, fíler, fração miúda de base e de CBUQ</td></tr>
+        <tr><td>Pedrisco (brita 0)</td><td class="num">4,8 – 9,5 mm</td><td>Areamento grosso, tratamento superficial, CBUQ faixa C</td></tr>
+        <tr><td>Brita 1</td><td class="num">9,5 – 19 mm</td><td>Agregado graúdo de CBUQ e de concreto</td></tr>
+        <tr><td>Brita 2</td><td class="num">19 – 25 mm</td><td>Camadas mais grossas, lastro, berço de tubo</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="flag">Dizer "jogamos CBUQ por cima" soa a improviso; dizer "fizemos o areamento do
+  excesso com a fração miúda da mistura, conforme prevê a especificação para excesso de ligante"
+  descreve o mesmo serviço com o nome que a norma usa — e muda inteiramente a conversa com a
+  fiscalização.</p>
+
   <h3>A mistura: CBUQ</h3>
   <p>Concreto betuminoso usinado a quente é agregado graúdo, agregado miúdo, material de enchimento
   (fíler) e ligante, dosados em usina e misturados a quente. A granulometria segue uma
@@ -640,6 +824,133 @@ details p{margin:8px 0 0; color:var(--ink-2)}
       com ligante e sobrepor a massa nova. Junta mal feita é por onde a água entra primeiro.</li>
   </ul>
 
+  <h3>Rastelo, arremate e o ponto baixo do cruzamento</h3>
+  <p>O cruzamento é o lugar mais difícil de uma rua: dois caimentos se encontram, a acabadora tem
+  que manobrar, e o que sobra vira arremate de rastelo. O resultado clássico é uma depressão no meio
+  do encontro, que a chuva denuncia na primeira semana. O nome técnico disso não é panela nem
+  afundamento estrutural — é <strong>irregularidade de superfície</strong>, uma depressão de
+  acabamento, e a água parada em cima dela é o <strong>empoçamento</strong>.</p>
+
+  <figure>
+    <div class="fw">
+      <svg viewBox="0 0 760 400" role="img" aria-label="Planta de um cruzamento de duas ruas mostrando o sentido de escoamento nas sarjetas, as bocas de lobo a montante das esquinas, a linha de água que atravessa o cruzamento e a poça formada por uma depressão de acabamento no meio do encontro">
+        <defs>
+          <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"></path>
+          </marker>
+        </defs>
+        <rect x="0" y="150" width="760" height="130" style="fill:var(--surface-2)"></rect>
+        <rect x="300" y="0" width="140" height="400" style="fill:var(--surface-2)"></rect>
+
+        <g stroke="currentColor" stroke-width="1.6" fill="none">
+          <line x1="0" y1="150" x2="270" y2="150"></line>
+          <line x1="470" y1="150" x2="760" y2="150"></line>
+          <line x1="0" y1="280" x2="270" y2="280"></line>
+          <line x1="470" y1="280" x2="760" y2="280"></line>
+          <line x1="300" y1="0" x2="300" y2="120"></line>
+          <line x1="300" y1="310" x2="300" y2="400"></line>
+          <line x1="440" y1="0" x2="440" y2="120"></line>
+          <line x1="440" y1="310" x2="440" y2="400"></line>
+          <path d="M270,150 A30,30 0 0 1 300,120"></path>
+          <path d="M440,120 A30,30 0 0 1 470,150"></path>
+          <path d="M300,310 A30,30 0 0 1 270,280"></path>
+          <path d="M470,280 A30,30 0 0 1 440,310"></path>
+        </g>
+
+        <g style="stroke:var(--water);color:var(--water)" stroke-width="2" marker-end="url(#ar4)">
+          <line x1="60" y1="164" x2="250" y2="164"></line>
+          <line x1="60" y1="266" x2="250" y2="266"></line>
+          <line x1="314" y1="40" x2="314" y2="112"></line>
+          <line x1="426" y1="40" x2="426" y2="112"></line>
+        </g>
+        <g style="fill:var(--water)">
+          <rect x="248" y="152" width="24" height="9"></rect>
+          <rect x="248" y="269" width="24" height="9"></rect>
+          <rect x="302" y="112" width="9" height="24"></rect>
+          <rect x="429" y="112" width="9" height="24"></rect>
+        </g>
+        <text x="236" y="144" font-size="11.5" fill="currentColor" text-anchor="end">boca de lobo a montante da esquina</text>
+
+        <line x1="262" y1="164" x2="478" y2="164" style="stroke:var(--water)" stroke-width="1.6" stroke-dasharray="6 4"></line>
+        <text x="492" y="168" font-size="11.5" fill="currentColor">linha de água — a sarjeta continua pelo cruzamento</text>
+
+        <ellipse cx="372" cy="228" rx="56" ry="32" style="fill:var(--signal);stroke:var(--signal)" fill-opacity=".22" stroke-width="1.6" stroke-dasharray="5 4"></ellipse>
+        <text x="372" y="232" font-size="11.5" fill="currentColor" text-anchor="middle" font-weight="600">poça</text>
+        <line x1="428" y1="236" x2="520" y2="252" stroke="currentColor" stroke-width="1"></line>
+        <text x="526" y="250" font-size="11.5" fill="currentColor">depressão de acabamento —</text>
+        <text x="526" y="266" font-size="11.5" fill="currentColor">2 cm abaixo do greide</text>
+
+        <text x="20" y="215" font-size="12.5" fill="currentColor" font-weight="600" letter-spacing="1">RUA A</text>
+        <text x="370" y="34" font-size="12.5" fill="currentColor" font-weight="600" letter-spacing="1" text-anchor="middle">RUA B</text>
+        <text x="20" y="352" font-size="11.5" fill="currentColor" opacity=".85">o cruzamento é onde dois caimentos</text>
+        <text x="20" y="368" font-size="11.5" fill="currentColor" opacity=".85">se encontram — e onde a acabadora</text>
+        <text x="20" y="384" font-size="11.5" fill="currentColor" opacity=".85">não passa inteira</text>
+      </svg>
+    </div>
+    <figcaption><b>Figura 4 — por que a poça se forma no cruzamento.</b> A água das quatro sarjetas
+    converge para o encontro. Se o greide do cruzamento estiver certo, ela atravessa pela linha de
+    água até a boca de lobo. Qualquer ponto 1 ou 2 cm abaixo desse plano segura água — e 1 cm é
+    exatamente a ordem de grandeza do que um rastelo mal passado deixa para trás.</figcaption>
+  </figure>
+
+  <h4>Por que o rastelo produz isso</h4>
+  <ul>
+    <li>A mesa da acabadora entrega massa uniforme e pré-compactada; o rastelo entrega massa solta e
+      desarrumada. Solta, ela <strong>encolhe mais</strong> na compactação — e afunda em relação ao
+      que estava ao lado.</li>
+    <li>Rastelar massa já espalhada <strong>segrega</strong>: o graúdo vem para a superfície e fica
+      um ponto poroso, que é por onde a água entra depois.</li>
+    <li>No arremate o rolo muitas vezes não alcança bem, ou passa de viés — menos energia de
+      compactação justamente onde a massa está mais solta.</li>
+    <li>E o cruzamento é onde a massa mais espera na caçamba, manobrando: massa mais fria, que já
+      não aceita correção.</li>
+  </ul>
+
+  <h4>Como resolver a que já está feita</h4>
+  <ol>
+    <li><strong>Medir antes de decidir.</strong> Molhe a área com um balde e contorne a poça com
+      spray: aquilo é o tamanho real do serviço. Meça a profundidade com régua de 3 m e cunha, e
+      anote o maior valor.</li>
+    <li><strong>Descartar causa estrutural.</strong> Se houver trinca, borda levantada ou a região
+      ceder sob o tráfego, o problema é base ou subleito, e o reparo tem que abrir a estrutura.
+      Depressão lisa e firme é acabamento — só geometria.</li>
+    <li><strong>Reparo por caixa</strong>, que é o correto para 2 a 5 cm: fresar (ou serrar e
+      remover) uma caixa retangular cobrindo toda a área da poça, com <strong>bordas verticais</strong>
+      e profundidade mínima de 3 cm (nunca em bisel — capa fina em ponta desagrega), limpar, aplicar
+      pintura de ligação no fundo e nas faces, lançar CBUQ novo com <strong>sobre-espessura de uns
+      20 a 25%</strong> e compactar com rolo até acabar rente. Conferir na régua e com água antes de
+      liberar.</li>
+    <li><strong>Correções abaixo de 2 cm</strong> não cabem em CBUQ: aí é micro revestimento
+      asfáltico a frio, lama asfáltica ou massa fina (PMF) como camada de nivelamento.</li>
+    <li><strong>Em cruzamento, prefira refazer a área inteira</strong> a costurar remendos. Fresar
+      todo o encontro numa profundidade uniforme e reexecutar com a acabadora corrige o greide de
+      verdade — e evita deixar um remendo bem onde há frenagem, conversão e faixa de pedestre.</li>
+    <li><strong>Drenagem é o último recurso</strong>, não o primeiro: acrescentar boca de lobo para
+      engolir a poça resolve o sintoma e mantém o defeito geométrico. Só se justifica quando o
+      greide não pode mais ser corrigido.</li>
+  </ol>
+
+  <div class="note risk">
+    <span class="lbl">Cuidados que evitam o problema</span>
+    <p><strong>1. Defina o greide do cruzamento antes de pedir massa.</strong> Cotas marcadas nos
+    quatro cantos, linha de água definida, tampões de PV e grelhas já na cota final. Cruzamento se
+    resolve no papel e na estaca, não no rastelo.</p>
+    <p><strong>2. Planeje a sequência de faixas</strong> para que a acabadora atravesse o encontro,
+    reduzindo ao mínimo a área de arremate manual.</p>
+    <p><strong>3. Rastelo é arremate, não greide.</strong> Serve para acertar borda, junta e contorno
+    de tampão. Nunca para fazer nível, e nunca sobre massa que a mesa já espalhou.</p>
+    <p><strong>4. Massa fria não vira acabamento.</strong> Completar depressão com massa que já
+    esfriou é garantir remendo solto em poucos meses.</p>
+    <p><strong>5. Respeite a sobre-espessura.</strong> A massa solta tem que ficar acima da cota:
+    ela encolhe de 20 a 25% na compactação. Quem espalha "na cota" entrega abaixo dela.</p>
+    <p><strong>6. Régua de 3 m durante, não depois.</strong> Enquanto está quente, dá para corrigir;
+    frio, só com fresa.</p>
+    <p><strong>7. Alimentação contínua.</strong> Acabadora que para deixa degrau; caminhão que
+    empurra ou freia contra a mesa deixa ondulação.</p>
+    <p><strong>8. Teste da água antes de liberar.</strong> Um balde em cada ponto duvidoso e a foto
+    do resultado. É mais barato descobrir com a equipe na rua do que com o fiscal na vistoria.</p>
+  </div>
+
   <h3>Controle do que foi executado</h3>
   <div class="tw">
     <table>
@@ -681,6 +992,10 @@ details p{margin:8px 0 0; color:var(--ink-2)}
     <li><input type="checkbox" id="ck-a6"><label for="ck-a6">Plano de rolagem definido: pneus no intermediário, liso no acabamento</label></li>
     <li><input type="checkbox" id="ck-a7"><label for="ck-a7">Juntas recortadas e pintadas antes da nova massa</label></li>
     <li><input type="checkbox" id="ck-a8"><label for="ck-a8">Amostra da pista coletada para extração de betume e granulometria</label></li>
+    <li><input type="checkbox" id="ck-a10"><label for="ck-a10">Greide do cruzamento marcado e linha de água definida antes de pedir massa</label></li>
+    <li><input type="checkbox" id="ck-a11"><label for="ck-a11">Rastelo usado só em arremate — nunca para fazer nível</label></li>
+    <li><input type="checkbox" id="ck-a12"><label for="ck-a12">Régua de 3 m passada no cruzamento e nos arremates com a massa ainda quente</label></li>
+    <li><input type="checkbox" id="ck-a13"><label for="ck-a13">Teste do balde de água nos pontos baixos antes de liberar o trecho</label></li>
     <li><input type="checkbox" id="ck-a9"><label for="ck-a9">Tráfego liberado só depois do resfriamento; sem estacionar sobre capa nova</label></li>
   </ul>
 </section>
@@ -786,7 +1101,7 @@ details p{margin:8px 0 0; color:var(--ink-2)}
         <line x1="300" y1="162" x2="292" y2="194" stroke="currentColor" stroke-width="1.3" marker-end="url(#ar2)"></line>
       </svg>
     </div>
-    <figcaption><b>Figura 3 — os dois caminhos da água.</b> Em cima, o percurso que o projeto
+    <figcaption><b>Figura 5 — os dois caminhos da água.</b> Em cima, o percurso que o projeto
     previu. Embaixo, o que acontece com a parcela que infiltra e não tem por onde sair — um ciclo
     que se realimenta. A camada drenante com saída é o que tira essa água de dentro da estrutura.</figcaption>
   </figure>
@@ -1013,6 +1328,8 @@ details p{margin:8px 0 0; color:var(--ink-2)}
       <tbody>
         <tr><td><strong>Greide</strong></td><td>A linha de cotas do projeto — o perfil que a rua tem que ter quando pronta.</td></tr>
         <tr><td><strong>Off-set</strong></td><td>Piquete deslocado que marca no terreno onde o talude encontra o terreno natural.</td></tr>
+        <tr><td><strong>Nivelette (cavalete)</strong></td><td>Cavaletes com linha esticada entre dois pontos de referência, que materializam o greide de forma contínua.</td></tr>
+        <tr><td><strong>RN</strong></td><td>Referência de nível: marco fixo, fora da área de trabalho, de onde toda cota é replantada.</td></tr>
         <tr><td><strong>Empolamento</strong></td><td>Aumento de volume do solo ao ser escavado e solto.</td></tr>
         <tr><td><strong>DMT</strong></td><td>Distância média de transporte do material movimentado.</td></tr>
         <tr><td><strong>Bota-fora</strong></td><td>Destino do material excedente que não serve para aterro.</td></tr>
@@ -1022,14 +1339,23 @@ details p{margin:8px 0 0; color:var(--ink-2)}
         <tr><td><strong>Regularização</strong></td><td>Os 20 cm superiores do subleito, escarificados, conformados e recompactados.</td></tr>
         <tr><td><strong>Reforço do subleito</strong></td><td>Camada extra quando o subleito é fraco demais para a espessura de projeto.</td></tr>
         <tr><td><strong>Imprimação</strong></td><td>Asfalto diluído aplicado sobre a base granular, para impermeabilizar e amarrar o pó.</td></tr>
+        <tr><td><strong>Areamento (salga)</strong></td><td>Espalhamento de material miúdo seco sobre excesso de ligante, para absorver ou cobrir e permitir tráfego.</td></tr>
+        <tr><td><strong>Pó de pedra</strong></td><td>Fração de 0 a 4,8 mm da britagem; material de areamento, fíler e fração miúda de misturas.</td></tr>
+        <tr><td><strong>Pedrisco (brita 0)</strong></td><td>Fração de 4,8 a 9,5 mm; areamento grosso, tratamento superficial e CBUQ de capa.</td></tr>
         <tr><td><strong>Pintura de ligação</strong></td><td>Emulsão entre camadas asfálticas, para colar a nova na existente.</td></tr>
         <tr><td><strong>Binder</strong></td><td>Camada asfáltica intermediária, entre a base e a capa.</td></tr>
         <tr><td><strong>Capa de rolamento</strong></td><td>A camada asfáltica superior, a que recebe a roda.</td></tr>
         <tr><td><strong>Fíler</strong></td><td>Material de enchimento (cal, pó de pedra, cimento) que completa a curva granulométrica da mistura.</td></tr>
         <tr><td><strong>Exsudação</strong></td><td>Ligante subindo à superfície; mancha preta brilhante e escorregadia.</td></tr>
         <tr><td><strong>Fresagem</strong></td><td>Remoção mecânica controlada de espessura do revestimento existente.</td></tr>
+        <tr><td><strong>Fresagem em caixa</strong></td><td>Remoção de uma área retangular com bordas verticais e profundidade uniforme, para recomposição com massa nova.</td></tr>
+        <tr><td><strong>Massa fina (PMF)</strong></td><td>Mistura de granulometria fina usada em nivelamento e correções rasas, onde o CBUQ não cabe.</td></tr>
+        <tr><td><strong>Sobre-espessura</strong></td><td>Excesso proposital de massa solta (20 a 25%) que a compactação consome até acabar rente à cota.</td></tr>
         <tr><td><strong>IGG</strong></td><td>Índice de Gravidade Global — nota do estado do pavimento a partir do levantamento de defeitos.</td></tr>
         <tr><td><strong>Sarjeta</strong></td><td>Canal raso junto ao meio-fio que conduz a água até a boca de lobo.</td></tr>
+        <tr><td><strong>Linha de água</strong></td><td>A continuação da sarjeta atravessando o cruzamento; define o greide do encontro das ruas.</td></tr>
+        <tr><td><strong>Empoçamento</strong></td><td>Água parada sobre o pavimento por falta de caimento ou por depressão de acabamento.</td></tr>
+        <tr><td><strong>Rastelo</strong></td><td>Ferramenta de arremate manual da massa asfáltica — de borda, junta e contorno, nunca de nível.</td></tr>
         <tr><td><strong>Boca de lobo</strong></td><td>Abertura que engole a água da sarjeta e a entrega ao tubo de ligação.</td></tr>
         <tr><td><strong>Poço de visita (PV)</strong></td><td>Câmara de inspeção da galeria, em toda mudança de direção, diâmetro ou declividade.</td></tr>
         <tr><td><strong>Talvegue</strong></td><td>A linha de fundo de vale por onde a água naturalmente corre.</td></tr>
@@ -1116,6 +1442,34 @@ details p{margin:8px 0 0; color:var(--ink-2)}
       material de jazida, com geotêxtil de separação; (3) estabilizar com cal, reduzindo plasticidade
       e expansão. Em qualquer um deles, a drenagem vem primeiro: sem tirar a água, nenhuma das outras
       soluções dura.</p></details>
+    <details><summary>21. O fiscal diz que a imprimação "parece cola". O que perguntar antes de responder?</summary>
+      <p>Choveu antes, durante ou nas horas seguintes à aplicação? Qual foi a taxa aplicada por m²?
+      A base estava varrida e seca? O material era CM-30 mesmo? E, no campo: abrir uma cava e medir a
+      penetração — 3 a 8 mm de faixa escurecida prova que penetrou; filme por cima com base clara
+      embaixo prova que não. Filme de diluído não curado gruda como adesivo sem ninguém ter usado
+      adesivo nenhum.</p></details>
+    <details><summary>22. Como se chama, tecnicamente, jogar material miúdo sobre a imprimação com excesso de ligante?</summary>
+      <p>Areamento — "salgar", na obra. O material padrão é areia limpa e seca ou pó de pedra; a
+      fração miúda do CBUQ serve como cobertura, com a diferença de que, sendo grão já envolto em
+      ligante, ela cobre em vez de absorver — e, em compensação, se incorpora à capa depois, ao
+      contrário da areia solta, que precisa ser varrida antes do CBUQ.</p></details>
+    <details><summary>23. Pó de pedra, pedrisco, brita 1 e brita 2: quais as faixas?</summary>
+      <p>Pó de pedra 0 a 4,8 mm; pedrisco (brita 0) 4,8 a 9,5 mm; brita 1 de 9,5 a 19 mm; brita 2 de
+      19 a 25 mm.</p></details>
+    <details><summary>24. Poça de 2 cm no encontro de duas ruas, sem trinca e sem ceder sob o tráfego. Qual o reparo?</summary>
+      <p>É defeito de acabamento, não estrutural. Contornar a poça molhada com spray, fresar uma caixa
+      com bordas verticais e no mínimo 3 cm de profundidade cobrindo toda a área, pintura de ligação
+      no fundo e nas faces, CBUQ novo com sobre-espessura de 20 a 25% e compactação com rolo até
+      acabar rente. Em cruzamento, refazer a área inteira costuma sair melhor que costurar remendos.</p></details>
+    <details><summary>25. Por que a área rastelada afunda em relação à espalhada pela mesa?</summary>
+      <p>Porque a mesa entrega massa uniforme e pré-compactada e o rastelo entrega massa solta. Solta,
+      ela encolhe mais na compactação — além de segregar, trazendo o graúdo para a superfície. Por
+      isso rastelo é arremate, nunca nível.</p></details>
+    <details><summary>26. O que está escrito num piquete de off-set e para que serve cada informação?</summary>
+      <p>A estaca do estaqueamento (posição no trecho), o afastamento em metros medido perpendicular
+      ao eixo até o ponto verdadeiro, e a altura de corte ou aterro naquele ponto (ou a cota de
+      projeto). Serve para reconstruir, a qualquer momento, um ponto que a máquina destrói assim que
+      o serviço começa — por isso o piquete fica fora da área de trabalho.</p></details>
   </div>
 </section>
 

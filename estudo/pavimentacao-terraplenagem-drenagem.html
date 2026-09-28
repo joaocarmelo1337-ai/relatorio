@@ -133,6 +133,17 @@ details p{margin:8px 0 0; color:var(--ink-2)}
 .foot{border-top:2px solid var(--ink); margin-top:46px; padding-block:20px 50px; font-size:.9rem; color:var(--ink-3)}
 .btn{font-family:"Barlow Condensed",sans-serif; font-size:.92rem; letter-spacing:.1em; text-transform:uppercase; background:transparent; color:var(--ink-2); border:1px solid var(--rule-2); padding:7px 14px; cursor:pointer}
 .btn:hover{border-color:var(--ink-2); color:var(--ink)}
+.s-mq{--tone:var(--stone)}
+.mqgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(228px,1fr)); gap:14px; margin:18px 0 24px}
+.mq{background:var(--surface); border:1px solid var(--rule); padding:12px 14px 15px; display:flex; flex-direction:column; gap:5px}
+.mq .mqfig{background:var(--surface-2); border:1px solid var(--rule); padding:6px 8px}
+.mq svg{display:block; width:100%; height:auto; color:var(--ink)}
+.mq h4{margin:7px 0 0; font-family:"Barlow Condensed","Arial Narrow",sans-serif; font-size:1.2rem; font-weight:700; line-height:1.1}
+.mq p{margin:0; max-width:none}
+.mq .mqw{font-size:.93rem; line-height:1.5}
+.mq .mqe,.mq .mqc{font-size:.84rem; line-height:1.45; color:var(--ink-2); padding-top:3px; border-top:1px solid var(--rule)}
+.mq .mqe span,.mq .mqc span{display:block; font-family:"Barlow Condensed","Arial Narrow",sans-serif; font-size:.73rem; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3)}
+.mq .mqc span{color:var(--signal)}
 @media print{
   .rail,.btn{display:none}
   body{background:#fff; color:#000; font-size:11pt}
@@ -149,9 +160,9 @@ details p{margin:8px 0 0; color:var(--ink-2)}
   <p class="sub">Terraplenagem, subleito, revestimento asfáltico e drenagem — o que cada camada faz,
   que número precisa fechar para ela ser aceita, que ensaio prova isso e o que costuma dar errado no campo.</p>
   <div class="meta">
-    <span>4 módulos + anexos</span>
+    <span>5 módulos + anexos</span>
     <span>Parâmetros DNIT / ABNT</span>
-    <span>26 questões de fixação</span>
+    <span>29 questões de fixação</span>
   </div>
 </header>
 
@@ -164,6 +175,7 @@ details p{margin:8px 0 0; color:var(--ink-2)}
     <li><a href="#subleito"><span class="n">02</span><span>Subleito</span></a></li>
     <li><a href="#asfalto"><span class="n">03</span><span>Pavimento asfáltico</span></a></li>
     <li><a href="#drenagem"><span class="n">04</span><span>Drenagem</span></a></li>
+    <li><a href="#maquinario"><span class="n">05</span><span>Maquinário</span></a></li>
     <li><a href="#ensaios"><span class="n">A</span><span>Caderno de ensaios</span></a></li>
     <li><a href="#formulas"><span class="n">B</span><span>Fórmulas</span></a></li>
     <li><a href="#normas"><span class="n">C</span><span>Normas</span></a></li>
@@ -1242,6 +1254,360 @@ details p{margin:8px 0 0; color:var(--ink-2)}
     <li><input type="checkbox" id="ck-d9"><label for="ck-d9">Registro fotográfico do serviço enterrado antes do reaterro</label></li>
   </ul>
 </section>
+<section id="maquinario" class="s-mq">
+  <div class="h2row"><span class="hn">05</span><h2>Maquinário</h2></div>
+  <p class="lede">Cada máquina existe para resolver um problema específico, e usar a errada custa
+  caro de duas maneiras: o serviço não fecha o ensaio, ou fecha e estraga o que estava pronto.
+  Este módulo é o resumo do que cada uma faz, onde entra e o erro que se comete com ela.</p>
+
+  <h3>A rua, na ordem das máquinas</h3>
+  <div class="tw">
+    <table>
+      <caption>Sequência típica de uma rua, do terreno ao asfalto</caption>
+      <thead><tr><th class="num">Etapa</th><th>Equipamento</th><th>O que acontece ali</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>Trator de esteiras, escavadeira, caminhão basculante</td><td>Limpeza, corte, aterro e bota-fora — o terreno ganha a forma do projeto</td></tr>
+        <tr><td class="num">2</td><td>Retroescavadeira, escavadeira</td><td>Valas de drenagem e interferências; assentamento de tubo</td></tr>
+        <tr><td class="num">3</td><td>Motoniveladora, caminhão pipa</td><td>Regularização do subleito: greide, caimento e umidade na faixa</td></tr>
+        <tr><td class="num">4</td><td>Rolo pé de carneiro ou liso vibratório, placa vibratória</td><td>Compactação da camada e dos reaterros de vala</td></tr>
+        <tr><td class="num">5</td><td>Pá carregadeira, basculante, motoniveladora, rolo liso e de pneus</td><td>Sub-base e base: espalhamento, conformação e compactação</td></tr>
+        <tr><td class="num">6</td><td>Vassoura mecânica, caminhão espargidor</td><td>Limpeza e imprimação da base; depois, pintura de ligação</td></tr>
+        <tr><td class="num">7</td><td>Vibroacabadora, rolo tandem, rolo de pneus</td><td>CBUQ: espalhamento no greide e compactação dentro da janela térmica</td></tr>
+        <tr><td class="num">8</td><td>Fresadora</td><td>Correções, caixas de reparo e recapeamento de pavimento existente</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="flag">Nos desenhos abaixo, a peça em laranja é a que faz o serviço — a lâmina, o tambor,
+  a mesa, a barra espargidora. É por ela que se entende a máquina.</p>
+
+  <h3>Terraplenagem, vala e base</h3>
+  <div class="mqgrid">
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de trator de esteiras com lâmina frontal destacada">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <rect x="48" y="68" width="104" height="26" rx="13" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></rect>
+        <circle cx="64" cy="81" r="7" fill="none" stroke="currentColor" stroke-width="1.4"></circle>
+        <circle cx="136" cy="81" r="7" fill="none" stroke="currentColor" stroke-width="1.4"></circle>
+        <rect x="70" y="42" width="64" height="26" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="92" y="24" width="32" height="18" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <polygon points="28,94 28,56 44,52 44,94" style="fill:var(--signal)"></polygon>
+        <line x1="44" y1="70" x2="70" y2="80" stroke="currentColor" stroke-width="2.4"></line>
+      </svg></div>
+      <h4>Trator de esteiras</h4>
+      <p class="mqw">Empurra volume: limpeza de capa vegetal, corte, espalhamento de aterro e cravação de rachão.</p>
+      <p class="mqe"><span>Entra em</span> limpeza, corte, aterro, bota-fora</p>
+      <p class="mqc"><span>Cuidado</span> espalha, mas não dá greide nem compacta — quem acerta cota é a motoniveladora</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de escavadeira hidráulica com caçamba destacada">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <rect x="34" y="72" width="94" height="22" rx="11" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></rect>
+        <circle cx="50" cy="83" r="6" fill="none" stroke="currentColor" stroke-width="1.4"></circle>
+        <circle cx="112" cy="83" r="6" fill="none" stroke="currentColor" stroke-width="1.4"></circle>
+        <rect x="44" y="48" width="74" height="24" rx="3" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="50" y="30" width="28" height="18" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <line x1="108" y1="54" x2="152" y2="26" stroke="currentColor" stroke-width="5" stroke-linecap="round"></line>
+        <line x1="152" y1="26" x2="166" y2="56" stroke="currentColor" stroke-width="4" stroke-linecap="round"></line>
+        <polygon points="158,56 180,58 174,76 156,68" style="fill:var(--signal)"></polygon>
+      </svg></div>
+      <h4>Escavadeira hidráulica</h4>
+      <p class="mqw">Escava fundo e carrega: vala de galeria, remoção de solo ruim, carga de caminhão.</p>
+      <p class="mqe"><span>Entra em</span> corte, vala profunda, substituição de subleito</p>
+      <p class="mqc"><span>Cuidado</span> vala aberta sem escoramento é risco de vida, por mais rápida que a máquina seja</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de retroescavadeira com concha frontal e braço traseiro destacados">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <circle cx="66" cy="84" r="11" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <circle cx="134" cy="81" r="14" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <rect x="76" y="52" width="56" height="24" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="90" y="32" width="30" height="20" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <line x1="76" y1="60" x2="46" y2="70" stroke="currentColor" stroke-width="3.4"></line>
+        <polygon points="24,72 46,66 46,86 24,88" style="fill:var(--signal)"></polygon>
+        <line x1="130" y1="54" x2="158" y2="38" stroke="currentColor" stroke-width="3.4"></line>
+        <line x1="158" y1="38" x2="170" y2="60" stroke="currentColor" stroke-width="3"></line>
+        <polygon points="164,60 182,64 176,78 162,72" style="fill:var(--signal)"></polygon>
+      </svg></div>
+      <h4>Retroescavadeira</h4>
+      <p class="mqw">A faz-tudo da obra urbana: abre vala estreita atrás e carrega, limpa e reaterra com a concha da frente.</p>
+      <p class="mqe"><span>Entra em</span> ramal, boca de lobo, reaterro, serviço miúdo</p>
+      <p class="mqc"><span>Cuidado</span> reaterro empurrado com a concha e não compactado em camadas é recalque garantido</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de pá carregadeira com concha destacada">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <circle cx="76" cy="82" r="14" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <circle cx="146" cy="82" r="14" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <rect x="86" y="46" width="62" height="26" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="100" y="28" width="32" height="18" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <line x1="88" y1="60" x2="48" y2="66" stroke="currentColor" stroke-width="4"></line>
+        <polygon points="22,58 48,62 48,82 20,82" style="fill:var(--signal)"></polygon>
+      </svg></div>
+      <h4>Pá carregadeira</h4>
+      <p class="mqw">Carrega e mistura: alimenta caminhão na jazida, homogeneiza material, espalha pilha.</p>
+      <p class="mqe"><span>Entra em</span> jazida, pátio, alimentação de base e sub-base</p>
+      <p class="mqc"><span>Cuidado</span> concha que raspa o terreno junto leva solo ruim para dentro da camada boa</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de motoniveladora com lâmina central destacada">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <circle cx="30" cy="85" r="11" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <circle cx="150" cy="84" r="12" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <circle cx="176" cy="84" r="12" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <line x1="30" y1="74" x2="140" y2="66" stroke="currentColor" stroke-width="4"></line>
+        <rect x="128" y="40" width="50" height="26" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="134" y="22" width="30" height="18" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <circle cx="88" cy="71" r="8" fill="none" stroke="currentColor" stroke-width="1.4"></circle>
+        <polygon points="66,82 106,74 108,84 68,92" style="fill:var(--signal)"></polygon>
+      </svg></div>
+      <h4>Motoniveladora (patrol)</h4>
+      <p class="mqw">A máquina do greide: espalha, corta e conforma a camada na cota e no caimento de projeto.</p>
+      <p class="mqe"><span>Entra em</span> regularização, sub-base, base, acerto de caimento</p>
+      <p class="mqc"><span>Cuidado</span> lâmina que alisa demais sela a superfície da base e atrapalha a imprimação</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de caminhão basculante com caçamba destacada">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <circle cx="52" cy="85" r="11" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <circle cx="148" cy="85" r="11" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <circle cx="172" cy="85" r="11" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <rect x="26" y="48" width="40" height="28" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <line x1="26" y1="76" x2="186" y2="76" stroke="currentColor" stroke-width="2.4"></line>
+        <polygon points="72,74 72,44 186,34 186,74" style="fill:var(--signal)"></polygon>
+      </svg></div>
+      <h4>Caminhão basculante</h4>
+      <p class="mqw">Transporta tudo o que entra e sai: solo, brita, bota-fora e a própria massa asfáltica.</p>
+      <p class="mqe"><span>Entra em</span> corte, aterro, base, transporte de CBUQ</p>
+      <p class="mqc"><span>Cuidado</span> massa asfáltica viaja lonada; carga descoberta chega fria e é recusada</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de caminhão pipa com barra de irrigação destacada">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <circle cx="52" cy="85" r="11" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <circle cx="150" cy="85" r="11" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <rect x="26" y="48" width="40" height="28" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="72" y="42" width="106" height="32" rx="16" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <line x1="26" y1="76" x2="180" y2="76" stroke="currentColor" stroke-width="2.4"></line>
+        <rect x="168" y="76" width="24" height="5" style="fill:var(--signal)"></rect>
+        <g style="stroke:var(--signal)" stroke-width="1.8" stroke-linecap="round">
+          <line x1="172" y1="83" x2="168" y2="93"></line>
+          <line x1="180" y1="83" x2="180" y2="93"></line>
+          <line x1="188" y1="83" x2="192" y2="93"></line>
+        </g>
+      </svg></div>
+      <h4>Caminhão pipa</h4>
+      <p class="mqw">Leva a camada até a umidade ótima e mata o pó da pista. Água é insumo de compactação, não cortesia.</p>
+      <p class="mqe"><span>Entra em</span> regularização, sub-base, base</p>
+      <p class="mqc"><span>Cuidado</span> molhar demais joga a camada no ramo úmido e ela borracha sob o rolo</p>
+    </article>
+
+  </div>
+
+  <h3>Compactação</h3>
+  <p>Todo rolo compacta, mas cada um compacta um tipo de material. Trocar o rolo é trocar o
+  mecanismo: o pé de carneiro amassa e quebra torrão em solo que tem coesão; a vibração acomoda grão
+  em material granular; o pneu amassa e fecha a superfície. Usar o vibratório em argila molhada só
+  produz o famoso "borrachudo".</p>
+  <div class="tw">
+    <table>
+      <caption>Qual rolo para qual material</caption>
+      <thead><tr><th>Material</th><th>Rolo indicado</th><th>Por quê</th></tr></thead>
+      <tbody>
+        <tr><td>Argila e silte (solo coesivo)</td><td>Pé de carneiro</td><td>As patas penetram, quebram o torrão e compactam de baixo para cima</td></tr>
+        <tr><td>Areia, pedregulho, brita (granular)</td><td>Liso vibratório</td><td>A vibração acomoda o grão; sem coesão, amassar não adianta</td></tr>
+        <tr><td>Base acabada e CBUQ</td><td>Rolo de pneus</td><td>Amassamento sem quebrar o agregado; é ele que dá o grau na capa</td></tr>
+        <tr><td>CBUQ: início e acabamento</td><td>Tandem liso</td><td>Fecha a superfície e apaga marca de pneu</td></tr>
+        <tr><td>Vala, arremate e canto</td><td>Placa vibratória ou soquete</td><td>Onde o rolo não entra — e é onde quase todo recalque nasce</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mqgrid">
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de rolo compactador pé de carneiro com tambor de patas destacado">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <circle cx="56" cy="74" r="19" style="fill:var(--signal)"></circle>
+        <g style="fill:var(--signal)">
+          <rect x="74" y="71" width="6" height="6"></rect>
+          <rect x="63" y="89" width="6" height="6"></rect>
+          <rect x="43" y="89" width="6" height="6"></rect>
+          <rect x="32" y="71" width="6" height="6"></rect>
+          <rect x="43" y="53" width="6" height="6"></rect>
+          <rect x="63" y="53" width="6" height="6"></rect>
+        </g>
+        <circle cx="56" cy="74" r="7" fill="none" stroke="var(--surface)" stroke-width="1.6"></circle>
+        <rect x="80" y="48" width="70" height="26" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="96" y="28" width="34" height="20" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <circle cx="162" cy="82" r="14" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+      </svg></div>
+      <h4>Rolo pé de carneiro</h4>
+      <p class="mqw">As patas penetram o solo coesivo, quebram o torrão e compactam da base da camada para a superfície.</p>
+      <p class="mqe"><span>Entra em</span> aterro e subleito de solo argiloso ou siltoso</p>
+      <p class="mqc"><span>Cuidado</span> em material granular ele só revolve — ali o certo é o liso vibratório</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de rolo liso vibratório com tambor destacado">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <circle cx="56" cy="74" r="21" style="fill:var(--signal)"></circle>
+        <circle cx="56" cy="74" r="8" fill="none" stroke="var(--surface)" stroke-width="1.8"></circle>
+        <rect x="80" y="48" width="70" height="26" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="96" y="28" width="34" height="20" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <circle cx="162" cy="82" r="14" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+      </svg></div>
+      <h4>Rolo liso vibratório</h4>
+      <p class="mqw">A vibração acomoda o grão do material granular. É o rolo da brita, da areia e da base.</p>
+      <p class="mqe"><span>Entra em</span> sub-base, base, aterro arenoso</p>
+      <p class="mqc"><span>Cuidado</span> vibrar argila úmida desestrutura a camada; e vibrar sobre tubo raso pode trincá-lo</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de rolo de pneus com as fileiras de pneus destacadas">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <rect x="46" y="44" width="106" height="28" rx="3" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="74" y="24" width="34" height="20" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <g style="fill:var(--signal);stroke:var(--surface)" stroke-width="1.4">
+          <circle cx="48" cy="84" r="12"></circle>
+          <circle cx="66" cy="84" r="12"></circle>
+          <circle cx="84" cy="84" r="12"></circle>
+          <circle cx="126" cy="84" r="12"></circle>
+          <circle cx="144" cy="84" r="12"></circle>
+          <circle cx="162" cy="84" r="12"></circle>
+        </g>
+      </svg></div>
+      <h4>Rolo de pneus</h4>
+      <p class="mqw">Compacta por amassamento, sem quebrar agregado. Na capa asfáltica é ele que entrega o grau de compactação.</p>
+      <p class="mqe"><span>Entra em</span> base acabada e rolagem intermediária do CBUQ</p>
+      <p class="mqc"><span>Cuidado</span> pneu frio gruda na massa quente — aquecer e manter o rolo em movimento contínuo</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de rolo tandem de dois tambores lisos destacados">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <circle cx="54" cy="76" r="19" style="fill:var(--signal)"></circle>
+        <circle cx="54" cy="76" r="7" fill="none" stroke="var(--surface)" stroke-width="1.6"></circle>
+        <circle cx="148" cy="76" r="19" style="fill:var(--signal)"></circle>
+        <circle cx="148" cy="76" r="7" fill="none" stroke="var(--surface)" stroke-width="1.6"></circle>
+        <rect x="66" y="46" width="70" height="30" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <g stroke="currentColor" stroke-width="2" fill="none">
+          <line x1="82" y1="46" x2="82" y2="26"></line>
+          <line x1="120" y1="46" x2="120" y2="26"></line>
+          <line x1="80" y1="26" x2="122" y2="26"></line>
+        </g>
+      </svg></div>
+      <h4>Rolo tandem liso</h4>
+      <p class="mqw">Dois tambores lisos: faz a rolagem inicial logo atrás da acabadora e o acabamento que fecha a superfície.</p>
+      <p class="mqe"><span>Entra em</span> CBUQ — início e acabamento</p>
+      <p class="mqc"><span>Cuidado</span> nunca parar, virar ou manobrar sobre massa quente: marca fundo e não sai mais</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de placa vibratória com a base destacada">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <rect x="52" y="84" width="92" height="10" rx="2" style="fill:var(--signal)"></rect>
+        <rect x="74" y="56" width="48" height="28" rx="3" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <circle cx="86" cy="70" r="7" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+        <line x1="120" y1="66" x2="164" y2="40" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"></line>
+        <line x1="156" y1="34" x2="176" y2="46" stroke="currentColor" stroke-width="3" stroke-linecap="round"></line>
+      </svg></div>
+      <h4>Placa vibratória (sapo)</h4>
+      <p class="mqw">Compacta onde o rolo não entra: vala estreita, canto, contorno de tampão e arremate junto à guia.</p>
+      <p class="mqe"><span>Entra em</span> reaterro de vala, envolvimento de tubo, arremates</p>
+      <p class="mqc"><span>Cuidado</span> camada fina, sempre: com 40 cm de solo solto ela só alisa a superfície</p>
+    </article>
+
+  </div>
+
+  <h3>Asfalto</h3>
+  <div class="mqgrid">
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de vassoura mecânica com a escova rotativa destacada">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <circle cx="48" cy="78" r="15" style="fill:var(--signal)"></circle>
+        <g style="stroke:var(--signal)" stroke-width="2" stroke-linecap="round">
+          <line x1="48" y1="59" x2="48" y2="53"></line>
+          <line x1="62" y1="64" x2="66" y2="60"></line>
+          <line x1="67" y1="78" x2="73" y2="78"></line>
+          <line x1="62" y1="92" x2="66" y2="96"></line>
+          <line x1="34" y1="64" x2="30" y2="60"></line>
+          <line x1="29" y1="78" x2="23" y2="78"></line>
+        </g>
+        <rect x="70" y="46" width="78" height="30" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="86" y="26" width="32" height="20" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <circle cx="154" cy="84" r="12" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+      </svg></div>
+      <h4>Vassoura mecânica</h4>
+      <p class="mqw">Tira o pó e o material solto da base antes da imprimação. Serviço barato que decide a aderência de tudo o que vem depois.</p>
+      <p class="mqe"><span>Entra em</span> antes da imprimação e de toda pintura de ligação</p>
+      <p class="mqc"><span>Cuidado</span> pó que sobra vira pasta com o ligante — e a imprimação não penetra</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de caminhão espargidor de ligante com a barra espargidora destacada">
+        <line x1="4" y1="96" x2="196" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <circle cx="48" cy="85" r="11" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <circle cx="140" cy="85" r="11" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <rect x="22" y="48" width="38" height="28" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="66" y="40" width="104" height="34" rx="8" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <line x1="22" y1="76" x2="172" y2="76" stroke="currentColor" stroke-width="2.4"></line>
+        <rect x="166" y="72" width="26" height="6" style="fill:var(--signal)"></rect>
+        <g style="stroke:var(--signal)" stroke-width="1.8" stroke-linecap="round">
+          <line x1="170" y1="80" x2="166" y2="93"></line>
+          <line x1="179" y1="80" x2="179" y2="93"></line>
+          <line x1="188" y1="80" x2="192" y2="93"></line>
+        </g>
+      </svg></div>
+      <h4>Caminhão espargidor</h4>
+      <p class="mqw">Aplica o ligante em taxa controlada pela barra espargidora: imprimação na base e pintura de ligação entre camadas.</p>
+      <p class="mqe"><span>Entra em</span> imprimação (CM-30) e pintura de ligação (emulsão)</p>
+      <p class="mqc"><span>Cuidado</span> bico entupido faz faixa sem ligante; taxa se confere por consumo e área, não no olho</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de vibroacabadora com a mesa alisadora destacada espalhando a camada asfáltica">
+        <line x1="4" y1="96" x2="124" y2="96" stroke="currentColor" stroke-width="2" opacity=".35"></line>
+        <rect x="124" y="88" width="72" height="8" style="fill:var(--lay-asf)"></rect>
+        <polygon points="18,44 72,44 66,74 30,74" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></polygon>
+        <rect x="62" y="74" width="62" height="18" rx="9" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="66" y="44" width="58" height="30" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="126" y="72" width="54" height="12" style="fill:var(--signal)"></rect>
+        <line x1="124" y1="58" x2="172" y2="72" stroke="currentColor" stroke-width="2.4"></line>
+      </svg></div>
+      <h4>Vibroacabadora</h4>
+      <p class="mqw">Espalha o CBUQ na espessura e no greide, já pré-compactado pela mesa. É a máquina que define a planicidade da rua.</p>
+      <p class="mqe"><span>Entra em</span> execução do binder e da capa</p>
+      <p class="mqc"><span>Cuidado</span> mesa que para deixa degrau, e caminhão que freia contra ela deixa ondulação</p>
+    </article>
+
+    <article class="mq"><div class="mqfig">
+      <svg viewBox="0 0 200 110" role="img" aria-label="Desenho de fresadora com o tambor de corte destacado removendo a capa asfáltica">
+        <polyline points="4,90 86,90 100,96 196,96" fill="none" stroke="currentColor" stroke-width="2" opacity=".35"></polyline>
+        <polygon points="46,58 14,34 14,24 46,48" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></polygon>
+        <rect x="46" y="38" width="100" height="38" rx="3" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <rect x="70" y="22" width="34" height="16" style="fill:var(--surface-2);stroke:currentColor" stroke-width="1.6"></rect>
+        <circle cx="100" cy="82" r="14" style="fill:var(--signal)"></circle>
+        <circle cx="100" cy="82" r="6" fill="none" stroke="var(--surface)" stroke-width="1.6"></circle>
+        <circle cx="58" cy="86" r="8" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+        <circle cx="140" cy="86" r="8" style="fill:var(--surface-3);stroke:currentColor" stroke-width="1.6"></circle>
+      </svg></div>
+      <h4>Fresadora</h4>
+      <p class="mqw">Remove espessura controlada do revestimento existente, deixando superfície ranhurada e bordas verticais.</p>
+      <p class="mqe"><span>Entra em</span> caixa de reparo, recapeamento, acerto de greide</p>
+      <p class="mqc"><span>Cuidado</span> fresado é material, não lixo: vale como agregado reciclado, e a pista fresada precisa ser varrida e pintada antes da massa</p>
+    </article>
+
+  </div>
+</section>
+
 <section id="ensaios">
   <div class="h2row"><span class="hn">A</span><h2>Caderno de ensaios</h2></div>
   <p class="lede">Os ensaios que decidem se uma camada é aceita, com a norma, o que medem e onde
@@ -1348,6 +1714,9 @@ details p{margin:8px 0 0; color:var(--ink-2)}
         <tr><td><strong>Fíler</strong></td><td>Material de enchimento (cal, pó de pedra, cimento) que completa a curva granulométrica da mistura.</td></tr>
         <tr><td><strong>Exsudação</strong></td><td>Ligante subindo à superfície; mancha preta brilhante e escorregadia.</td></tr>
         <tr><td><strong>Fresagem</strong></td><td>Remoção mecânica controlada de espessura do revestimento existente.</td></tr>
+        <tr><td><strong>Patrol</strong></td><td>Nome de campo da motoniveladora — a máquina que dá o greide da camada.</td></tr>
+        <tr><td><strong>Mesa (da acabadora)</strong></td><td>Peça traseira da vibroacabadora que define espessura e greide e já pré-compacta a massa.</td></tr>
+        <tr><td><strong>Fresado</strong></td><td>Material removido pela fresadora; é agregado asfáltico reciclável, não entulho.</td></tr>
         <tr><td><strong>Fresagem em caixa</strong></td><td>Remoção de uma área retangular com bordas verticais e profundidade uniforme, para recomposição com massa nova.</td></tr>
         <tr><td><strong>Massa fina (PMF)</strong></td><td>Mistura de granulometria fina usada em nivelamento e correções rasas, onde o CBUQ não cabe.</td></tr>
         <tr><td><strong>Sobre-espessura</strong></td><td>Excesso proposital de massa solta (20 a 25%) que a compactação consome até acabar rente à cota.</td></tr>
@@ -1465,6 +1834,18 @@ details p{margin:8px 0 0; color:var(--ink-2)}
       <p>Porque a mesa entrega massa uniforme e pré-compactada e o rastelo entrega massa solta. Solta,
       ela encolhe mais na compactação — além de segregar, trazendo o graúdo para a superfície. Por
       isso rastelo é arremate, nunca nível.</p></details>
+    <details><summary>27. Por que não se usa rolo liso vibratório em argila úmida?</summary>
+      <p>Porque em solo coesivo a vibração não acomoda grão: ela desestrutura a camada e produz o
+      borrachudo. Ali o mecanismo certo é o amassamento com penetração — rolo pé de carneiro, que
+      quebra o torrão e compacta de baixo para cima.</p></details>
+    <details><summary>28. Qual rolo entrega o grau de compactação da capa asfáltica?</summary>
+      <p>O rolo de pneus, na rolagem intermediária: ele compacta por amassamento, sem quebrar o
+      agregado, enquanto a massa ainda está quente. O tandem liso faz a rolagem inicial e o
+      acabamento, fechando a superfície e apagando a marca dos pneus.</p></details>
+    <details><summary>29. Por que tanto recalque nasce no reaterro de vala, se o rolo passou por cima?</summary>
+      <p>Porque o rolo passa por cima, não dentro. Dentro da vala quem compacta é a placa vibratória
+      ou o soquete, em camadas finas — e se o reaterro foi empurrado com a concha em camada grossa,
+      nenhuma passada de rolo na superfície corrige o que ficou fofo lá embaixo.</p></details>
     <details><summary>26. O que está escrito num piquete de off-set e para que serve cada informação?</summary>
       <p>A estaca do estaqueamento (posição no trecho), o afastamento em metros medido perpendicular
       ao eixo até o ponto verdadeiro, e a altura de corte ou aterro naquele ponto (ou a cota de

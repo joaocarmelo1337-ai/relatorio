@@ -1265,7 +1265,7 @@ var COR_PDF = {'Mantido':[46,125,50],'A remanejar':[230,126,34],'Danificado':[19
                'Já remanejado':[127,140,141],'Não localizado':[142,68,173],'Não instalado':[52,73,94]};
 var LIMITE_FOTO = 900 * 1024;         // ~900 KB por foto
 var LIMITE_LOGO = 500 * 1024;         // ~500 KB para a logo
-var VERSAO_APP = '27/09/2026';       // atualizada a cada publicação
+var VERSAO_APP = '06/10/2026';       // atualizada a cada publicação
 var CHAVE_LS = 'aguasguariroba_registros_v1';
 var CHAVE_LS_ARV = 'aguasguariroba_arvores_v1';
 var CHAVE_LS_MEN = 'aguasguariroba_mensais_v1';
@@ -1378,6 +1378,71 @@ var COLECOES = {
   meses:     { loja: 'meses',     ls: CHAVE_LS_MESES },
   ramais:    { loja: 'ramais',    ls: CHAVE_LS_RAM }
 };
+
+/* ================= LISTA LEVE E MINIATURAS DOS CARTÕES ===============
+   Cada foto de campo tem quase 1 MB. Carregar todas elas na memória e
+   ainda jogá-las dentro dos cartões deixava a tela pesada: abrir uma rua
+   travava meio segundo no computador e vários segundos no celular. Agora
+   cada registro guarda também uma miniatura (200 px, uns poucos KB) e é
+   ela que aparece no cartão; as fotos em tamanho cheio só entram na
+   memória na hora de gerar o PDF, exportar o backup ou editar o registro.
+   ===================================================================== */
+var CAMPOS_FOTO = {
+  registros: ['fotoHid','fotoEsg'],
+  arvores:   ['fotoArv','fotoEtq'],
+  mensais:   ['foto'],
+  ramais:    ['foto','foto2'],
+  meses:     []
+};
+// Qual foto vira a miniatura do cartão de cada coleção.
+var FOTO_DA_CAPA = { registros:'fotoHid', arvores:'fotoArv', mensais:'foto', ramais:'foto' };
+// Coleções que têm foto e, por isso, entram no índice leve da lista.
+var LOJAS_INDICE = ['registros','arvores','mensais','ramais'];
+// Em que lista do estado cada coleção é guardada.
+var LISTA_DA_COLECAO = { registros:'registros', arvores:'arvores', mensais:'mensais',
+                         ramais:'ramais', meses:'meses' };
+var LADO_MINI = 200;            // o cartão mostra 66 px; 200 cobre telas de 3x
+var QUALIDADE_MINI = 0.6;
+
+/* Cópia do registro sem as fotos, que é o que a tela precisa. No lugar de
+   cada foto fica uma marca "tem_<campo>", para o cartão saber que ela existe
+   sem carregá-la. */
+function aliviarUm(col, r){
+  var campos = CAMPOS_FOTO[col] || [];
+  var c = {}, k;
+  for(k in r){
+    if(Object.prototype.hasOwnProperty.call(r, k) && campos.indexOf(k) < 0) c[k] = r[k];
+  }
+  campos.forEach(function(campo){
+    c['tem_' + campo] = (campo in r) ? !!r[campo] : !!r['tem_' + campo];
+  });
+  return c;
+}
+function aliviar(col, lista){
+  return (lista || []).map(function(r){ return aliviarUm(col, r); });
+}
+
+/* Gera a miniatura quadrada de uma foto. Nunca rejeita: se algo der errado
+   o cartão simplesmente fica sem imagem. */
+function gerarMini(dataUrl){
+  return new Promise(function(res){
+    if(!dataUrl){ res(''); return; }
+    var im = new Image();
+    im.onload = function(){
+      try{
+        var w = im.naturalWidth || im.width, h = im.naturalHeight || im.height;
+        if(!w || !h){ res(''); return; }
+        var lado = Math.min(w, h);
+        var c = document.createElement('canvas');
+        c.width = LADO_MINI; c.height = LADO_MINI;
+        c.getContext('2d').drawImage(im, (w - lado)/2, (h - lado)/2, lado, lado, 0, 0, LADO_MINI, LADO_MINI);
+        res(c.toDataURL('image/jpeg', QUALIDADE_MINI));
+      }catch(e){ res(''); }
+    };
+    im.onerror = function(){ res(''); };
+    im.src = dataUrl;
+  });
+}
 
 // Dados que identificam o relatório: capa, cabeçalho das páginas e assinatura.
 var CFG_PADRAO = {
@@ -1532,7 +1597,7 @@ var Armaz = {
         if(!pronto) rej(new Error('tempo esgotado ao abrir o banco de dados'));
       }, 8000);
       var req;
-      try{ req = indexedDB.open(Obras.ativa().banco || 'aguasguariroba_db', 5); }
+      try{ req = indexedDB.open(Obras.ativa().banco || 'aguasguariroba_db', 6); }
       catch(e){ clearTimeout(t); rej(e); return; }
       req.onupgradeneeded = function(ev){
         var db = ev.target.result;
@@ -1542,6 +1607,9 @@ var Armaz = {
         if(!db.objectStoreNames.contains('meses')) db.createObjectStore('meses', {keyPath:'id'});
         if(!db.objectStoreNames.contains('ramais')) db.createObjectStore('ramais', {keyPath:'id'});
         if(!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
+        // Índice: cópia leve de cada registro, sem as fotos. É o que a lista
+        // da tela lê ao abrir, em vez de puxar centenas de MB de imagens.
+        if(!db.objectStoreNames.contains('indice')) db.createObjectStore('indice');
       };
       req.onsuccess = function(){ pronto = true; clearTimeout(t); res(req.result); };
       req.onerror = function(){ pronto = true; clearTimeout(t); rej(req.error || new Error('falha ao abrir o banco')); };
@@ -1569,7 +1637,15 @@ var Armaz = {
   iniciar: function(){
     var self = this;
     var valor = 'teste_' + Date.now();
-    return self.abrirIDB().then(function(db){
+    // Uma segunda tentativa: se o aplicativo estiver aberto em outra aba, o
+    // banco pode recusar a abertura por um instante. Cair direto no
+    // armazenamento alternativo faria a lista parecer vazia.
+    var abrir = self.abrirIDB().catch(function(e){
+      return new Promise(function(res){ setTimeout(res, 1200); }).then(function(){
+        return self.abrirIDB();
+      });
+    });
+    return abrir.then(function(db){
       self.db = db;
       return self.tx('meta','readwrite', function(s){ return s.put({v:valor}, '__teste__'); })
         .then(function(){ return self.tx('meta','readonly', function(s){ return s.get('__teste__'); }); })
@@ -1619,6 +1695,101 @@ var Armaz = {
     return Promise.resolve(self.memoria[d.loja].slice());
   },
 
+  // Lê um registro só, com as fotos em tamanho cheio.
+  ler: function(col, id){
+    var self = this, d = COLECOES[col || 'registros'];
+    if(self.modo === 'indexeddb'){
+      return self.tx(d.loja,'readonly', function(s){ return s.get(id); })
+        .then(function(r){ return r || null; });
+    }
+    return self.listar(col).then(function(lista){
+      return lista.filter(function(r){ return r.id === id; })[0] || null;
+    });
+  },
+
+  /* A tela trabalha com registros sem foto. Para que gravar um deles nunca
+     apague a imagem guardada, toda gravação devolve ao registro as fotos
+     que ele não trouxe. Campo presente, mesmo vazio, continua mandando —
+     é assim que apagar a foto complementar de um ramal funciona. */
+  comAsFotos: function(col, regs){
+    var campos = CAMPOS_FOTO[col || 'registros'] || [];
+    if(!campos.length) return Promise.resolve(regs);
+    var self = this;
+    return Promise.all(regs.map(function(reg){
+      var falta = campos.filter(function(c){ return !(c in reg); });
+      if(!falta.length) return reg;
+      return self.ler(col, reg.id).then(function(guardado){
+        if(!guardado) return reg;
+        var copia = {}, k;
+        for(k in reg){ if(Object.prototype.hasOwnProperty.call(reg, k)) copia[k] = reg[k]; }
+        falta.forEach(function(c){ if(c in guardado) copia[c] = guardado[c]; });
+        return copia;
+      }).catch(function(){ return reg; });
+    }));
+  },
+
+  /* ======================= ÍNDICE DA LISTA ==========================
+     Ler o banco inteiro na abertura custava segundos, porque cada registro
+     traz suas fotos de quase 1 MB. O índice guarda a mesma lista sem as
+     fotos: abrir o aplicativo passa a ler só ele. Ele é apenas uma cópia —
+     some sem prejuízo e é refeito sozinho a partir dos registros.
+     ================================================================== */
+  gravarIndice: function(col, regs){
+    var self = this;
+    if(self.modo !== 'indexeddb' || LOJAS_INDICE.indexOf(col) < 0) return Promise.resolve();
+    return self.tx('indice','readwrite', function(s){
+      var ult = null;
+      regs.forEach(function(reg){
+        var leve = aliviarUm(col, reg);
+        leve.__col = col;
+        ult = s.put(leve, col + ':' + reg.id);
+      });
+      return ult;
+    }).catch(function(){});
+  },
+
+  removerDoIndice: function(col, id){
+    var self = this;
+    if(self.modo !== 'indexeddb' || LOJAS_INDICE.indexOf(col) < 0) return Promise.resolve();
+    return self.tx('indice','readwrite', function(s){ return s.delete(col + ':' + id); })
+      .catch(function(){});
+  },
+
+  // Devolve as listas leves, ou null quando o índice não existe ou está
+  // defasado — aí quem chamou lê os registros de verdade e manda refazê-lo.
+  lerIndice: function(){
+    var self = this;
+    if(self.modo !== 'indexeddb') return Promise.resolve(null);
+    return Promise.all(LOJAS_INDICE.map(function(col){
+      return self.tx(COLECOES[col].loja,'readonly', function(s){ return s.count(); });
+    })).then(function(contas){
+      return self.tx('indice','readonly', function(s){ return s.getAll(); }).then(function(todos){
+        var saida = { registros: [], arvores: [], mensais: [], ramais: [] };
+        (todos || []).forEach(function(r){ if(saida[r.__col]) saida[r.__col].push(r); });
+        for(var i = 0; i < LOJAS_INDICE.length; i++){
+          if(saida[LOJAS_INDICE[i]].length !== contas[i]) return null;
+        }
+        return saida;
+      });
+    }).catch(function(){ return null; });
+  },
+
+  refazerIndice: function(listas){
+    var self = this;
+    if(self.modo !== 'indexeddb') return Promise.resolve();
+    return self.tx('indice','readwrite', function(s){
+      var ult = s.clear();
+      LOJAS_INDICE.forEach(function(col){
+        (listas[col] || []).forEach(function(r){
+          var leve = aliviarUm(col, r);
+          leve.__col = col;
+          ult = s.put(leve, col + ':' + r.id);
+        });
+      });
+      return ult;
+    }).catch(function(){});
+  },
+
   gravarLS: function(col, lista){
     var d = COLECOES[col || 'registros'];
     try{
@@ -1634,10 +1805,16 @@ var Armaz = {
   },
 
   salvar: function(col, reg){
+    var self = this;
+    return self.comAsFotos(col, [reg]).then(function(r){ return self.gravar(col, r[0]); });
+  },
+
+  gravar: function(col, reg){
     var self = this, d = COLECOES[col || 'registros'];
     marcarSalvando();
     if(self.modo === 'indexeddb'){
-      return self.tx(d.loja,'readwrite', function(s){ return s.put(reg); });
+      return self.tx(d.loja,'readwrite', function(s){ return s.put(reg); })
+        .then(function(){ return self.gravarIndice(col, [reg]); });
     }
     if(self.modo === 'localstorage'){
       return self.listar(col).then(function(lista){
@@ -1655,7 +1832,8 @@ var Armaz = {
   remover: function(col, id){
     var self = this, d = COLECOES[col || 'registros'];
     if(self.modo === 'indexeddb'){
-      return self.tx(d.loja,'readwrite', function(s){ return s.delete(id); });
+      return self.tx(d.loja,'readwrite', function(s){ return s.delete(id); })
+        .then(function(){ return self.removerDoIndice(col, id); });
     }
     if(self.modo === 'localstorage'){
       return self.listar(col).then(function(lista){
@@ -1700,6 +1878,12 @@ var Armaz = {
   },
 
   salvarVarios: function(col, regs){
+    var self = this;
+    if(!regs.length) return Promise.resolve();
+    return self.comAsFotos(col, regs).then(function(r){ return self.gravarVarios(col, r); });
+  },
+
+  gravarVarios: function(col, regs){
     var self = this, d = COLECOES[col || 'registros'];
     if(!regs.length) return Promise.resolve();
     if(self.modo === 'indexeddb'){
@@ -1707,7 +1891,7 @@ var Armaz = {
         var ult = null;
         for(var i=0;i<regs.length;i++) ult = s.put(regs[i]);
         return ult;
-      });
+      }).then(function(){ return self.gravarIndice(col, regs); });
     }
     if(self.modo === 'localstorage'){
       return self.listar(col).then(function(lista){
@@ -2153,10 +2337,18 @@ function renderizarResumoObra(){
     (cfg.contrato ? ' &middot; ' + esc(cfg.contrato) : '') + '</div></div>';
 }
 
+/* A imagem do cartão é sempre a miniatura: leve, e só baixada quando a rua
+   está aberta e o cartão chega perto da tela. */
+function imgMini(r, alt){
+  if(!r.mini) return '<div class="mini" aria-hidden="true"></div>';
+  return '<img class="mini" src="' + esc(r.mini) + '" alt="' + esc(alt) + '" ' +
+         'loading="lazy" decoding="async" width="66" height="66">';
+}
+
 function cardEsgoto(r){
   var num = (r.numero||'').trim();
   return '<div class="card">' +
-    '<img class="mini" src="' + esc(r.fotoHid || '') + '" alt="Foto do hidrômetro">' +
+    imgMini(r, 'Foto do hidrômetro') +
     '<div class="corpo">' +
       '<div class="l1">' + (num ? 'Casa nº ' + esc(num) : '<span class="semnum">Sem número</span>') + '</div>' +
       '<div class="l2">Hidrômetro: ' + (String(r.numHid||'').trim() ? esc(r.numHid) : 'não informado') +
@@ -2174,7 +2366,7 @@ function cardArvore(r){
   var etq = (r.etiqueta||'').trim();
   var num = (r.numero||'').trim();
   return '<div class="card">' +
-    '<img class="mini" src="' + esc(r.fotoArv || '') + '" alt="Foto da árvore">' +
+    imgMini(r, 'Foto da árvore') +
     '<div class="corpo">' +
       '<div class="l1">' + (etq ? 'Etiqueta nº ' + esc(etq) : '<span class="semnum">Sem etiqueta</span>') + '</div>' +
       '<div class="l2">' + (num ? 'Referência: nº ' + esc(num) + ' &middot; ' : '') + esc(dataBR(r.data)) + '</div>' +
@@ -2189,7 +2381,7 @@ function cardArvore(r){
 
 function cardMensal(r, indice, primeiro, ultimo){
   return '<div class="card">' +
-    '<img class="mini" src="' + esc(r.foto || '') + '" alt="Foto do relatório mensal">' +
+    imgMini(r, 'Foto do relatório mensal') +
     '<div class="corpo">' +
       '<div class="l1">Foto ' + indice + '</div>' +
       '<div class="l2">' + esc(r.descricao || '') + '</div>' +
@@ -2480,9 +2672,9 @@ function excluirMes(mes){
 }
 
 function cardRamal(r){
-  var extra = r.foto2 ? ' &middot; com foto complementar' : '';
+  var extra = (r.foto2 || r.tem_foto2) ? ' &middot; com foto complementar' : '';
   return '<div class="card">' +
-    '<img class="mini" src="' + esc(r.foto || '') + '" alt="Foto do ramal">' +
+    imgMini(r, 'Foto do ramal') +
     '<div class="corpo">' +
       '<div class="l1">Ramal de água</div>' +
       '<div class="l2">' + esc(r.rua || '') + extra + '</div>' +
@@ -2495,6 +2687,8 @@ function cardRamal(r){
     '</div>' +
   '</div>';
 }
+
+var gruposNaTela = {};
 
 function renderizar(){
   try{
@@ -2540,13 +2734,21 @@ function renderizar(){
 
     // uma rua aberta por vez; com uma rua só, ela já vem aberta
     var aberta = estado.ruaAberta[estado.aba] || '';
-    if(!aberta && grupos.length === 1) aberta = chaveRua(grupos[0].nome);
+    if(!aberta && grupos.length === 1){
+      // com uma rua só ela já vem aberta; o estado precisa saber disso,
+      // senão o primeiro toque no título não fecha nada.
+      aberta = chaveRua(grupos[0].nome);
+      estado.ruaAberta[estado.aba] = aberta;
+    }
 
     var html = '';
+    gruposNaTela = {};
     grupos.forEach(function(g){
       var chave = chaveRua(g.nome);
       var fechada = chave !== aberta;
-      html += '<div class="grupoRua' + (fechada ? ' fechado' : '') + '">';
+      gruposNaTela[chave] = g.itens;
+      html += '<div class="grupoRua' + (fechada ? ' fechado' : '') +
+              '" data-grupo="' + esc(chave) + '">';
       html += '<button type="button" class="tituloRua" data-rua="' + esc(chave) + '" ' +
               'aria-expanded="' + (fechada ? 'false' : 'true') + '">' +
               '<span class="nome">' + esc(g.nome) + '</span>' +
@@ -2564,7 +2766,9 @@ function renderizar(){
         var nEsg = g.itens.filter(function(r){ return contaEsgoto(r.sitEsg); }).length;
         html += '<div class="subRua">Ligações de esgoto a modificar nesta rua: <b>' + nEsg + '</b></div>';
       }
-      g.itens.forEach(function(r){ html += ram ? cardRamal(r) : arv ? cardArvore(r) : cardEsgoto(r); });
+      // Rua fechada não monta cartão nenhum: é o que mantém a lista leve
+      // mesmo com centenas de registros no aparelho.
+      html += '<div class="cartoes">' + (fechada ? '' : cartoesDaRua(g.itens)) + '</div>';
       html += '</div>';
     });
     cx.innerHTML = html;
@@ -2573,10 +2777,62 @@ function renderizar(){
   }
 }
 
+/* Cartões de uma rua, no formato da aba em que a lista está. */
+function cartoesDaRua(itens){
+  var ram = estado.aba === 'ramal', arv = estado.aba === 'arvore';
+  var s = '';
+  itens.forEach(function(r){ s += ram ? cardRamal(r) : arv ? cardArvore(r) : cardEsgoto(r); });
+  return s;
+}
+
+function grupoNaTela(chave){
+  var gs = $('lista').querySelectorAll('.grupoRua');
+  for(var i = 0; i < gs.length; i++){
+    if(gs[i].getAttribute('data-grupo') === chave) return gs[i];
+  }
+  return null;
+}
+
+/* Abre ou fecha uma rua mexendo só nela. Antes a lista inteira era refeita
+   a cada toque, o que travava a tela por segundos; agora o resto da página
+   nem é tocado. Devolve false quando não acha a rua, e aí a lista é refeita. */
+function pintarRua(chave, abrir){
+  if(!chave) return true;
+  var g = grupoNaTela(chave);
+  if(!g) return false;
+  var cx = g.querySelector('.cartoes');
+  var bt = g.querySelector('.tituloRua');
+  if(!cx || !bt) return false;
+  if(abrir){
+    var itens = gruposNaTela[chave];
+    if(!itens) return false;
+    if(!cx.firstChild) cx.innerHTML = cartoesDaRua(itens);
+  }else{
+    cx.textContent = '';
+  }
+  g.classList.toggle('fechado', !abrir);
+  bt.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+  return true;
+}
+
+/* A lista da tela não guarda as fotos; na hora de editar, o registro é lido
+   inteiro do banco, para a ficha abrir com as imagens no lugar. */
+function abrirParaEditar(col, id, abrir){
+  return Armaz.ler(col, id).then(function(reg){
+    if(!reg) throw new Error('registro não encontrado');
+    abrir(reg);
+  }).catch(function(e){
+    mostrarMsg('Não foi possível abrir o registro para edição: ' + msgErro(e), 'erro', true);
+  });
+}
+
 function alternarRua(chave){
   var atual = estado.ruaAberta[estado.aba] || '';
-  estado.ruaAberta[estado.aba] = (atual === chave) ? '' : chave;
-  renderizar();
+  var nova = (atual === chave) ? '' : chave;
+  estado.ruaAberta[estado.aba] = nova;
+  var ok = pintarRua(atual, false);
+  if(ok) ok = pintarRua(nova, true);
+  if(!ok) renderizar();
 }
 
 function trocarAba(aba){
@@ -2589,20 +2845,108 @@ function trocarAba(aba){
 }
 
 function recarregar(){
+  // Primeiro o atalho: o índice leve. Só quando ele falta ou está defasado
+  // é que os registros são lidos inteiros — e aí o índice é refeito.
+  return Armaz.lerIndice().then(function(indice){
+    if(indice){
+      return Armaz.listar('meses').then(function(meses){
+        estado.registros = indice.registros;
+        estado.arvores = indice.arvores;
+        estado.mensais = indice.mensais;
+        estado.ramais = indice.ramais;
+        estado.meses = Array.isArray(meses) ? meses : [];
+        return false;
+      });
+    }
+    return Promise.all([Armaz.listar('registros'), Armaz.listar('arvores'),
+                        Armaz.listar('mensais'), Armaz.listar('ramais'),
+                        Armaz.listar('meses')]).then(function(r){
+      estado.registros = aliviar('registros', Array.isArray(r[0]) ? r[0] : []);
+      estado.arvores = aliviar('arvores', Array.isArray(r[1]) ? r[1] : []);
+      estado.mensais = aliviar('mensais', Array.isArray(r[2]) ? r[2] : []);
+      estado.ramais = aliviar('ramais', Array.isArray(r[3]) ? r[3] : []);
+      estado.meses = Array.isArray(r[4]) ? r[4] : [];
+      return true;
+    });
+  }).then(function(refazerIndice){
+    return migrarFotosSemMes().then(function(){
+      if(!refazerIndice) return null;
+      return Armaz.refazerIndice({ registros: estado.registros, arvores: estado.arvores,
+                                   mensais: estado.mensais, ramais: estado.ramais });
+    });
+  }).then(function(){
+    marcarSalvo();
+    renderizar();
+    completarMiniaturas();
+  }).catch(function(e){
+    mostrarMsg('Não foi possível ler os registros salvos: ' + msgErro(e), 'erro', true);
+  });
+}
+
+/* Guarda o registro já gravado na lista da tela, sem reler o banco inteiro.
+   É o que faz a tela voltar na hora depois de cadastrar uma casa. */
+function guardarNaLista(col, reg){
+  var lista = estado[LISTA_DA_COLECAO[col]];
+  if(!lista) return;
+  var leve = aliviarUm(col, reg);
+  var i = lista.findIndex(function(r){ return r.id === leve.id; });
+  if(i >= 0) lista[i] = leve; else lista.push(leve);
+}
+
+/* Põe as fotos em tamanho cheio de volta no estado pelo tempo de gerar o
+   PDF ou o backup, e tira de novo no fim — a memória do celular agradece. */
+function comFotos(fn){
+  var leves = [estado.registros, estado.arvores, estado.mensais, estado.ramais];
+  var repor = function(){
+    estado.registros = leves[0]; estado.arvores = leves[1];
+    estado.mensais = leves[2]; estado.ramais = leves[3];
+  };
   return Promise.all([Armaz.listar('registros'), Armaz.listar('arvores'),
-                      Armaz.listar('mensais'), Armaz.listar('ramais'),
-                      Armaz.listar('meses')]).then(function(r){
+                      Armaz.listar('mensais'), Armaz.listar('ramais')]).then(function(r){
     estado.registros = Array.isArray(r[0]) ? r[0] : [];
     estado.arvores = Array.isArray(r[1]) ? r[1] : [];
     estado.mensais = Array.isArray(r[2]) ? r[2] : [];
     estado.ramais = Array.isArray(r[3]) ? r[3] : [];
-    estado.meses = Array.isArray(r[4]) ? r[4] : [];
-    return migrarFotosSemMes();
-  }).then(function(){
+    return fn();
+  }).then(function(v){ repor(); return v; },
+          function(e){ repor(); throw e; });
+}
+
+/* Registros cadastrados antes das miniaturas ganham a sua aos poucos, em
+   segundo plano, um por vez, para não travar a tela. */
+var fazendoMiniaturas = false;
+function completarMiniaturas(){
+  if(fazendoMiniaturas) return Promise.resolve();
+  var tarefas = [];
+  ['registros','arvores','mensais','ramais'].forEach(function(col){
+    var capa = FOTO_DA_CAPA[col];
+    (estado[LISTA_DA_COLECAO[col]] || []).forEach(function(r){
+      if(!r.mini && r['tem_' + capa]) tarefas.push({ col: col, leve: r });
+    });
+  });
+  if(!tarefas.length) return Promise.resolve();
+  fazendoMiniaturas = true;
+  var feitas = 0;
+  var passo = function(i){
+    if(i >= tarefas.length) return Promise.resolve();
+    var t = tarefas[i];
+    return Armaz.ler(t.col, t.leve.id).then(function(cheio){
+      if(!cheio) return null;
+      return gerarMini(cheio[FOTO_DA_CAPA[t.col]]).then(function(mini){
+        if(!mini) return null;
+        cheio.mini = mini;
+        t.leve.mini = mini;
+        feitas++;
+        return Armaz.gravar(t.col, cheio);
+      });
+    }).catch(function(){ return null; }).then(function(){
+      return new Promise(function(res){ setTimeout(function(){ res(passo(i + 1)); }, 0); });
+    });
+  };
+  return passo(0).then(function(){
+    fazendoMiniaturas = false;
     marcarSalvo();
-    renderizar();
-  }).catch(function(e){
-    mostrarMsg('Não foi possível ler os registros salvos: ' + msgErro(e), 'erro', true);
+    if(feitas) renderizar();
   });
 }
 
@@ -2955,15 +3299,19 @@ function salvarRamal(){
 
     $('btSalvarRam').disabled = true;
     var edicao = !!estado.editandoRamId;
-    Armaz.salvar('ramais', reg).then(function(){
+    gerarMini(reg.foto).then(function(mini){
+      reg.mini = mini;
+      return Armaz.salvar('ramais', reg);
+    }).then(function(){
+      return Armaz.ler('ramais', reg.id);
+    }).then(function(gravado){
+      if(!gravado) throw new Error('o registro não apareceu no banco após a gravação');
       estado.ultimaRuaRam = rua;
       estado.ruaAberta['ramal'] = chaveRua(rua);
       fecharSheetRamal();
-      return recarregar();
-    }).then(function(){
-      if(!estado.ramais.some(function(r){ return r.id === reg.id; })){
-        throw new Error('o registro não apareceu na lista após a gravação');
-      }
+      guardarNaLista('ramais', reg);
+      marcarSalvo();
+      renderizar();
       guardarTexto('obs', reg.obs);
       mostrarMsg((edicao ? 'Ramal atualizado' : 'Ramal cadastrado') + ': ' + rua + ' — ' + reg.ajuste + '.', 'sucesso');
     }).catch(function(e){
@@ -3099,17 +3447,19 @@ function salvarFotoMensal(){
 
     $('btSalvarMen').disabled = true;
     var edicao = !!estado.editandoMenId;
-    Armaz.salvar('mensais', reg).then(function(){
-      fecharSheetMensal();
-      return recarregar();
+    gerarMini(reg.foto).then(function(mini){
+      reg.mini = mini;
+      return Armaz.salvar('mensais', reg);
     }).then(function(){
+      return Armaz.ler('mensais', reg.id);
+    }).then(function(gravado){
+      if(!gravado) throw new Error('o registro não apareceu no banco após a gravação');
+      fecharSheetMensal();
+      guardarNaLista('mensais', reg);
       return gravarOrdemMensal(paginasMensais());
     }).then(function(){
-      return recarregar();
-    }).then(function(){
-      if(!estado.mensais.some(function(r){ return r.id === reg.id; })){
-        throw new Error('o registro não apareceu na lista após a gravação');
-      }
+      marcarSalvo();
+      renderizar();
       guardarTexto('descricao', reg.descricao);
       mostrarMsg((edicao ? 'Foto atualizada' : 'Foto adicionada') + ': ' + desc.slice(0,60) + '.', 'sucesso');
     }).catch(function(e){
@@ -3245,15 +3595,19 @@ function salvarArvore(){
 
     $('btSalvarArv').disabled = true;
     var edicao = !!estado.editandoArvId;
-    Armaz.salvar('arvores', reg).then(function(){
+    gerarMini(reg.fotoArv).then(function(mini){
+      reg.mini = mini;
+      return Armaz.salvar('arvores', reg);
+    }).then(function(){
+      return Armaz.ler('arvores', reg.id);
+    }).then(function(gravado){
+      if(!gravado) throw new Error('o registro não apareceu no banco após a gravação');
       estado.ultimaRuaArv = rua;
       estado.ruaAberta['arvore'] = chaveRua(rua);
       fecharSheetArv();
-      return recarregar();
-    }).then(function(){
-      if(!estado.arvores.some(function(r){ return r.id === reg.id; })){
-        throw new Error('o registro não apareceu na lista após a gravação');
-      }
+      guardarNaLista('arvores', reg);
+      marcarSalvo();
+      renderizar();
       guardarTexto('obs', reg.obs);
       mostrarMsg((edicao ? 'Árvore atualizada' : 'Árvore registrada') + ': ' + rua +
                  (reg.etiqueta ? ', etiqueta nº ' + reg.etiqueta : ' (sem etiqueta)') + '.', 'sucesso');
@@ -3508,14 +3862,21 @@ function salvarCasa(){
 
     $('btSalvar').disabled = true;
     var edicao = !!estado.editandoId;
-    Armaz.salvar('registros', reg).then(function(){
+    gerarMini(reg.fotoHid).then(function(mini){
+      reg.mini = mini;
+      return Armaz.salvar('registros', reg);
+    }).then(function(){
+      return Armaz.ler('registros', reg.id);
+    }).then(function(gravado){
+      if(!gravado) throw new Error('o registro não apareceu no banco após a gravação');
       estado.ultimaRua = rua;
       estado.ruaAberta['esgoto'] = chaveRua(rua);
       fecharSheet();
-      return recarregar();
-    }).then(function(){
-      var conferido = estado.registros.some(function(r){ return r.id === reg.id; });
-      if(!conferido) throw new Error('o registro não apareceu na lista após a gravação');
+      // a lista é atualizada em memória: reler o banco inteiro a cada
+      // cadastro era o que fazia a tela demorar para voltar.
+      guardarNaLista('registros', reg);
+      marcarSalvo();
+      renderizar();
       guardarTexto('obs', reg.obs);
       mostrarMsg((edicao ? 'Registro atualizado' : 'Casa cadastrada') + ': ' + rua +
                  (reg.numero ? ', nº ' + reg.numero : ' (sem número)') + '.', 'sucesso');
@@ -3630,45 +3991,48 @@ function arquivarMes(mes){
   var mesAnterior = estado.mesAtivo;
   estado.mesAtivo = mes;                      // o PDF é sempre do mês aberto
 
-  var pendentes = [];
-  fotos.forEach(function(r){
-    if(!r.dim || !r.dim.w) pendentes.push(medirImagem(r.foto).then(function(d){ r.dim = d; }));
-  });
-  if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)) pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
-  if(cfg.brasao && (!cfg.brasaoDim || !cfg.brasaoDim.w)) pendentes.push(medirImagem(cfg.brasao).then(function(d){ cfg.brasaoDim = d; }));
-
   var arquivos = [];
-  Promise.all(pendentes).then(function(){
-    return montarPDFMensal(Ctor, paginasMensais());
-  }).then(function(res){
-    arquivos.push({ blob: res.blob, nome: res.nome,
-                    dica: 'Relatório de ' + mesPorExtenso(mes) + ' com ' + res.paginas + ' página(s).' });
-    var pacote = {
-      aplicativo: 'registro-interferencias-aguas-guariroba',
-      versao: 5,
-      exportadoEm: new Date().toISOString(),
-      tipo: 'mes-arquivado',
-      mes: mes,
-      config: estado.config,
-      registros: [], arvores: [], ramais: [],
-      meses: [registroDoMes(mes) || { id: mes }],
-      mensais: mensaisOrdenadas()
-    };
-    var texto = JSON.stringify(pacote);
-    arquivos.push({ blob: new Blob([texto], { type:'application/json' }),
-                    nome: 'backup-mensal-' + mes + '.json',
-                    dica: 'Backup de ' + mesPorExtenso(mes) + ' com as ' + fotos.length +
-                          ' foto(s) (' + kb(texto.length) + '). Guarde: é com ele que o mês volta.' });
-    // só agora as fotos saem do aparelho
-    return fotos.reduce(function(pr, r){
-      return pr.then(function(){ return Armaz.remover('mensais', r.id); });
-    }, Promise.resolve());
-  }).then(function(){
-    var reg = registroDoMes(mes) || { id: mes, criadoEm: new Date().toISOString() };
-    reg.arquivadoEm = new Date().toISOString();
-    reg.fotosArquivadas = fotos.length;
-    if(!registroDoMes(mes)) estado.meses.push(reg);
-    return Armaz.salvar('meses', reg);
+  // O PDF e o backup do mês precisam das fotos em tamanho cheio.
+  comFotos(function(){
+    var pendentes = [];
+    fotosDoMes(mes).forEach(function(r){
+      if(!r.dim || !r.dim.w) pendentes.push(medirImagem(r.foto).then(function(d){ r.dim = d; }));
+    });
+    if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)) pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
+    if(cfg.brasao && (!cfg.brasaoDim || !cfg.brasaoDim.w)) pendentes.push(medirImagem(cfg.brasao).then(function(d){ cfg.brasaoDim = d; }));
+
+    return Promise.all(pendentes).then(function(){
+      return montarPDFMensal(Ctor, paginasMensais());
+    }).then(function(res){
+      arquivos.push({ blob: res.blob, nome: res.nome,
+                      dica: 'Relatório de ' + mesPorExtenso(mes) + ' com ' + res.paginas + ' página(s).' });
+      var pacote = {
+        aplicativo: 'registro-interferencias-aguas-guariroba',
+        versao: 5,
+        exportadoEm: new Date().toISOString(),
+        tipo: 'mes-arquivado',
+        mes: mes,
+        config: estado.config,
+        registros: [], arvores: [], ramais: [],
+        meses: [registroDoMes(mes) || { id: mes }],
+        mensais: mensaisOrdenadas()
+      };
+      var texto = JSON.stringify(pacote);
+      arquivos.push({ blob: new Blob([texto], { type:'application/json' }),
+                      nome: 'backup-mensal-' + mes + '.json',
+                      dica: 'Backup de ' + mesPorExtenso(mes) + ' com as ' + fotos.length +
+                            ' foto(s) (' + kb(texto.length) + '). Guarde: é com ele que o mês volta.' });
+      // só agora as fotos saem do aparelho
+      return fotos.reduce(function(pr, r){
+        return pr.then(function(){ return Armaz.remover('mensais', r.id); });
+      }, Promise.resolve());
+    }).then(function(){
+      var reg = registroDoMes(mes) || { id: mes, criadoEm: new Date().toISOString() };
+      reg.arquivadoEm = new Date().toISOString();
+      reg.fotosArquivadas = fotos.length;
+      if(!registroDoMes(mes)) estado.meses.push(reg);
+      return Armaz.salvar('meses', reg);
+    });
   }).then(function(){
     estado.mesAtivo = '';
     return recarregar();
@@ -3908,30 +4272,38 @@ function gerarPDF(){
   processando(true, 'Gerando o PDF…', 'Preparando as fotos.');
   $('btPdf').disabled = true;
 
-  var grupos = agruparPorRua(todos);
+  // As fotos em tamanho cheio entram na memória só aqui, pelo tempo do PDF.
+  comFotos(function(){
+    var cheios = perfil.lista();
+    var grupos = agruparPorRua(cheios);
 
-  // garante que todas as fotos tenham dimensões conhecidas (proporção correta)
-  var pendentes = [];
-  todos.forEach(function(r){
-    var f = perfil.fotos(r);
-    var campos = { esgoto: ['dimHid','dimEsg'], arvore: ['dimArv','dimEtq'], ramal: ['dim','dim2'] }[perfil.chave];
-    f.forEach(function(par, i){
-      if(par[0] && (!par[1] || !par[1].w)){
-        pendentes.push(medirImagem(par[0]).then(function(d){ r[campos[i]] = d; }));
-      }
+    // garante que todas as fotos tenham dimensões conhecidas (proporção correta)
+    var pendentes = [];
+    cheios.forEach(function(r){
+      var f = perfil.fotos(r);
+      var campos = { esgoto: ['dimHid','dimEsg'], arvore: ['dimArv','dimEtq'], ramal: ['dim','dim2'] }[perfil.chave];
+      f.forEach(function(par, i){
+        if(par[0] && (!par[1] || !par[1].w)){
+          pendentes.push(medirImagem(par[0]).then(function(d){ r[campos[i]] = d; }));
+        }
+      });
     });
-  });
-  if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)){
-    pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
-  }
+    if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)){
+      pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
+    }
 
-  Promise.all(pendentes).then(function(){
-    return montarPDF(Ctor, grupos, todos, perfil);
+    return Promise.all(pendentes).then(function(){
+      return montarPDF(Ctor, grupos, cheios, perfil);
+    }).then(function(res){
+      res.nRegistros = cheios.length;
+      res.nRuas = grupos.length;
+      return res;
+    });
   }).then(function(res){
     processando(false);
     var auto = publicarArquivo(res.nome, res.blob,
-      'PDF com ' + res.paginas + ' página(s), ' + todos.length +
-      ({ arvore:' árvore(s) ', ramal:' ramal(is) ' }[perfil.chave] || ' casa(s) ') + 'e ' + grupos.length + ' rua(s). ' +
+      'PDF com ' + res.paginas + ' página(s), ' + res.nRegistros +
+      ({ arvore:' árvore(s) ', ramal:' ramal(is) ' }[perfil.chave] || ' casa(s) ') + 'e ' + res.nRuas + ' rua(s). ' +
       'Se o download automático não abrir, use os botões abaixo.');
     var extra = '';
     if(res.fotosComFalha) extra += ' Atenção: ' + res.fotosComFalha + ' foto(s) não puderam ser desenhadas e aparecem como moldura vazia.';
@@ -4612,7 +4984,6 @@ function gerarPDFMensal(Ctor){
     return;
   }
   var itens = mensaisOrdenadas();
-  var paginasFotos = paginasMensais();
   if(!itens.length){
     mostrarMsg('Não há nada para gerar: ' + mesPorExtenso(estado.mesAtivo) + ' está sem fotos.', 'erro', true);
     return;
@@ -4625,15 +4996,18 @@ function gerarPDFMensal(Ctor){
   processando(true, 'Gerando o PDF…', 'Preparando as fotos.');
   $('btPdf').disabled = true;
 
-  var pendentes = [];
-  itens.forEach(function(r){
-    if(!r.dim || !r.dim.w) pendentes.push(medirImagem(r.foto).then(function(d){ r.dim = d; }));
-  });
-  if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)) pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
-  if(cfg.brasao && (!cfg.brasaoDim || !cfg.brasaoDim.w)) pendentes.push(medirImagem(cfg.brasao).then(function(d){ cfg.brasaoDim = d; }));
-
-  Promise.all(pendentes).then(function(){
-    return montarPDFMensal(Ctor, paginasFotos);
+  comFotos(function(){
+    var cheias = mensaisOrdenadas();
+    var paginasCheias = paginasMensais();
+    var pendentes = [];
+    cheias.forEach(function(r){
+      if(!r.dim || !r.dim.w) pendentes.push(medirImagem(r.foto).then(function(d){ r.dim = d; }));
+    });
+    if(cfg.logo && (!cfg.logoDim || !cfg.logoDim.w)) pendentes.push(medirImagem(cfg.logo).then(function(d){ cfg.logoDim = d; }));
+    if(cfg.brasao && (!cfg.brasaoDim || !cfg.brasaoDim.w)) pendentes.push(medirImagem(cfg.brasao).then(function(d){ cfg.brasaoDim = d; }));
+    return Promise.all(pendentes).then(function(){
+      return montarPDFMensal(Ctor, paginasCheias);
+    });
   }).then(function(res){
     processando(false);
     var auto = publicarArquivo(res.nome, res.blob,
@@ -5024,7 +5398,7 @@ function abasDaPlanilha(){
   if(estado.ramais.length){
     var lr = [['Rua','Ajuste de nível','A ajustar','Foto complementar','Observações']];
     ordenarRegistros(estado.ramais).forEach(function(r){
-      lr.push([r.rua || '', r.ajuste || '', sim(contaRamal(r.ajuste)), sim(!!r.foto2), r.obs || '']);
+      lr.push([r.rua || '', r.ajuste || '', sim(contaRamal(r.ajuste)), sim(!!(r.foto2 || r.tem_foto2)), r.obs || '']);
     });
     abas.push({ nome:'Ramais', linhas: lr });
   }
@@ -5085,11 +5459,13 @@ function semAcentoSimples(t){
 }
 
 function exportarBackup(){
-  try{
-    if(!estado.registros.length && !estado.arvores.length && !estado.mensais.length && !estado.ramais.length){
-      mostrarMsg('Não há registros para exportar.', 'erro', true);
-      return;
-    }
+  if(!estado.registros.length && !estado.arvores.length && !estado.mensais.length && !estado.ramais.length){
+    mostrarMsg('Não há registros para exportar.', 'erro', true);
+    return;
+  }
+  processando(true, 'Montando o backup…', 'Juntando as fotos.');
+  // O backup leva as imagens, então aqui elas voltam para a memória.
+  comFotos(function(){
     var pacote = {
       aplicativo: 'registro-interferencias-aguas-guariroba',
       versao: 5,
@@ -5104,19 +5480,26 @@ function exportarBackup(){
       ramais: ordenarRegistros(estado.ramais)
     };
     var texto = JSON.stringify(pacote);
-    var blob = new Blob([texto], { type: 'application/json' });
+    return {
+      blob: new Blob([texto], { type: 'application/json' }),
+      tamanho: texto.length,
+      contas: [estado.registros.length, estado.arvores.length, estado.mensais.length, estado.ramais.length]
+    };
+  }).then(function(d){
+    processando(false);
     var apelido = semAcentoSimples(nomeDaObraAtiva()).toLowerCase()
       .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40) || 'obra';
     var nome = 'backup-' + apelido + '-' + hojeISO() + '.json';
-    var auto = publicarArquivo(nome, blob,
-      'Backup com ' + estado.registros.length + ' casa(s), ' + estado.arvores.length +
-      ' árvore(s), ' + estado.mensais.length + ' foto(s) do mensal, ' + estado.ramais.length +
-      ' ramal(is) e todas as imagens (' + kb(texto.length) + '). ' +
+    var auto = publicarArquivo(nome, d.blob,
+      'Backup com ' + d.contas[0] + ' casa(s), ' + d.contas[1] +
+      ' árvore(s), ' + d.contas[2] + ' foto(s) do mensal, ' + d.contas[3] +
+      ' ramal(is) e todas as imagens (' + kb(d.tamanho) + '). ' +
       'Guarde este arquivo: ele é a única cópia fora deste aparelho.');
     mostrarMsg('Backup exportado.' + (auto ? ' O download automático foi disparado.' : ''), 'sucesso');
-  }catch(e){
+  }).catch(function(e){
+    processando(false);
     mostrarMsg('Falha ao exportar o backup: ' + msgErro(e), 'erro', true);
-  }
+  });
 }
 
 function normalizarRegistro(o){
@@ -5128,6 +5511,7 @@ function normalizarRegistro(o){
     rua: String(o.rua || '').trim(),
     numero: String(o.numero || '').trim(),
     data: String(o.data || hojeISO()),
+    mini: String(o.mini || ''),
     fotoHid: String(o.fotoHid || ''),
     dimHid: o.dimHid && o.dimHid.w ? { w: o.dimHid.w, h: o.dimHid.h } : null,
     numHid: String(o.numHid || '').trim(),
@@ -5148,6 +5532,7 @@ function normalizarArvore(o){
     rua: String(o.rua || '').trim(),
     numero: String(o.numero || '').trim(),
     data: String(o.data || hojeISO()),
+    mini: String(o.mini || ''),
     fotoArv: String(o.fotoArv || ''),
     dimArv: o.dimArv && o.dimArv.w ? { w: o.dimArv.w, h: o.dimArv.h } : null,
     fotoEtq: String(o.fotoEtq || ''),
@@ -5165,6 +5550,7 @@ function normalizarRamal(o){
     id: String(o.id || novoId()),
     rua: String(o.rua || '').trim(),
     ajuste: AJUSTES.indexOf(o.ajuste) >= 0 ? o.ajuste : 'Rebaixar',
+    mini: String(o.mini || ''),
     foto: String(o.foto || ''),
     dim: o.dim && o.dim.w ? { w: o.dim.w, h: o.dim.h } : null,
     foto2: String(o.foto2 || ''),
@@ -5185,6 +5571,7 @@ function normalizarMensal(o){
   return {
     id: String(o.id || novoId()),
     mes: mes,
+    mini: String(o.mini || ''),
     foto: String(o.foto || ''),
     dim: o.dim && o.dim.w ? { w: o.dim.w, h: o.dim.h } : null,
     descricao: String(o.descricao || '').trim(),
@@ -5432,12 +5819,7 @@ function ligarEventos(){
     if(!alvo) return;
     var idEdR = alvo.getAttribute('data-editar-ram');
     var idExR = alvo.getAttribute('data-excluir-ram');
-    if(idEdR){
-      var ram = estado.ramais.filter(function(r){ return r.id === idEdR; })[0];
-      if(!ram){ mostrarMsg('Registro não encontrado para edição.', 'erro', true); return; }
-      abrirSheetRamal(ram);
-      return;
-    }
+    if(idEdR){ abrirParaEditar('ramais', idEdR, abrirSheetRamal); return; }
     if(idExR){ excluirRamal(idExR); return; }
     var idSobe = alvo.getAttribute('data-subir-men');
     var idDesce = alvo.getAttribute('data-descer-men');
@@ -5451,28 +5833,16 @@ function ligarEventos(){
     if(mesExcluir){ excluirMes(mesExcluir); return; }
     var idEdM = alvo.getAttribute('data-editar-men');
     var idExM = alvo.getAttribute('data-excluir-men');
-    if(idEdM){
-      var men = estado.mensais.filter(function(r){ return r.id === idEdM; })[0];
-      if(!men){ mostrarMsg('Registro não encontrado para edição.', 'erro', true); return; }
-      abrirSheetMensal(men);
-      return;
-    }
+    if(idEdM){ abrirParaEditar('mensais', idEdM, abrirSheetMensal); return; }
     if(idExM){ excluirFotoMensal(idExM); return; }
     var idEdA = alvo.getAttribute('data-editar-arv');
     var idExA = alvo.getAttribute('data-excluir-arv');
-    if(idEdA){
-      var arv = estado.arvores.filter(function(r){ return r.id === idEdA; })[0];
-      if(!arv){ mostrarMsg('Registro não encontrado para edição.', 'erro', true); return; }
-      abrirSheetArv(arv);
-      return;
-    }
+    if(idEdA){ abrirParaEditar('arvores', idEdA, abrirSheetArv); return; }
     if(idExA){ excluirArvore(idExA); return; }
     var idEd = alvo.getAttribute('data-editar');
     var idEx = alvo.getAttribute('data-excluir');
     if(idEd){
-      var reg = estado.registros.filter(function(r){ return r.id === idEd; })[0];
-      if(!reg){ mostrarMsg('Registro não encontrado para edição.', 'erro', true); return; }
-      abrirSheet(reg);
+      abrirParaEditar('registros', idEd, abrirSheet);
     }else if(idEx){
       excluirRegistro(idEx);
     }

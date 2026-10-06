@@ -57,7 +57,7 @@
             </td>
             <td>
               {% if i.assinatura_id %}
-                <img class="assin-mini" src="{{ url_for('assinatura', aid=i.assinatura_id) }}" alt="Assinatura de recebimento">
+                <img class="assin-mini" src="{{ url_for('assinatura', aid=i.assinatura_id) }}" alt="Assinatura de recebimento" loading="lazy" decoding="async">
               {% else %}
                 <span class="pequeno" style="color:var(--erro)">sem assinatura</span>
               {% endif %}
@@ -66,7 +66,7 @@
               {% if i.data_devolucao %}
                 {{ i.data_devolucao | data_br }}
                 {% if i.assinatura_devolucao_id %}
-                  <br><img class="assin-mini" src="{{ url_for('assinatura', aid=i.assinatura_devolucao_id) }}" alt="Assinatura de devolução">
+                  <br><img class="assin-mini" src="{{ url_for('assinatura', aid=i.assinatura_devolucao_id) }}" alt="Assinatura de devolução" loading="lazy" decoding="async">
                 {% else %}
                   <div class="pequeno suave">sem assinatura</div>
                 {% endif %}

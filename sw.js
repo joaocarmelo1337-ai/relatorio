@@ -4,7 +4,7 @@
    nova chega sem depender de cache), caindo para a cópia guardada quando
    está sem sinal — que é a situação da obra. Os arquivos de versão nunca
    são guardados, senão o aviso de atualização olharia para o passado. */
-var CACHE = 'campo-epi-2026-09-23';
+var CACHE = 'campo-epi-2026-10-06';
 var ARQUIVOS = [
   './',
   './index.html',

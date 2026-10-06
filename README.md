@@ -154,6 +154,25 @@ todos os registros, as fotos e os dados da obra, inclusive a logo) e **Importar 
 (restaura ou mescla a partir do `.json`) para transferir entre aparelhos ou guardar cópia
 de segurança.
 
+### Como a lista se mantém rápida
+
+Cada foto de campo ocupa quase 1 MB. Para a tela não engasgar quando o aparelho já
+tem centenas de registros:
+
+- **Miniatura por registro.** Ao salvar, o aplicativo guarda também uma miniatura de
+  200 px (poucos KB) e é ela que aparece no cartão da lista. Registros antigos ganham
+  a sua em segundo plano, logo depois de o aplicativo abrir.
+- **Índice leve.** O banco mantém uma cópia de cada registro sem as fotos (loja
+  `indice`). Abrir o aplicativo lê só esse índice; as fotos em tamanho cheio entram na
+  memória apenas na hora de gerar o PDF, exportar o backup ou editar um registro. O
+  índice é só uma cópia: se sumir, ele é refeito sozinho a partir dos registros.
+- **Rua fechada não monta cartão.** Só a rua aberta tem cartões na tela, e abrir ou
+  fechar uma rua mexe apenas nela, sem refazer a lista inteira.
+- **Cadastro não relê o banco.** Depois de salvar, a lista é atualizada em memória.
+
+Na ficha de EPI vale o mesmo: só a entrega mais recente já vem aberta e as outras
+montam a tabela de assinaturas no momento em que são abertas.
+
 ## Detalhes técnicos
 
 - Arquivo único, autocontido: HTML + CSS + JavaScript puro, sem framework e **sem CDN**.

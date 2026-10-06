@@ -57,6 +57,21 @@ main{max-width:1000px;margin:0 auto;padding:14px}
 .cartao{background:#fff;border:1px solid var(--borda);border-radius:var(--raio);padding:14px;margin-bottom:14px}
 .cartao h2{margin:0 0 10px;font-size:1.05rem}
 .cartao h3{margin:0 0 8px;font-size:.95rem}
+
+/* Entrega do histórico: fica recolhida até ser aberta. Uma ficha antiga
+   chega a ter dezenas de entregas, cada uma com a assinatura de cada
+   material — montar todas de uma vez deixava a ficha lenta para abrir. */
+.cartao.entrega{padding:0;overflow:hidden}
+.cabecalho-entrega{
+  display:flex;width:100%;gap:10px;align-items:center;justify-content:space-between;
+  background:none;border:none;font-family:inherit;font-size:1rem;color:inherit;
+  text-align:left;padding:12px 14px;min-height:48px;cursor:pointer;
+}
+.cabecalho-entrega .titulo{font-weight:700;font-size:.95rem}
+.cabecalho-entrega .chev{transition:transform .2s ease;flex:0 0 auto}
+.cartao.entrega:not(.fechada) .cabecalho-entrega .chev{transform:rotate(180deg)}
+.cartao.entrega .corpo-entrega{padding:0 14px 14px}
+.cartao.entrega.fechada .corpo-entrega{display:none}
 h1{font-size:1.3rem;margin:4px 0 14px}
 .vazio{color:var(--suave);text-align:center;padding:26px 10px}
 .suave{color:var(--suave)}
@@ -843,7 +858,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 (function(){
 'use strict';
 
-var VERSAO_APP = '23/09/2026';
+var VERSAO_APP = '06/10/2026';
 var AVISO_BACKUP_DIAS = 7;          // lembra de exportar backup a cada 7 dias
 
 var CHAVE_LS = {
@@ -1490,7 +1505,7 @@ function renderFicha(){
     '</div>' +
     (f.assinAdmissao
       ? '<div class="assinatura-atual" style="margin-top:12px">' +
-          '<img src="' + f.assinAdmissao + '" alt="Assinatura de admissão">' +
+          '<img src="' + f.assinAdmissao + '" alt="Assinatura de admissão" loading="lazy" decoding="async">' +
           '<span class="pequeno suave">Assinatura do funcionário (admissão)</span></div>'
       : '') +
     '<div class="acoes">' +
@@ -1500,8 +1515,10 @@ function renderFicha(){
       '<button type="button" class="btn perigo" data-acao="excluir-func">Excluir funcionário</button>' +
     '</div>';
 
+  // Só a entrega mais recente já vem aberta; as outras esperam um toque.
   var ents = entregasDoFuncionario(f.id);
-  $('fichaHistorico').innerHTML = ents.length ? ents.map(cartaoEntrega).join('')
+  $('fichaHistorico').innerHTML = ents.length
+    ? ents.map(function(e, i){ return cartaoEntrega(e, i === 0); }).join('')
     : '<div class="cartao vazio">Nenhuma entrega registrada para este funcionário.</div>';
 
   $('fichaDados').querySelectorAll('[data-acao]').forEach(function(bt){
@@ -1513,20 +1530,25 @@ function renderFicha(){
       if(a === 'excluir-func') excluirFuncionario(f);
     });
   });
-  $('fichaHistorico').querySelectorAll('[data-entrega]').forEach(function(bt){
-    bt.addEventListener('click', function(){
+  // Um ouvinte só para o histórico inteiro: os cartões que são abertos
+  // depois também passam por aqui, sem precisar de ouvinte novo.
+  if(!$('fichaHistorico').dataset.ouvindo){
+    $('fichaHistorico').dataset.ouvindo = '1';
+    $('fichaHistorico').addEventListener('click', function(ev){
+      var cab = ev.target.closest ? ev.target.closest('[data-abrir-entrega]') : null;
+      if(cab){ alternarEntrega(cab.getAttribute('data-abrir-entrega')); return; }
+      var bt = ev.target.closest ? ev.target.closest('[data-entrega]') : null;
+      if(!bt) return;
       var id = bt.dataset.entrega, a = bt.dataset.acao;
       if(a === 'editar') abrirFormEntrega(id);
       if(a === 'devolucao') abrirDevolucao(id);
       if(a === 'excluir') excluirEntrega(id);
     });
-  });
+  }
 }
 
-function cartaoEntrega(e){
+function corpoEntrega(e){
   var itens = e.itens || [];
-  var assinados = itens.filter(function(i){ return i.assinatura; }).length;
-  var devolvidos = itens.filter(function(i){ return i.dataDevolucao; }).length;
 
   var linhas = itens.map(function(i){
     return '<tr>' +
@@ -1534,28 +1556,20 @@ function cartaoEntrega(e){
         '<div class="pequeno suave">' + (i.ca ? 'CA ' + esc(i.ca) + ' · ' : '') +
         'Qtde ' + esc(numeroBonito(i.qtde)) + '</div></td>' +
       '<td>' + (i.assinatura
-        ? '<img class="assin-mini" src="' + i.assinatura + '" alt="Assinatura de recebimento">'
+        ? '<img class="assin-mini" src="' + i.assinatura + '" alt="Assinatura de recebimento" ' +
+          'loading="lazy" decoding="async">'
         : '<span class="pequeno" style="color:var(--vermelho)">sem assinatura</span>') + '</td>' +
       '<td>' + (i.dataDevolucao
         ? esc(dataBR(i.dataDevolucao)) +
           (i.assinaturaDevolucao
-            ? '<br><img class="assin-mini" src="' + i.assinaturaDevolucao + '" alt="Assinatura de devolução">'
+            ? '<br><img class="assin-mini" src="' + i.assinaturaDevolucao + '" alt="Assinatura de devolução" ' +
+              'loading="lazy" decoding="async">'
             : '<div class="pequeno suave">sem assinatura</div>')
         : '<span class="pequeno suave">—</span>') + '</td>' +
     '</tr>';
   }).join('');
 
-  return '<div class="cartao">' +
-    '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between">' +
-      '<h3 style="margin:0">Entrega de ' + esc(dataBR(e.dataEntrega)) + '</h3>' +
-      '<span class="selo">' + itens.length + ' ite' + (itens.length === 1 ? 'm' : 'ns') + '</span>' +
-    '</div>' +
-    '<div class="pequeno suave">' +
-      (e.dataInicio ? 'Ficha iniciada em ' + esc(dataBR(e.dataInicio)) + ' · ' : '') +
-      assinados + ' de ' + itens.length + ' assinado(s)' +
-      (devolvidos ? ' · ' + devolvidos + ' devolvido(s)' : '') +
-    '</div>' +
-    '<div class="rolagem" style="margin-top:10px"><table>' +
+  return '<div class="rolagem" style="margin-top:4px"><table>' +
       '<thead><tr><th>EPI/Uniforme</th><th>Assinatura</th><th>Devolução</th></tr></thead>' +
       '<tbody>' + linhas + '</tbody>' +
     '</table></div>' +
@@ -1564,8 +1578,55 @@ function cartaoEntrega(e){
       '<button type="button" class="btn pequeno" data-entrega="' + esc(e.id) + '" data-acao="devolucao">Registrar devolução</button>' +
       '<button type="button" class="btn pequeno" data-entrega="' + esc(e.id) + '" data-acao="editar">Editar</button>' +
       '<button type="button" class="btn perigo pequeno" data-entrega="' + esc(e.id) + '" data-acao="excluir">Excluir</button>' +
-    '</div>' +
+    '</div>';
+}
+
+/* O cartão fechado mostra só o resumo da entrega; a tabela com as
+   assinaturas é montada no momento em que ela é aberta. */
+function cartaoEntrega(e, aberta){
+  var itens = e.itens || [];
+  var assinados = itens.filter(function(i){ return i.assinatura; }).length;
+  var devolvidos = itens.filter(function(i){ return i.dataDevolucao; }).length;
+  return '<div class="cartao entrega' + (aberta ? '' : ' fechada') + '" data-cartao="' + esc(e.id) + '">' +
+    '<button type="button" class="cabecalho-entrega" data-abrir-entrega="' + esc(e.id) + '" ' +
+      'aria-expanded="' + (aberta ? 'true' : 'false') + '">' +
+      '<span>' +
+        '<span class="titulo">Entrega de ' + esc(dataBR(e.dataEntrega)) + '</span>' +
+        '<span class="pequeno suave" style="display:block">' +
+          (e.dataInicio ? 'Ficha iniciada em ' + esc(dataBR(e.dataInicio)) + ' · ' : '') +
+          assinados + ' de ' + itens.length + ' assinado(s)' +
+          (devolvidos ? ' · ' + devolvidos + ' devolvido(s)' : '') +
+        '</span>' +
+      '</span>' +
+      '<span style="display:flex;align-items:center;gap:8px;flex:0 0 auto">' +
+        '<span class="selo">' + itens.length + ' ite' + (itens.length === 1 ? 'm' : 'ns') + '</span>' +
+        '<svg class="chev" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">' +
+        '<path d="M6 9.5L12 15.5L18 9.5" fill="none" stroke="currentColor" stroke-width="2.2" ' +
+        'stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      '</span>' +
+    '</button>' +
+    '<div class="corpo-entrega">' + (aberta ? corpoEntrega(e) : '') + '</div>' +
   '</div>';
+}
+
+/* Abre ou fecha uma entrega mexendo só nela. */
+function alternarEntrega(id){
+  var cx = $('fichaHistorico');
+  var cartao = null, cs = cx.querySelectorAll('[data-cartao]');
+  for(var i = 0; i < cs.length; i++){ if(cs[i].getAttribute('data-cartao') === id) cartao = cs[i]; }
+  if(!cartao) return;
+  var corpo = cartao.querySelector('.corpo-entrega');
+  var bt = cartao.querySelector('.cabecalho-entrega');
+  var abrir = cartao.classList.contains('fechada');
+  if(abrir){
+    var e = entregaPorId(id);
+    if(!e) return;
+    if(!corpo.firstChild) corpo.innerHTML = corpoEntrega(e);
+  }else{
+    corpo.textContent = '';
+  }
+  cartao.classList.toggle('fechada', !abrir);
+  bt.setAttribute('aria-expanded', abrir ? 'true' : 'false');
 }
 
 /* ------------------------ cadastro de funcionário ------------------- */
@@ -2944,7 +3005,13 @@ function iniciar(){
   }).then(function(r){
     if(r[0]) estado.cfg = Object.assign({}, CFG_PADRAO, r[0]);
     var empresa = lerEmpresaCompartilhada();
-    if(empresa) estado.cfg = Object.assign({}, estado.cfg, empresa);   // cadastro único da empresa
+    if(empresa && empresa.empresa){
+      estado.cfg = Object.assign({}, estado.cfg, empresa);       // cadastro único da empresa
+    }else if(estado.cfg.empresa){
+      // primeira abertura depois da atualização: a empresa que já estava cadastrada
+      // aqui passa a valer para a tela inicial e para os relatórios de obra
+      gravarEmpresaCompartilhada(estado.cfg);
+    }
     if(r[1]) estado.meta = Object.assign({ ultimoBackup:'' }, r[1]);
     estado.funcionarios = r[2] || [];
     estado.epis = r[3] || [];

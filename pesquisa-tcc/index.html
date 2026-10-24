@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pesquisa de TCC – Patologias em imóveis novos | Campo Grande/MS</title>
+  <meta name="description" content="Pesquisa acadêmica de Engenharia Civil (UFMS) sobre patologias em construções recentes em Campo Grande/MS.">
+
+  <!-- Fonte Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    /* ===== CORES E FONTE (edite aqui; o resto do site usa só os nomes) ===== */
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            verde: { 50: '#f0fdf4', 500: '#16a34a', 900: '#14532d' },
+            'cinza-texto': '#1f2937'
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Ícones Lucide via CDN -->
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+  <!-- CSS próprio: só o indispensável (respeitar quem prefere menos movimento) -->
+  <style>
+    @media (prefers-reduced-motion: reduce) {
+      * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+
+<body class="font-sans text-cinza-texto bg-verde-50 antialiased">
+
+  <!-- Link para pular direto ao formulário (acessibilidade) -->
+  <a href="#formulario" class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-verde-900">Ir para o formulário</a>
+
+  <!-- ===================== 1. TOPO (HERO) ===================== -->
+  <header class="bg-white border-b border-verde-500/20">
+    <div class="mx-auto max-w-2xl lg:max-w-3xl px-5 py-10 md:py-16">
+      <p class="mb-4 inline-flex items-center gap-2 rounded-full bg-verde-50 px-3 py-1 text-sm font-medium text-verde-900">
+        <i data-lucide="graduation-cap" class="h-4 w-4" aria-hidden="true"></i>
+        Pesquisa acadêmica · Engenharia Civil – UFMS
+      </p>
+
+      <h1 class="text-2xl md:text-4xl font-bold leading-tight text-verde-900">
+        Mora em um imóvel construído recentemente? Preciso da sua ajuda na minha pesquisa.
+      </h1>
+
+      <!-- Texto de introdução (edite livremente) -->
+      <div class="mt-6 space-y-4 text-base md:text-lg leading-relaxed">
+        <p>Olá! Me chamo João Carmelo Jordão Carrilho da Silva, sou estudante do último ano de Engenharia Civil na UFMS e estou me formando em breve. Meu Trabalho de Conclusão de Curso, orientado pelo Prof. Dr. Sidiclei Formagini, é sobre as patologias (problemas) que aparecem em construções recentes, como fissuras, infiltrações e manchas.</p>
+        <p>Hoje existe pouco registro organizado do que realmente acontece em imóveis novos aqui em Campo Grande. Documentar isso ajuda a entender quais problemas são mais frequentes e a melhorar a qualidade das construções.</p>
+        <p><strong class="text-verde-900">Como funciona a visita:</strong> gostaria de visitar o seu imóvel, com registro fotográfico, para observar e fotografar as condições da construção. É sem custo e sem nenhuma intervenção na sua casa. Aproveito a visita para explicar como funcionam as garantias de um imóvel novo e os prazos que você tem para acionar a construtora.</p>
+        <p><strong class="text-verde-900">Fotos e dados:</strong> as fotos serão focadas nas manifestações patológicas, sem pessoas e sem identificar o endereço. Tudo será usado somente neste trabalho acadêmico, e sua identidade ficará em sigilo.</p>
+        <p>O preenchimento leva cerca de 2 minutos. Muito obrigado por contribuir com a minha formação!</p>
+      </div>
+
+      <a href="#formulario" id="btn-participar"
+         class="mt-8 inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-verde-900 px-8 text-lg font-semibold text-white shadow-sm transition duration-200 hover:bg-verde-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-verde-500/50 w-full md:w-auto">
+        Quero participar
+        <i data-lucide="arrow-down" class="h-5 w-5" aria-hidden="true"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-2xl px-4 py-10 md:py-14">
+
+    <!-- ===================== 2. FORMULÁRIO EM 4 ETAPAS ===================== -->
+    <section id="formulario" class="scroll-mt-6 rounded-2xl bg-white p-5 shadow-md md:p-8" aria-labelledby="titulo-form">
+      <h2 id="titulo-form" class="sr-only">Formulário da pesquisa</h2>
+
+      <!-- Barra de progresso -->
+      <div class="mb-6">
+        <div class="mb-2 flex items-center justify-between text-sm font-medium text-verde-900">
+          <span id="rotulo-etapa">Etapa 1 de 4 – Você</span>
+          <span id="percentual">25%</span>
+        </div>
+        <div class="h-3 w-full overflow-hidden rounded-full bg-verde-50" role="progressbar" id="barra"
+             aria-label="Progresso do formulário" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25">
+          <div id="barra-preenchida" class="h-full rounded-full bg-verde-500 transition-all duration-300" style="width:25%"></div>
+        </div>
+      </div>
+
+      <form id="form" novalidate autocomplete="on">
+
+        <!-- Honeypot anti-spam: humanos não veem nem preenchem -->
+        <div class="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+          <label for="site">Não preencha este campo</label>
+          <input type="text" id="site" name="site" tabindex="-1" autocomplete="off">
+        </div>
+
+        <!-- ---------- ETAPA 1 – VOCÊ ---------- -->
+        <div data-etapa="1" class="space-y-5 transition-opacity duration-200">
+          <h3 class="text-xl font-semibold text-verde-900">Sobre você</h3>
+
+          <div>
+            <label for="nome" class="mb-1 block font-medium">Nome completo <span class="text-red-700" aria-hidden="true">*</span></label>
+            <input type="text" id="nome" name="nome" autocomplete="name" required aria-describedby="erro-nome"
+                   class="campo">
+            <p id="erro-nome" class="erro" role="alert"></p>
+          </div>
+
+          <div>
+            <label for="whatsapp" class="mb-1 block font-medium">WhatsApp <span class="text-red-700" aria-hidden="true">*</span></label>
+            <input type="tel" id="whatsapp" name="whatsapp" inputmode="numeric" autocomplete="tel-national"
+                   placeholder="(67) 99999-9999" maxlength="15" required aria-describedby="erro-whatsapp" class="campo">
+            <p id="erro-whatsapp" class="erro" role="alert"></p>
+          </div>
+
+          <div>
+            <label for="email" class="mb-1 block font-medium">E-mail <span class="font-normal text-gray-600">(opcional)</span></label>
+            <input type="email" id="email" name="email" autocomplete="email" aria-describedby="erro-email" class="campo">
+            <p id="erro-email" class="erro" role="alert"></p>
+          </div>
+        </div>
+
+        <!-- ---------- ETAPA 2 – IMÓVEL ---------- -->
+        <div data-etapa="2" class="hidden space-y-5 transition-opacity duration-200">
+          <h3 class="text-xl font-semibold text-verde-900">Sobre o imóvel</h3>
+
+          <div>
+            <label for="bairro" class="mb-1 block font-medium">Bairro <span class="text-red-700" aria-hidden="true">*</span></label>
+            <input type="text" id="bairro" name="bairro" required aria-describedby="erro-bairro" class="campo">
+            <p id="erro-bairro" class="erro" role="alert"></p>
+          </div>
+
+          <fieldset aria-describedby="erro-tipo_imovel">
+            <legend class="mb-2 font-medium">Tipo de imóvel <span class="text-red-700" aria-hidden="true">*</span></legend>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" id="grupo-tipo_imovel"></div>
+            <p id="erro-tipo_imovel" class="erro" role="alert"></p>
+          </fieldset>
+
+          <div>
+            <label for="construtora" class="mb-1 block font-medium">Construtora <span class="font-normal text-gray-600">(opcional)</span></label>
+            <input type="text" id="construtora" name="construtora" class="campo">
+          </div>
+
+          <div>
+            <label for="ano_entrega" class="mb-1 block font-medium">Ano de entrega ou habite-se <span class="font-normal text-gray-600">(opcional)</span></label>
+            <select id="ano_entrega" name="ano_entrega" class="campo bg-white">
+              <option value="">Selecione…</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ---------- ETAPA 3 – SITUAÇÃO E VISITA ---------- -->
+        <div data-etapa="3" class="hidden space-y-6 transition-opacity duration-200">
+          <h3 class="text-xl font-semibold text-verde-900">Situação e visita</h3>
+
+          <fieldset aria-describedby="erro-problemas">
+            <legend class="mb-2 font-medium">Já notou algum problema no imóvel? <span class="font-normal text-gray-600">(pode marcar vários)</span> <span class="text-red-700" aria-hidden="true">*</span></legend>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" id="grupo-problemas"></div>
+            <p id="erro-problemas" class="erro" role="alert"></p>
+          </fieldset>
+
+          <div id="bloco-outro" class="hidden">
+            <label for="problema_outro" class="mb-1 block font-medium">Descreva o outro problema <span class="text-red-700" aria-hidden="true">*</span></label>
+            <textarea id="problema_outro" name="problema_outro" rows="3" maxlength="500" aria-describedby="erro-problema_outro" class="campo"></textarea>
+            <p id="erro-problema_outro" class="erro" role="alert"></p>
+          </div>
+
+          <fieldset aria-describedby="erro-acionou_construtora">
+            <legend class="mb-2 font-medium">Já acionou a construtora? <span class="text-red-700" aria-hidden="true">*</span></legend>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3" id="grupo-acionou_construtora"></div>
+            <p id="erro-acionou_construtora" class="erro" role="alert"></p>
+          </fieldset>
+
+          <fieldset aria-describedby="erro-aceita_visita">
+            <legend class="mb-2 font-medium">Aceita receber a visita com registro fotográfico? <span class="text-red-700" aria-hidden="true">*</span></legend>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3" id="grupo-aceita_visita"></div>
+            <p id="erro-aceita_visita" class="erro" role="alert"></p>
+          </fieldset>
+
+          <div id="bloco-horario" class="hidden">
+            <label for="melhor_horario" class="mb-1 block font-medium">Melhor dia e horário para a visita <span class="font-normal text-gray-600">(opcional)</span></label>
+            <input type="text" id="melhor_horario" name="melhor_horario" placeholder="Ex.: sábados de manhã" maxlength="200" class="campo">
+          </div>
+        </div>
+
+        <!-- ---------- ETAPA 4 – CONSENTIMENTO ---------- -->
+        <div data-etapa="4" class="hidden space-y-5 transition-opacity duration-200">
+          <h3 class="text-xl font-semibold text-verde-900">Consentimento</h3>
+
+          <div>
+            <label class="flex cursor-pointer items-start gap-3 rounded-xl border-2 border-gray-300 p-4 transition duration-200 hover:border-verde-500 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-verde-500/50">
+              <input type="checkbox" id="consent_dados" name="consent_dados" aria-describedby="erro-consent_dados"
+                     class="mt-1 h-6 w-6 shrink-0 rounded accent-verde-900 focus:outline-none">
+              <span><strong class="text-verde-900">Obrigatório.</strong> Autorizo o uso dos meus dados somente para esta pesquisa acadêmica, conforme a LGPD (Lei Geral de Proteção de Dados).</span>
+            </label>
+            <p id="erro-consent_dados" class="erro" role="alert"></p>
+          </div>
+
+          <div>
+            <label class="flex cursor-pointer items-start gap-3 rounded-xl border-2 border-gray-300 p-4 transition duration-200 hover:border-verde-500 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-verde-500/50">
+              <input type="checkbox" id="consent_fotos" name="consent_fotos"
+                     class="mt-1 h-6 w-6 shrink-0 rounded accent-verde-900 focus:outline-none">
+              <span><strong class="text-verde-900">Opcional.</strong> Autorizo o registro fotográfico do imóvel, focado nas manifestações patológicas, sem pessoas e sem identificar o endereço.</span>
+            </label>
+          </div>
+
+          <!-- Mensagem de erro de envio -->
+          <div id="erro-envio" class="hidden rounded-xl border border-red-300 bg-red-50 p-4 text-red-800" role="alert"></div>
+        </div>
+
+        <!-- ---------- BOTÕES ---------- -->
+        <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+          <button type="button" id="btn-voltar"
+                  class="invisible inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl border-2 border-verde-900 px-6 font-semibold text-verde-900 transition duration-200 hover:bg-verde-50 focus:outline-none focus-visible:ring-4 focus-visible:ring-verde-500/50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-500">
+            <i data-lucide="arrow-left" class="h-5 w-5" aria-hidden="true"></i> Voltar
+          </button>
+          <button type="button" id="btn-avancar"
+                  class="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-verde-900 px-8 font-semibold text-white transition duration-200 hover:bg-verde-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-verde-500/50">
+            Avançar <i data-lucide="arrow-right" class="h-5 w-5" aria-hidden="true"></i>
+          </button>
+          <button type="submit" id="btn-enviar"
+                  class="hidden min-h-[52px] items-center justify-center gap-2 rounded-xl bg-verde-900 px-8 font-semibold text-white transition duration-200 hover:bg-verde-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-verde-500/50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:hover:bg-gray-400">
+            <span id="enviar-icone"><i data-lucide="send" class="h-5 w-5" aria-hidden="true"></i></span>
+            <span id="enviar-texto">Enviar</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ===================== 3. TELA DE SUCESSO ===================== -->
+    <section id="sucesso" class="hidden rounded-2xl bg-white p-8 text-center shadow-md md:p-12" tabindex="-1" aria-live="polite">
+      <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-verde-50 text-verde-500">
+        <i data-lucide="check-circle-2" class="h-10 w-10" aria-hidden="true"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-verde-900">Muito obrigado por participar!</h2>
+      <p class="mt-4 text-lg leading-relaxed">Sua resposta foi registrada com sucesso. Entrarei em contato pelo WhatsApp para combinarmos os próximos passos.</p>
+      <p class="mt-3 text-gray-600">Você já pode fechar esta página.</p>
+    </section>
+  </main>
+
+  <!-- ===================== 4. RODAPÉ ===================== -->
+  <footer class="bg-verde-900 text-verde-50">
+    <div class="mx-auto max-w-2xl lg:max-w-3xl space-y-3 px-5 py-10 text-sm leading-relaxed md:text-base">
+      <p class="text-lg font-semibold text-white">João Carmelo Jordão Carrilho da Silva</p>
+      <p>Engenharia Civil – UFMS/FAENG</p>
+      <p>Orientador: Prof. Dr. Sidiclei Formagini</p>
+      <p>Contato: <a href="mailto:joao_carmelo@ufms.br" class="underline hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white">joao_carmelo@ufms.br</a></p>
+      <p class="border-t border-verde-50/30 pt-4">
+        <strong>Privacidade:</strong> seus dados são usados somente nesta pesquisa acadêmica, conforme a LGPD. Sua identidade fica em sigilo, as fotos não mostram pessoas nem identificam o endereço, e você pode pedir a exclusão dos seus dados a qualquer momento pelo e-mail acima.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+  /* =====================================================================
+     CONFIGURAÇÃO  (o que você mais vai editar)
+     ===================================================================== */
+  // Cole aqui a URL do Apps Script (termina com /exec). Veja o README.
+  const APPS_SCRIPT_URL = 'COLE_AQUI_A_URL_DO_APPS_SCRIPT';
+
+  const ANO_INICIAL = 2015; // primeiro ano da lista de entrega do imóvel
+
+  // Opções das perguntas de múltipla escolha: [valor, texto exibido]
+  const OPCOES = {
+    tipo_imovel: [['casa', 'Casa'], ['apartamento', 'Apartamento']],
+    problemas: [
+      ['fissuras/trincas', 'Fissuras/trincas'],
+      ['infiltração/umidade', 'Infiltração/umidade'],
+      ['manchas/mofo', 'Manchas/mofo'],
+      ['descolamento de revestimento ou pintura', 'Descolamento de revestimento ou pintura'],
+      ['problemas hidráulicos', 'Problemas hidráulicos'],
+      ['problemas elétricos', 'Problemas elétricos'],
+      ['outro', 'Outro'],
+      ['nenhum', 'Nenhum']
+    ],
+    acionou_construtora: [['sim', 'Sim'], ['nao', 'Não'], ['ainda nao', 'Ainda não']],
+    aceita_visita: [['sim', 'Sim'], ['nao', 'Não'], ['talvez', 'Talvez']]
+  };
+
+  const ETAPAS = ['Você', 'Imóvel', 'Situação e visita', 'Consentimento'];
+
+  /* =====================================================================
+     UTILITÁRIOS
+     ===================================================================== */
+  const $ = (id) => document.getElementById(id);
+  const form = $('form');
+  let etapaAtual = 1;
+  let enviando = false;
+
+  // Estilo comum dos campos e das mensagens de erro (aplicado via JS para não repetir classes)
+  const CLASSES_CAMPO = 'block w-full min-h-[52px] rounded-xl border-2 border-gray-300 px-4 py-3 text-base text-cinza-texto transition duration-200 hover:border-verde-500 focus:border-verde-500 focus:outline-none focus:ring-4 focus:ring-verde-500/30 aria-[invalid=true]:border-red-600';
+  const CLASSES_ERRO = 'mt-1 hidden text-sm font-medium text-red-700';
+  document.querySelectorAll('.campo').forEach((el) => el.className = (el.className + ' ' + CLASSES_CAMPO).trim());
+  document.querySelectorAll('.erro').forEach((el) => el.className = CLASSES_ERRO);
+
+  // Gera as opções (rádio ou caixa de seleção) com aparência de cartão tocável
+  function renderOpcoes(grupoId, nome, tipo) {
+    $(grupoId).innerHTML = OPCOES[nome].map(([valor, texto], i) => `
+      <label class="block cursor-pointer">
+        <input type="${tipo}" name="${nome}" value="${valor}" class="peer sr-only" id="${nome}-${i}">
+        <span class="flex min-h-[52px] items-center gap-3 rounded-xl border-2 border-gray-300 px-4 py-3 transition duration-200 hover:border-verde-500 peer-checked:border-verde-900 peer-checked:bg-verde-50 peer-checked:font-semibold peer-checked:text-verde-900 peer-focus-visible:ring-4 peer-focus-visible:ring-verde-500/50">
+          <span class="flex h-5 w-5 shrink-0 items-center justify-center border-2 border-gray-400 ${tipo === 'radio' ? 'rounded-full' : 'rounded'}"></span>
+          ${texto}
+        </span>
+      </label>`).join('');
+  }
+  renderOpcoes('grupo-tipo_imovel', 'tipo_imovel', 'radio');
+  renderOpcoes('grupo-problemas', 'problemas', 'checkbox');
+  renderOpcoes('grupo-acionou_construtora', 'acionou_construtora', 'radio');
+  renderOpcoes('grupo-aceita_visita', 'aceita_visita', 'radio');
+
+  // Anos de entrega: do mais recente até ANO_INICIAL
+  (function preencherAnos() {
+    const sel = $('ano_entrega');
+    for (let ano = new Date().getFullYear(); ano >= ANO_INICIAL; ano--) {
+      sel.add(new Option(ano, ano));
+    }
+  })();
+
+  const valorRadio = (nome) => (form.querySelector(`input[name="${nome}"]:checked`) || {}).value || '';
+  const valoresMarcados = (nome) => [...form.querySelectorAll(`input[name="${nome}"]:checked`)].map((i) => i.value);
+
+  function mostrarErro(id, msg) {
+    const p = $('erro-' + id);
+    if (!p) return;
+    p.textContent = msg;
+    p.classList.toggle('hidden', !msg);
+    const campo = $(id);
+    if (campo) msg ? campo.setAttribute('aria-invalid', 'true') : campo.removeAttribute('aria-invalid');
+  }
+
+  /* =====================================================================
+     MÁSCARA DE TELEFONE  (67) 99999-9999
+     ===================================================================== */
+  $('whatsapp').addEventListener('input', (e) => {
+    const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+    let r = d;
+    if (d.length > 6) r = `(${d.slice(0, 2)}) ${d.slice(2, d.length === 11 ? 7 : 6)}-${d.slice(d.length === 11 ? 7 : 6)}`;
+    else if (d.length > 2) r = `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    else if (d.length > 0) r = `(${d}`;
+    e.target.value = r;
+  });
+
+  /* =====================================================================
+     CAMPOS CONDICIONAIS
+     ===================================================================== */
+  // "Nenhum" é exclusivo; "Outro" abre o campo de descrição
+  $('grupo-problemas').addEventListener('change', (e) => {
+    const marcados = form.querySelectorAll('input[name="problemas"]');
+    if (e.target.value === 'nenhum' && e.target.checked) {
+      marcados.forEach((i) => { if (i.value !== 'nenhum') i.checked = false; });
+    } else if (e.target.checked) {
+      marcados.forEach((i) => { if (i.value === 'nenhum') i.checked = false; });
+    }
+    const outro = valoresMarcados('problemas').includes('outro');
+    $('bloco-outro').classList.toggle('hidden', !outro);
+    if (!outro) { $('problema_outro').value = ''; mostrarErro('problema_outro', ''); }
+  });
+
+  // Melhor horário só aparece se respondeu "sim" ou "talvez"
+  $('grupo-aceita_visita').addEventListener('change', () => {
+    const mostra = ['sim', 'talvez'].includes(valorRadio('aceita_visita'));
+    $('bloco-horario').classList.toggle('hidden', !mostra);
+    if (!mostra) $('melhor_horario').value = '';
+  });
+
+  /* =====================================================================
+     VALIDAÇÃO POR ETAPA  (retorna true se estiver tudo certo)
+     ===================================================================== */
+  const VALIDADORES = {
+    1() {
+      let ok = true;
+      const primeiroErro = [];
+      const falha = (id, msg) => { mostrarErro(id, msg); ok = false; primeiroErro.push(id); };
+
+      mostrarErro('nome', ''); mostrarErro('whatsapp', ''); mostrarErro('email', '');
+      const nome = $('nome').value.trim();
+      if (!nome) falha('nome', 'Informe seu nome completo.');
+      else if (nome.split(/\s+/).length < 2) falha('nome', 'Digite nome e sobrenome.');
+
+      const tel = $('whatsapp').value.replace(/\D/g, '');
+      if (!tel) falha('whatsapp', 'Informe seu WhatsApp para eu poder entrar em contato.');
+      else if (tel.length < 10 || tel.length > 11) falha('whatsapp', 'Número incompleto. Use o formato (67) 99999-9999.');
+
+      const email = $('email').value.trim();
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) falha('email', 'Esse e-mail parece inválido. Confira ou deixe em branco.');
+
+      if (!ok) $(primeiroErro[0]).focus();
+      return ok;
+    },
+    2() {
+      let ok = true;
+      mostrarErro('bairro', ''); mostrarErro('tipo_imovel', '');
+      if (!$('bairro').value.trim()) { mostrarErro('bairro', 'Informe o bairro do imóvel.'); ok = false; $('bairro').focus(); }
+      if (!valorRadio('tipo_imovel')) {
+        mostrarErro('tipo_imovel', 'Escolha se é casa ou apartamento.');
+        if (ok) $('tipo_imovel-0').focus();
+        ok = false;
+      }
+      return ok;
+    },
+    3() {
+      let ok = true;
+      ['problemas', 'problema_outro', 'acionou_construtora', 'aceita_visita'].forEach((id) => mostrarErro(id, ''));
+      const foco = [];
+      if (valoresMarcados('problemas').length === 0) {
+        mostrarErro('problemas', 'Marque ao menos uma opção (ou "Nenhum").'); ok = false; foco.push('problemas-0');
+      }
+      if (valoresMarcados('problemas').includes('outro') && !$('problema_outro').value.trim()) {
+        mostrarErro('problema_outro', 'Descreva brevemente o outro problema.'); ok = false; foco.push('problema_outro');
+      }
+      if (!valorRadio('acionou_construtora')) {
+        mostrarErro('acionou_construtora', 'Informe se já acionou a construtora.'); ok = false; foco.push('acionou_construtora-0');
+      }
+      if (!valorRadio('aceita_visita')) {
+        mostrarErro('aceita_visita', 'Informe se aceita receber a visita.'); ok = false; foco.push('aceita_visita-0');
+      }
+      if (!ok) $(foco[0]).focus();
+      return ok;
+    },
+    4() {
+      mostrarErro('consent_dados', '');
+      if (!$('consent_dados').checked) {
+        mostrarErro('consent_dados', 'Para participar, é necessário autorizar o uso dos dados (Caixa 1).');
+        $('consent_dados').focus();
+        return false;
+      }
+      return true;
+    }
+  };
+
+  /* =====================================================================
+     NAVEGAÇÃO ENTRE ETAPAS
+     ===================================================================== */
+  function irParaEtapa(n, rolar = true) {
+    etapaAtual = n;
+    document.querySelectorAll('[data-etapa]').forEach((el) => {
+      const ativa = Number(el.dataset.etapa) === n;
+      el.classList.toggle('hidden', !ativa);
+      if (ativa) { // transição suave de entrada
+        el.classList.add('opacity-0');
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove('opacity-0')));
+      }
+    });
+    const pct = n * 25;
+    $('barra-preenchida').style.width = pct + '%';
+    $('barra').setAttribute('aria-valuenow', pct);
+    $('percentual').textContent = pct + '%';
+    $('rotulo-etapa').textContent = `Etapa ${n} de 4 – ${ETAPAS[n - 1]}`;
+
+    $('btn-voltar').classList.toggle('invisible', n === 1);
+    $('btn-avancar').classList.toggle('hidden', n === 4);
+    $('btn-enviar').classList.toggle('hidden', n !== 4);
+    $('btn-enviar').classList.toggle('inline-flex', n === 4);
+    $('erro-envio').classList.add('hidden');
+    if (rolar) $('formulario').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  $('btn-avancar').addEventListener('click', () => { if (VALIDADORES[etapaAtual]()) irParaEtapa(etapaAtual + 1); });
+  $('btn-voltar').addEventListener('click', () => { if (etapaAtual > 1 && !enviando) irParaEtapa(etapaAtual - 1); });
+
+  // Enter avança de etapa (e envia só na última)
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (etapaAtual < 4) { if (VALIDADORES[etapaAtual]()) irParaEtapa(etapaAtual + 1); }
+    else enviar();
+  });
+
+  /* =====================================================================
+     ENVIO PARA O GOOGLE APPS SCRIPT
+     ===================================================================== */
+  function montarDados() {
+    return {
+      data_hora: new Date().toISOString(),
+      nome: $('nome').value.trim(),
+      whatsapp: $('whatsapp').value.trim(),
+      email: $('email').value.trim(),
+      bairro: $('bairro').value.trim(),
+      tipo_imovel: valorRadio('tipo_imovel'),
+      construtora: $('construtora').value.trim(),
+      ano_entrega: $('ano_entrega').value,
+      problemas: valoresMarcados('problemas').join(';'),
+      problema_outro: $('problema_outro').value.trim(),
+      acionou_construtora: valorRadio('acionou_construtora'),
+      aceita_visita: valorRadio('aceita_visita'),
+      melhor_horario: $('melhor_horario').value.trim(),
+      consent_dados: $('consent_dados').checked,
+      consent_fotos: $('consent_fotos').checked
+    };
+  }
+
+  function definirCarregando(sim) {
+    enviando = sim;
+    $('btn-enviar').disabled = sim;
+    $('btn-voltar').disabled = sim;
+    $('enviar-texto').textContent = sim ? 'Enviando…' : 'Enviar';
+    $('enviar-icone').innerHTML = sim
+      ? '<svg class="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/><path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>'
+      : '<i data-lucide="send" class="h-5 w-5" aria-hidden="true"></i>';
+    if (!sim && window.lucide) lucide.createIcons();
+  }
+
+  function mostrarErroEnvio(msg) {
+    const box = $('erro-envio');
+    box.textContent = msg;
+    box.classList.remove('hidden');
+  }
+
+  function mostrarSucesso() {
+    $('formulario').classList.add('hidden');
+    const s = $('sucesso');
+    s.classList.remove('hidden');
+    s.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    s.focus();
+  }
+
+  async function enviar() {
+    if (enviando) return;
+    // Revalida tudo antes de enviar (garante que a Caixa 1 foi marcada)
+    for (let n = 1; n <= 4; n++) {
+      if (!VALIDADORES[n]()) { if (n !== etapaAtual) irParaEtapa(n); return; }
+    }
+
+    // Honeypot: se um robô preencheu, finge sucesso sem enviar nada
+    if ($('site').value) { mostrarSucesso(); return; }
+
+    if (APPS_SCRIPT_URL.indexOf('COLE_AQUI') === 0) {
+      mostrarErroEnvio('O formulário ainda não foi configurado: falta colar a URL do Apps Script em APPS_SCRIPT_URL.');
+      return;
+    }
+
+    definirCarregando(true);
+    $('erro-envio').classList.add('hidden');
+    try {
+      const resp = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        // text/plain evita o preflight de CORS, que o Apps Script não responde
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(montarDados())
+      });
+      const json = await resp.json();
+      if (!json.ok) throw new Error(json.erro || 'falha');
+      mostrarSucesso();
+    } catch (err) {
+      mostrarErroEnvio('Não consegui enviar sua resposta agora. Verifique sua conexão com a internet e toque em "Enviar" para tentar de novo. Suas respostas continuam preenchidas.');
+    } finally {
+      definirCarregando(false);
+    }
+  }
+
+  /* =====================================================================
+     INICIALIZAÇÃO
+     ===================================================================== */
+  if (window.lucide) lucide.createIcons();
+  irParaEtapa(1, false);
+  </script>
+</body>
+</html>
